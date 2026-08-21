@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=stagelink
+POSTGRES_USER=vrvGKRKKsgjdjxUyGDCjaJCKbqWSbyAC
+POSTGRES_PASSWORD=MNaTgc70jFfizDcRKuLGFLDZhilYrpaYaudypyzdY5BwiPvoxdGZSfWHiQqTFx1X
