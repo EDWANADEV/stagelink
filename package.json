@@ -1,0 +1,29 @@
+{
+  "name": "stagelink",
+  "version": "1.0.0",
+  "description": "cette plateforme réunir les entreprises et les étudiants autour du stage.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+  "dev": "npx @tailwindcss/cli -i ./stagelink/static/css/input.css -o ./stagelink/static/css/output.css --watch",
+  "build": "npx @tailwindcss/cli -i ./stagelink/static/css/input.css -o ./stagelink/static/css/output.css --minify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HooYia/stagelink.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HooYia/stagelink/issues"
+  },
+  "homepage": "https://github.com/HooYia/stagelink#readme",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}
