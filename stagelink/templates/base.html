@@ -100,21 +100,20 @@
             {% else %}
 
               <a
-                href="{% url 'account_login' %}"
+                href="{% url 'users:login' %}"
                 class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7]"
               >
                 {% translate "Sign In" %}
               </a>
-
               {% if ACCOUNT_ALLOW_REGISTRATION %}
                 <a
                   id="sign-up-link"
-                  href="{% url 'account_signup' %}"
+                  href="{% url 'users:signup' %}"
                   class="rounded-[10px] bg-[#1565C0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0D47A1] focus:outline-none focus:ring-2 focus:ring-[#1565C0] focus:ring-offset-2"
                 >
                   {% translate "Sign Up" %}
                 </a>
-              {% endif %}
+              {% endif %} 
 
             {% endif %}
 

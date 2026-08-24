@@ -302,3 +302,12 @@ msgstr "Informations mises à jour avec succès"
 #~ msgstr ""
 #~ "<strong>Remarque :</strong> vous pouvez toujours <a "
 #~ "href=\"%(email_url)s\">changer votre e-adresse e-mail</a>."
+
+msgid "Student"
+msgstr "Étudiant"
+
+msgid "Company"
+msgstr "Entreprise"
+
+msgid "Role"
+msgstr "Rôle"

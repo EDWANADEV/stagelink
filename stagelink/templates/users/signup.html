@@ -1,0 +1,214 @@
+
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+{% translate "Créer un compte" %}
+{% endblock title %}
+
+{% block content %}
+
+<div class="mx-auto max-w-2xl">
+
+  <!-- Header -->
+
+  <div class="mb-8 text-center">
+    <h1 class="text-3xl font-bold tracking-tight text-[#16203A]">
+      {% translate "Créer votre compte" %}
+    </h1>
+
+```
+<p class="mt-2 text-sm text-[#5A6478]">
+  {% translate "Rejoignez StageLink et commencez votre parcours." %}
+</p>
+```
+
+  </div>
+
+  <!-- Signup card -->
+
+  <div class="rounded-2xl border border-[#D6DCE6] bg-white p-6 shadow-sm sm:p-8">
+
+```
+<form method="post" action="{% url 'users:signup' %}" class="space-y-6">
+
+  {% csrf_token %}
+
+  <!-- Global errors -->
+  {% if form.non_field_errors %}
+    <div
+      class="rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      role="alert"
+    >
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+
+  <!-- Role -->
+  <div>
+    <label
+      for="{{ form.role.id_for_label }}"
+      class="mb-2 block text-sm font-semibold text-[#16203A]"
+    >
+      {% translate "Je suis" %}
+    </label>
+
+    <select
+      name="{{ form.role.html_name }}"
+      id="{{ form.role.id_for_label }}"
+      class="block w-full rounded-[10px] border border-[#B8C1D1] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm outline-none transition focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20"
+      required
+    >
+      {% for value, label in form.role.field.choices %}
+        <option
+          value="{{ value }}"
+          {% if form.role.value == value %}selected{% endif %}
+        >
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+
+    {% if form.role.errors %}
+      <p class="mt-2 text-sm text-red-600">
+        {{ form.role.errors|striptags }}
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Name -->
+  <div>
+    <label
+      for="{{ form.name.id_for_label }}"
+      class="mb-2 block text-sm font-semibold text-[#16203A]"
+    >
+      {% translate "Nom complet" %}
+    </label>
+
+    <input
+      type="text"
+      name="{{ form.name.html_name }}"
+      id="{{ form.name.id_for_label }}"
+      value="{{ form.name.value|default:'' }}"
+      autocomplete="name"
+      required
+      class="block w-full rounded-[10px] border border-[#B8C1D1] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm outline-none transition placeholder:text-[#8A94A6] focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20"
+      placeholder="{% translate 'Votre nom complet' %}"
+    >
+
+    {% if form.name.errors %}
+      <p class="mt-2 text-sm text-red-600">
+        {{ form.name.errors|striptags }}
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Email -->
+  <div>
+    <label
+      for="{{ form.email.id_for_label }}"
+      class="mb-2 block text-sm font-semibold text-[#16203A]"
+    >
+      {% translate "Adresse e-mail" %}
+    </label>
+
+    <input
+      type="email"
+      name="{{ form.email.html_name }}"
+      id="{{ form.email.id_for_label }}"
+      value="{{ form.email.value|default:'' }}"
+      autocomplete="email"
+      required
+      class="block w-full rounded-[10px] border border-[#B8C1D1] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm outline-none transition placeholder:text-[#8A94A6] focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20"
+      placeholder="{% translate 'exemple@email.com' %}"
+    >
+
+    {% if form.email.errors %}
+      <p class="mt-2 text-sm text-red-600">
+        {{ form.email.errors|striptags }}
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Password -->
+  <div>
+    <label
+      for="{{ form.password1.id_for_label }}"
+      class="mb-2 block text-sm font-semibold text-[#16203A]"
+    >
+      {% translate "Mot de passe" %}
+    </label>
+
+    <input
+      type="password"
+      name="{{ form.password1.html_name }}"
+      id="{{ form.password1.id_for_label }}"
+      autocomplete="new-password"
+      required
+      class="block w-full rounded-[10px] border border-[#B8C1D1] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm outline-none transition placeholder:text-[#8A94A6] focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20"
+      placeholder="{% translate 'Votre mot de passe' %}"
+    >
+
+    {% if form.password1.errors %}
+      <p class="mt-2 text-sm text-red-600">
+        {{ form.password1.errors|striptags }}
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Password confirmation -->
+  <div>
+    <label
+      for="{{ form.password2.id_for_label }}"
+      class="mb-2 block text-sm font-semibold text-[#16203A]"
+    >
+      {% translate "Confirmer le mot de passe" %}
+    </label>
+
+    <input
+      type="password"
+      name="{{ form.password2.html_name }}"
+      id="{{ form.password2.id_for_label }}"
+      autocomplete="new-password"
+      required
+      class="block w-full rounded-[10px] border border-[#B8C1D1] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm outline-none transition placeholder:text-[#8A94A6] focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20"
+      placeholder="{% translate 'Confirmez votre mot de passe' %}"
+    >
+
+    {% if form.password2.errors %}
+      <p class="mt-2 text-sm text-red-600">
+        {{ form.password2.errors|striptags }}
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Submit -->
+  <button
+    type="submit"
+    class="w-full rounded-[10px] bg-[#1565C0] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0D47A1] focus:outline-none focus:ring-2 focus:ring-[#1565C0] focus:ring-offset-2"
+  >
+    {% translate "Créer mon compte" %}
+  </button>
+
+</form>
+
+<!-- Login link -->
+<div class="mt-6 border-t border-[#E2E6ED] pt-6 text-center">
+  <p class="text-sm text-[#5A6478]">
+    {% translate "Vous avez déjà un compte ?" %}
+
+    <a
+      href="{% url 'users:login' %}"
+      class="font-semibold text-[#1565C0] hover:text-[#0D47A1]"
+    >
+      {% translate "Se connecter" %}
+    </a>
+  </p>
+</div>
+```
+
+  </div>
+
+</div>
+
+{% endblock content %}

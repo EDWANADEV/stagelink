@@ -4,10 +4,11 @@ from typing import ClassVar
 from django.contrib.auth.models import AbstractUser
 from django.db.models import CharField
 from django.db.models import EmailField
+from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+
 from .managers import UserManager
-from django.db import models
 
 
 class Role(models.TextChoices):
