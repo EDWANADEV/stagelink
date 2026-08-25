@@ -12,6 +12,17 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # stagelink/
 APPS_DIR = BASE_DIR / "stagelink"
 env = environ.Env()
+SITE_NAME = env("SITE_NAME", default="StageLink")
+
+BASE_URL = env(
+    "BASE_URL",
+    default="http://127.0.0.1:8000",
+)
+
+EMAIL_LOGO_PATH = env(
+    "EMAIL_LOGO_PATH",
+    default="images/logo/stagelink.png",
+)
 
 READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=True)
 if READ_DOT_ENV_FILE:
@@ -104,6 +115,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "stagelink.users",
+    "stagelink.core",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

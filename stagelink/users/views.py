@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .forms import LoginForm
+from .forms import UserSignupForm
 from .forms import SignupForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
@@ -14,9 +15,10 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView
 from django.views.generic import RedirectView
 from django.views.generic import FormView
+from django.views import View
 from django.views.generic import UpdateView
-from django.contrib.auth import login
 from django.shortcuts import redirect
+from django.shortcuts import render
 
 from .models import User
 
@@ -81,28 +83,47 @@ class LoginView(FormView):
 login_view = LoginView.as_view()
 
 
-
-class SignupView(FormView):
+class SignupView(View):
     template_name = "users/signup.html"
-    form_class = SignupForm
 
-    def form_valid(self, form):
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect("users:redirect")
+
+        form = UserSignupForm()
+
+        return render(
+            request,
+            self.template_name,
+            {"form": form},
+        )
+
+    def post(self, request):
+        if request.user.is_authenticated:
+            return redirect("users:redirect")
+
+        form = UserSignupForm(request.POST)
+
+        if not form.is_valid():
+            return render(
+                request,
+                self.template_name,
+                {"form": form},
+            )
+
         user = User.objects.create_user(
             email=form.cleaned_data["email"],
             password=form.cleaned_data["password"],
-            name=form.cleaned_data["name"],
             role=form.cleaned_data["role"],
-            is_active=False,
         )
 
-        self.request.session["pending_signup_user_id"] = user.pk
-
+        login(request, user)
+        
         messages.success(
-            self.request,
-            _("Votre compte a été créé. Un code de vérification vous sera envoyé."),
+            request,
+            _("Votre compte a été créé avec succès."),
         )
 
-        return redirect("users:verify-otp")
-
-
+        return redirect("users:redirect")
+    
 signup_view = SignupView.as_view()

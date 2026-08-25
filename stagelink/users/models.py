@@ -10,11 +10,8 @@ from django.utils.translation import gettext_lazy as _
 
 from .managers import UserManager
 
+from utils.enums import Role
 
-class Role(models.TextChoices):
-    STUDENT = "STUDENT", _("Student")
-    COMPANY = "COMPANY", _("Company")
-    
     
 class User(AbstractUser):
     """
@@ -41,4 +38,48 @@ class User(AbstractUser):
 
     def get_absolute_url(self) -> str:
         return reverse("users:detail", kwargs={"pk": self.id})
+    
+    
+class OTPVerification(models.Model):
+    class OTPType(models.TextChoices):
+        SIGNUP = "SIGNUP", _("Inscription")
+        PASSWORD_RESET = "PASSWORD_RESET", _("Réinitialisation du mot de passe")
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="otp_verifications",
+    )
+    code = models.CharField(
+        _("Code OTP"),
+        max_length=6,
+    )
+    otp_type = models.CharField(
+        _("Type de vérification"),
+        max_length=20,
+        choices=OTPType.choices,
+    )
+    expires_at = models.DateTimeField(
+        _("Date d'expiration"),
+    )
+    is_used = models.BooleanField(
+        _("Utilisé"),
+        default=False,
+    )
+    attempts = models.PositiveIntegerField(
+        _("Nombre de tentatives"),
+        default=0,
+    )
+    created_at = models.DateTimeField(
+        _("Date de création"),
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("Vérification OTP")
+        verbose_name_plural = _("Vérifications OTP")
+
+    def __str__(self) -> str:
+        return f"{self.user.email} - {self.otp_type}"
     

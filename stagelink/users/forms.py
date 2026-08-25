@@ -138,25 +138,12 @@ class LoginForm(forms.Form):
         return self.user_cache
     
 
-
-class SignupForm(forms.Form):
+class UserSignupForm(forms.Form):
     role = forms.ChoiceField(
-        label=_("Type de compte"),
+        label=_("Je suis"),
         choices=Role.choices,
-        required=True,
         widget=forms.RadioSelect,
-    )
-
-    name = forms.CharField(
-        label=_("Nom"),
-        max_length=255,
         required=True,
-        widget=forms.TextInput(
-            attrs={
-                "autocomplete": "name",
-                "placeholder": _("Votre nom"),
-            },
-        ),
     )
 
     email = forms.EmailField(
@@ -165,36 +152,37 @@ class SignupForm(forms.Form):
         widget=forms.EmailInput(
             attrs={
                 "autocomplete": "email",
-                "inputmode": "email",
                 "placeholder": _("exemple@email.com"),
-            },
+            }
         ),
     )
 
     password = forms.CharField(
         label=_("Mot de passe"),
         required=True,
+        strip=False,
         widget=forms.PasswordInput(
             attrs={
                 "autocomplete": "new-password",
                 "placeholder": _("Votre mot de passe"),
-            },
+            }
         ),
     )
 
     password_confirmation = forms.CharField(
         label=_("Confirmer le mot de passe"),
         required=True,
+        strip=False,
         widget=forms.PasswordInput(
             attrs={
                 "autocomplete": "new-password",
                 "placeholder": _("Confirmez votre mot de passe"),
-            },
+            }
         ),
     )
 
     def clean_email(self):
-        email = self.cleaned_data["email"].lower()
+        email = self.cleaned_data["email"].lower().strip()
 
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError(
@@ -221,85 +209,8 @@ class SignupForm(forms.Form):
             and password_confirmation
             and password != password_confirmation
         ):
-            raise forms.ValidationError(
-                _("Les deux mots de passe ne correspondent pas.")
-            )
-
-        return cleaned_data
-    
-class UserSignupForm(forms.Form):
-    """
-    Form used to create a StageLink user account.
-    """
-
-    role = forms.ChoiceField(
-        label=_("Type de compte"),
-        choices=Role.choices,
-        widget=forms.RadioSelect,
-        required=True,
-    )
-
-    email = forms.EmailField(
-        label=_("Adresse e-mail"),
-        required=True,
-        widget=forms.EmailInput(
-            attrs={
-                "autocomplete": "email",
-                "placeholder": "exemple@email.com",
-            },
-        ),
-    )
-
-    password1 = forms.CharField(label=_("Mot de passe"),
-        required=True,
-        widget=forms.PasswordInput(
-            attrs={
-                "autocomplete": "new-password",
-                "placeholder": "Votre mot de passe",
-            },
-        ),
-    )
-
-    password2 = forms.CharField(
-        label=_("Confirmer le mot de passe"),
-        required=True,
-        widget=forms.PasswordInput(
-            attrs={
-                "autocomplete": "new-password",
-                "placeholder": "Confirmez votre mot de passe",
-            },
-        ),
-    )
-    def clean_email(self):
-        email = self.cleaned_data["email"].strip().lower()
-
-        if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError(
-                _("Cette adresse e-mail est déjà utilisée."),
-            )
-
-        return email
-
-    def clean_password1(self):
-        password1 = self.cleaned_data.get("password1")
-
-        if password1:
-            password_validation.validate_password(
-                password1,
-                user=None,
-            )
-
-        return password1
-
-    def clean(self):
-        cleaned_data = super().clean()
-        
-        password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
-
-        if password1 and password2 and password1 != password2:
             self.add_error(
-                "password2",
+                "password_confirmation",
                 _("Les deux mots de passe ne correspondent pas."),
             )
 
