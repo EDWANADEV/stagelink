@@ -24,6 +24,11 @@ EMAIL_LOGO_PATH = env(
     default="images/logo/stagelink.png",
 )
 
+OTP_EXPIRATION_MINUTES = env.int(
+    "OTP_EXPIRATION_MINUTES",
+    default=10,
+)
+
 READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=True)
 if READ_DOT_ENV_FILE:
     # OS environment variables take precedence over variables from .env

@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import login
+from django.contrib.auth import logout
 from django.urls import reverse
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -21,6 +22,12 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 
 from .models import User
+
+from stagelink.users.forms import OTPVerificationForm
+from stagelink.users.models import OTPVerification
+from stagelink.users.services.otp import OTPService
+
+
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -117,13 +124,77 @@ class SignupView(View):
             role=form.cleaned_data["role"],
         )
 
-        login(request, user)
-        
+        login(
+            request,
+            user,
+            backend="django.contrib.auth.backends.ModelBackend",
+        )
+
+        OTPService.send_otp(
+            user=user,
+            otp_type=OTPVerification.OTPType.SIGNUP,
+        )
+
         messages.success(
             request,
-            _("Votre compte a été créé avec succès."),
+            _("Votre compte a été créé. Un code de vérification vous a été envoyé par e-mail."),
+        )
+
+        return redirect("users:verify-email")
+
+
+signup_view = SignupView.as_view()
+
+
+
+class VerifyEmailView(LoginRequiredMixin, FormView):
+    template_name = "users/verify_otp.html"
+    form_class = OTPVerificationForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.email_verified:
+            return redirect("users:redirect")
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        success, message = OTPService.verify_otp(
+            user=self.request.user,
+            code=form.cleaned_data["code"],
+            otp_type=OTPVerification.OTPType.SIGNUP,
+        )
+
+        if not success:
+            form.add_error("code", message)
+            return self.form_invalid(form)
+
+        self.request.user.email_verified = True
+        self.request.user.save(update_fields=["email_verified"])
+
+        messages.success(
+            self.request,
+            _("Votre adresse e-mail a été vérifiée avec succès."),
         )
 
         return redirect("users:redirect")
-    
-signup_view = SignupView.as_view()
+
+
+verify_email_view = VerifyEmailView.as_view()
+
+
+
+class LogoutView(View):
+    def post(self, request):
+        logout(request)
+
+        messages.success(
+            request,
+            _("Vous avez été déconnecté avec succès."),
+        )
+
+        return redirect("home")
+
+
+logout_view = LogoutView.as_view()
+
+

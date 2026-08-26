@@ -89,13 +89,19 @@
               >
                 {% translate "My Profile" %}
               </a>
-
-              <a
-                href="{% url 'account_logout' %}"
-                class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7]"
+              <form
+                method="post"
+                action="{% url 'users:logout' %}"
               >
-                {% translate "Sign Out" %}
-              </a>
+                {% csrf_token %}
+
+                <button
+                  type="submit"
+                  class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7]"
+                >
+                  {% translate "Se déconnecter" %}
+                </button>
+              </form>
 
             {% else %}
 

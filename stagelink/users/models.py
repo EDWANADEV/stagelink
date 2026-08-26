@@ -7,7 +7,7 @@ from django.db.models import EmailField
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-
+from core.models import BaseModel
 from .managers import UserManager
 
 from utils.enums import Role
@@ -32,6 +32,10 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.STUDENT,
     )
+    email_verified = models.BooleanField(
+        _("Adresse e-mail vérifiée"),
+        default=False,
+    )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
     objects: ClassVar[UserManager] = UserManager()
@@ -40,7 +44,7 @@ class User(AbstractUser):
         return reverse("users:detail", kwargs={"pk": self.id})
     
     
-class OTPVerification(models.Model):
+class OTPVerification(BaseModel):
     class OTPType(models.TextChoices):
         SIGNUP = "SIGNUP", _("Inscription")
         PASSWORD_RESET = "PASSWORD_RESET", _("Réinitialisation du mot de passe")
@@ -70,10 +74,7 @@ class OTPVerification(models.Model):
         _("Nombre de tentatives"),
         default=0,
     )
-    created_at = models.DateTimeField(
-        _("Date de création"),
-        auto_now_add=True,
-    )
+    
 
     class Meta:
         ordering = ["-created_at"]

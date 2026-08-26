@@ -215,3 +215,21 @@ class UserSignupForm(forms.Form):
             )
 
         return cleaned_data
+
+
+
+class OTPVerificationForm(forms.Form):
+    code = forms.CharField(
+        label=_("Code de vérification"),
+        max_length=6,
+        min_length=6,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "inputmode": "numeric",
+                "autocomplete": "one-time-code",
+                "maxlength": "6",
+                "placeholder": "000000",
+            },
+        ),
+    )
