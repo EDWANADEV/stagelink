@@ -1,5 +1,6 @@
+{% load static i18n %}
 
-{% load static i18n %}<!DOCTYPE html>
+<!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
   <head>
@@ -7,135 +8,96 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <title>
       {% block title %}
-      StageLink
-    {% endblock title %}
-  </title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-        content="cette plateforme réunir les entreprises et les étudiants autour du stage." />
-  <meta name="author"
-        content="Adora" />
-  <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
-  {% block css %}
-    <!-- Latest compiled and minified Bootstrap CSS -->
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
-          integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA=="
-          crossorigin="anonymous"
-          referrerpolicy="no-referrer" />
-<!-- Your stuff: Third-party CSS libraries go here -->
-<!-- This file stores project-specific CSS -->
-
-  
-  <link href="{% static 'css/project.css' %}" rel="stylesheet" />
-
-
-{% endblock css %}
-<!-- Le javascript
-    ================================================== -->
-{# Placed at the top of the document so pages load faster with defer #}
-{% block javascript %}
-
-
-<!-- Bootstrap JS -->
-<script defer
-        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"
-        integrity="sha512-1/RvZTcCDEUjY/CypiMz+iqqtaoQfAITmNSJY17Myp4Ms5mdxPS5UV7iOfdZoxcGhzFbOm6sntTKJppjvuhg4g=="
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-<!-- Your stuff: Third-party javascript libraries go here -->
-
-
-<!-- place project specific Javascript in this file -->
-
-  
-  <script defer src="{% static 'js/project.js' %}"></script>
-
-
-{% endblock javascript %}
-</head>
-<body class="{% block bodyclass %}{% endblock bodyclass %}">
-  {% block body %}
-  <div class="mb-1">
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
-      <div class="container-fluid">
-        <button class="navbar-toggler navbar-toggler-right"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <a class="navbar-brand" href="{% url 'home' %}">StageLink</a>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
-            </li>
+        StageLink
+      {% endblock title %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+          content="StageLink met en relation les étudiants et les entreprises autour du stage." />
+    <meta name="author" content="Adora" />
+    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+    {% block css %}
+      <link rel="stylesheet" href="{% static 'css/output.css' %}" />
+    {% endblock css %}
+    {% block javascript %}
+      <script defer src="{% static 'js/project.js' %}"></script>
+    {% endblock javascript %}
+  </head>
+  <body class="flex min-h-screen flex-col bg-[#EEF2F7] text-[#16203A] antialiased">
+    {% block body %}
+      <!-- Navigation -->
+      <header class="border-b border-[#D6DCE6] bg-white">
+        <nav class="mx-auto flex min-h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+             aria-label="Main navigation">
+          <!-- Logo -->
+          <a href="{% url 'home' %}"
+             class="font-['Fraunces'] text-2xl font-bold tracking-tight text-[#1565C0]">
+            <img src="{% static 'images/logo/logo.jpeg' %}"
+                 alt="logo"
+                 class="h-[17vh] w-[75%]" />
+          </a>
+          <!-- Desktop navigation -->
+          <div class="hidden items-center gap-6 md:flex">
+            <a href="{% url 'home' %}"
+               class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">{% translate "Home" %}</a>
+            <a href="{% url 'about' %}"
+               class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">{% translate "About" %}</a>
             {% if request.user.is_authenticated %}
-              <li class="nav-item">
-                <a class="nav-link"
-                   href="{% url 'users:detail' request.user.pk %}">{% translate "My Profile" %}</a>
-              </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
-              </li>
+              <a href="{% url 'users:detail' request.user.pk %}"
+                 class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">
+                {% translate "My Profile" %}
+              </a>
+              <form method="post" action="{% url 'users:logout' %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7]">
+                  {% translate "Se déconnecter" %}
+                </button>
+              </form>
             {% else %}
+              <a href="{% url 'users:login' %}"
+                 class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7]">
+                {% translate "Sign In" %}
+              </a>
               {% if ACCOUNT_ALLOW_REGISTRATION %}
-                <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
-                </li>
+                <a id="sign-up-link"
+                   href="{% url 'users:signup' %}"
+                   class="rounded-[10px] bg-[#1565C0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0D47A1] focus:outline-none focus:ring-2 focus:ring-[#1565C0] focus:ring-offset-2">
+                  {% translate "Sign Up" %}
+                </a>
               {% endif %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
-              </li>
             {% endif %}
-          </ul>
+          </div>
+        </nav>
+      </header>
+      <!-- Django messages -->
+      {% if messages %}
+        <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+          <div class="space-y-3">
+            {% for message in messages %}
+              <div class="rounded-[10px] border border-[#D6DCE6] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm"
+                   role="alert">{{ message }}</div>
+            {% endfor %}
+          </div>
         </div>
-      </div>
-    </nav>
-  </div>
-  <div class="container">
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-          {{ message }}
-          <button type="button"
-                  class="btn-close"
-                  data-bs-dismiss="alert"
-                  aria-label="Close"></button>
+      {% endif %}
+      <!-- Main content -->
+      <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+        {% block main %}
+          {% block content %}
+          {% endblock content %}
+        {% endblock main %}
+      </main>
+      <!-- Footer -->
+      <footer class="border-t border-[#D6DCE6] bg-white">
+        <div class="mx-auto max-w-7xl px-4 py-6 text-center text-sm text-[#5A6478] sm:px-6 lg:px-8">
+          © {% now "Y" %} StageLink. {% translate "All rights reserved." %}
         </div>
-      {% endfor %}
-    {% endif %}
-    {% block main %}
-      {% block content %}
-        <p>Use this document as a way to quick start any new project.</p>
-      {% endblock content %}
-    {% endblock main %}
-
-  </div>
-  {% endblock body %}
-  <!-- /container -->
-  {% block modal %}
-  {% endblock modal %}
-  {% block inline_javascript %}
-    {% comment %}
-    Script tags with only code, no src (defer by default). To run
-    with a "defer" so that you run inline code:
-    <script>
-      window.addEventListener('DOMContentLoaded', () => {
-        /* Run whatever you want */
-      });
-    </script>
-    {% endcomment %}
-  {% endblock inline_javascript %}
-</body>
+      </footer>
+    {% endblock body %}
+    {% block modal %}
+    {% endblock modal %}
+    {% block inline_javascript %}
+    {% endblock inline_javascript %}
+  </body>
 </html>
