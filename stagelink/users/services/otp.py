@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import secrets
@@ -9,8 +8,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from stagelink.utils.email import EmailUtil
 from stagelink.users.models import OTPVerification
+from stagelink.utils.email import EmailUtil
 
 
 class OTPService:
@@ -50,15 +49,12 @@ class OTPService:
 
         expiration_minutes = cls._get_expiration_minutes()
 
-        otp = OTPVerification.objects.create(
+        return OTPVerification.objects.create(
             user=user,
             code=cls._generate_code(),
             otp_type=otp_type,
-            expires_at=timezone.now()
-            + timedelta(minutes=expiration_minutes),
+            expires_at=timezone.now() + timedelta(minutes=expiration_minutes),
         )
-
-        return otp
 
     @classmethod
     def send_otp(

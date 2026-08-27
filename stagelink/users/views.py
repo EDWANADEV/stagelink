@@ -2,32 +2,28 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .forms import LoginForm
-from .forms import UserSignupForm
-from .forms import SignupForm
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import login
 from django.contrib.auth import logout
-from django.urls import reverse
-from django.urls import reverse_lazy
-from django.utils.translation import gettext_lazy as _
-from django.views.generic import DetailView
-from django.views.generic import RedirectView
-from django.views.generic import FormView
-from django.views import View
-from django.views.generic import UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import redirect
 from django.shortcuts import render
-
-from .models import User
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+from django.views import View
+from django.views.generic import DetailView
+from django.views.generic import FormView
+from django.views.generic import RedirectView
+from django.views.generic import UpdateView
 
 from stagelink.users.forms import OTPVerificationForm
 from stagelink.users.models import OTPVerification
 from stagelink.users.services.otp import OTPService
 
-
+from .forms import LoginForm
+from .forms import UserSignupForm
+from .models import User
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -67,7 +63,6 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
 
 
 user_redirect_view = UserRedirectView.as_view()
-
 
 
 class LoginView(FormView):
@@ -137,14 +132,16 @@ class SignupView(View):
 
         messages.success(
             request,
-            _("Votre compte a été créé. Un code de vérification vous a été envoyé par e-mail."),
+            _(
+                "Votre compte a été créé."
+                "Un code de vérification vous a été envoyé par e-mail.",
+            ),
         )
 
         return redirect("users:verify-email")
 
 
 signup_view = SignupView.as_view()
-
 
 
 class VerifyEmailView(LoginRequiredMixin, FormView):
@@ -182,7 +179,6 @@ class VerifyEmailView(LoginRequiredMixin, FormView):
 verify_email_view = VerifyEmailView.as_view()
 
 
-
 class LogoutView(View):
     def post(self, request):
         logout(request)
@@ -196,5 +192,3 @@ class LogoutView(View):
 
 
 logout_view = LogoutView.as_view()
-
-

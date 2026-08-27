@@ -1,64 +1,55 @@
-
 {% load i18n static %}
 
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% translate "Vérification de votre adresse e-mail" %}</title>
-</head>
-
-<body style="margin:0; padding:0; background:#EEF2F7; font-family:Arial, sans-serif; color:#16203A;">
-
-  <div style="max-width:600px; margin:40px auto; padding:0 20px;">
-
-    <div style="background:#FFFFFF; border-radius:16px; padding:40px; border:1px solid #D6DCE6;">
-
-      <div style="text-align:center; margin-bottom:32px;">
-        <div style="font-size:28px; font-weight:700; color:#1565C0;">
-          StageLink
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% translate "Vérification de votre adresse e-mail" %}</title>
+  </head>
+  <body style="margin:0;
+               padding:0;
+               background:#EEF2F7;
+               font-family:Arial, sans-serif;
+               color:#16203A">
+    <div style="max-width:600px; margin:40px auto; padding:0 20px;">
+      <div style="background:#FFFFFF;
+                  border-radius:16px;
+                  padding:40px;
+                  border:1px solid #D6DCE6">
+        <div style="text-align:center; margin-bottom:32px;">
+          <div style="font-size:28px; font-weight:700; color:#1565C0;">StageLink</div>
         </div>
-      </div>
-
-      <h1 style="font-size:24px; margin:0 0 16px; text-align:center;">
-        {% translate "Vérifiez votre adresse e-mail" %}
-      </h1>
-
-      <p style="font-size:15px; line-height:1.6; color:#5A6478;">
-        {% blocktranslate with name=user.name %}
+        <h1 style="font-size:24px; margin:0 0 16px; text-align:center;">{% translate "Vérifiez votre adresse e-mail" %}</h1>
+        <p style="font-size:15px; line-height:1.6; color:#5A6478;">
+          {% blocktranslate with name=user.name %}
           Bonjour {{ name }}, utilisez le code ci-dessous pour vérifier votre adresse e-mail et terminer votre inscription sur StageLink.
         {% endblocktranslate %}
-      </p>
-
-      <div style="margin:32px 0; padding:24px; background:#EEF2F7; border-radius:12px; text-align:center;">
-        <div style="font-size:12px; color:#5A6478; margin-bottom:8px;">
-          {% translate "Votre code de vérification" %}
-        </div>
-
-        <div style="font-size:36px; font-weight:700; letter-spacing:8px; color:#1565C0;">
-          {{ otp_code }}
-        </div>
-      </div>
-
-      <p style="font-size:14px; line-height:1.6; color:#5A6478;">
-        {% translate "Ce code est valable pendant 10 minutes." %}
-      </p>
-
-      <p style="font-size:14px; line-height:1.6; color:#5A6478;">
-        {% translate "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail." %}
-      </p>
-
-      <div style="margin-top:32px; padding-top:20px; border-top:1px solid #E2E6ED; text-align:center;">
-        <p style="font-size:12px; color:#8A94A6; margin:0;">
-          © {% now "Y" %} StageLink
         </p>
+        <div style="margin:32px 0;
+                    padding:24px;
+                    background:#EEF2F7;
+                    border-radius:12px;
+                    text-align:center">
+          <div style="font-size:12px; color:#5A6478; margin-bottom:8px;">{% translate "Votre code de vérification" %}</div>
+          <div style="font-size:36px;
+                      font-weight:700;
+                      letter-spacing:8px;
+                      color:#1565C0">{{ otp_code }}</div>
+        </div>
+        <p style="font-size:14px; line-height:1.6; color:#5A6478;">
+          {% translate "Ce code est valable pendant 10 minutes." %}
+        </p>
+        <p style="font-size:14px; line-height:1.6; color:#5A6478;">
+          {% translate "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail." %}
+        </p>
+        <div style="margin-top:32px;
+                    padding-top:20px;
+                    border-top:1px solid #E2E6ED;
+                    text-align:center">
+          <p style="font-size:12px; color:#8A94A6; margin:0;">© {% now "Y" %} StageLink</p>
+        </div>
       </div>
-
     </div>
-
-  </div>
-
-</body>
+  </body>
 </html>
-

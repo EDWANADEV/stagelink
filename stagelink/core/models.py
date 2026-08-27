@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import uuid
@@ -76,6 +75,9 @@ class BaseModel(models.Model):
         abstract = True
         ordering = ["-created_at"]
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__} ({self.pk})"
+
     def soft_delete(self, user: User | None = None) -> None:
         """Soft-delete this instance."""
         self.is_deleted = True
@@ -99,7 +101,3 @@ class BaseModel(models.Model):
                 "updated_at",
             ],
         )
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__} ({self.pk})"
-

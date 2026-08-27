@@ -1,18 +1,13 @@
-from allauth.account.forms import SignupForm
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
-
 from django import forms
-from django.contrib.auth import forms as admin_forms
 from django.contrib.auth import authenticate
+from django.contrib.auth import forms as admin_forms
 from django.contrib.auth import password_validation
-from django.contrib.auth.models import User
 from django.forms import EmailField
 from django.utils.translation import gettext_lazy as _
 
-from .models import User
 from .models import Role
-
-
+from .models import User
 
 
 class UserAdminChangeForm(admin_forms.UserChangeForm):
@@ -36,12 +31,79 @@ class UserAdminCreationForm(admin_forms.AdminUserCreationForm):
         }
 
 
-class UserSignupForm(SignupForm):
-    """
-    Form that will be rendered on a user sign up section/screen.
-    Default fields will be added automatically.
-    Check UserSocialSignupForm for accounts created from social.
-    """
+class UserSignupForm(forms.Form):
+    role = forms.ChoiceField(
+        label=_("Je suis"),
+        choices=Role.choices,
+        widget=forms.RadioSelect,
+        required=True,
+    )
+
+    email = forms.EmailField(
+        label=_("Adresse e-mail"),
+        required=True,
+        widget=forms.EmailInput(
+            attrs={
+                "autocomplete": "email",
+                "placeholder": _("exemple@email.com"),
+            },
+        ),
+    )
+
+    password = forms.CharField(
+        label=_("Mot de passe"),
+        required=True,
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "autocomplete": "new-password",
+                "placeholder": _("Votre mot de passe"),
+            },
+        ),
+    )
+
+    password_confirmation = forms.CharField(
+        label=_("Confirmer le mot de passe"),
+        required=True,
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "autocomplete": "new-password",
+                "placeholder": _("Confirmez votre mot de passe"),
+            },
+        ),
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].lower().strip()
+
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                _("Cette adresse e-mail est déjà utilisée."),
+            )
+
+        return email
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+
+        password_validation.validate_password(password)
+
+        return password
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        password = cleaned_data.get("password")
+        password_confirmation = cleaned_data.get("password_confirmation")
+
+        if password and password_confirmation and password != password_confirmation:
+            self.add_error(
+                "password_confirmation",
+                _("Les deux mots de passe ne correspondent pas."),
+            )
+
+        return cleaned_data
 
 
 class UserSocialSignupForm(SocialSignupForm):
@@ -50,7 +112,6 @@ class UserSocialSignupForm(SocialSignupForm):
     Default fields will be added automatically.
     See UserSignupForm otherwise.
     """
-
 
 
 class LoginForm(forms.Form):
@@ -102,7 +163,7 @@ class LoginForm(forms.Form):
 
         if not User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError(
-                _("Aucun compte n'est associé à cette adresse e-mail.")
+                _("Aucun compte n'est associé à cette adresse e-mail."),
             )
 
         return email
@@ -124,98 +185,18 @@ class LoginForm(forms.Form):
 
         if self.user_cache is None:
             raise forms.ValidationError(
-                _("L'adresse e-mail ou le mot de passe est incorrect.")
+                _("L'adresse e-mail ou le mot de passe est incorrect."),
             )
 
         if not self.user_cache.is_active:
             raise forms.ValidationError(
-                _("Ce compte est actuellement désactivé.")
+                _("Ce compte est actuellement désactivé."),
             )
 
         return cleaned_data
 
     def get_user(self):
         return self.user_cache
-    
-
-class UserSignupForm(forms.Form):
-    role = forms.ChoiceField(
-        label=_("Je suis"),
-        choices=Role.choices,
-        widget=forms.RadioSelect,
-        required=True,
-    )
-
-    email = forms.EmailField(
-        label=_("Adresse e-mail"),
-        required=True,
-        widget=forms.EmailInput(
-            attrs={
-                "autocomplete": "email",
-                "placeholder": _("exemple@email.com"),
-            }
-        ),
-    )
-
-    password = forms.CharField(
-        label=_("Mot de passe"),
-        required=True,
-        strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                "autocomplete": "new-password",
-                "placeholder": _("Votre mot de passe"),
-            }
-        ),
-    )
-
-    password_confirmation = forms.CharField(
-        label=_("Confirmer le mot de passe"),
-        required=True,
-        strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                "autocomplete": "new-password",
-                "placeholder": _("Confirmez votre mot de passe"),
-            }
-        ),
-    )
-
-    def clean_email(self):
-        email = self.cleaned_data["email"].lower().strip()
-
-        if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError(
-                _("Cette adresse e-mail est déjà utilisée.")
-            )
-
-        return email
-
-    def clean_password(self):
-        password = self.cleaned_data["password"]
-
-        password_validation.validate_password(password)
-
-        return password
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        password = cleaned_data.get("password")
-        password_confirmation = cleaned_data.get("password_confirmation")
-
-        if (
-            password
-            and password_confirmation
-            and password != password_confirmation
-        ):
-            self.add_error(
-                "password_confirmation",
-                _("Les deux mots de passe ne correspondent pas."),
-            )
-
-        return cleaned_data
-
 
 
 class OTPVerificationForm(forms.Form):

@@ -1,168 +1,91 @@
-
 {% extends "base.html" %}
+
 {% load i18n %}
 
 {% block title %}
   {% translate "Vérifier votre adresse e-mail" %}
 {% endblock title %}
-
 {% block content %}
-
-<div class="mx-auto flex min-h-[70vh] max-w-md items-center justify-center">
-
-  <div class="w-full">
-
-    <!-- Header -->
-    <div class="mb-8 text-center">
-
-      <div
-        class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF2F7]"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-7 w-7 text-[#1565C0]"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="1.8"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-      </div>
-
-      <h1 class="text-3xl font-bold tracking-tight text-[#16203A]">
-        {% translate "Vérifiez votre adresse e-mail" %}
-      </h1>
-
-      <p class="mt-3 text-sm leading-6 text-[#5A6478]">
-        {% translate "Nous avons envoyé un code de vérification à votre adresse e-mail." %}
-      </p>
-
-      <p class="mt-1 text-sm font-medium text-[#16203A]">
-        {{ request.user.email }}
-      </p>
-
-    </div>
-
-    <!-- Card -->
-    <div
-      class="rounded-2xl border border-[#D6DCE6] bg-white p-6 shadow-sm sm:p-8"
-    >
-
-      <form
-        method="post"
-        action="{% url 'users:verify-email' %}"
-        class="space-y-6"
-      >
-
-        {% csrf_token %}
-
-        <!-- Global errors -->
-        {% if form.non_field_errors %}
-          <div
-            class="rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-            role="alert"
-          >
-            {{ form.non_field_errors }}
-          </div>
-        {% endif %}
-
-        <!-- OTP -->
-        <div>
-
-          <label
-            for="{{ form.code.id_for_label }}"
-            class="mb-2 block text-sm font-semibold text-[#16203A]"
-          >
-            {% translate "Code de vérification" %}
-          </label>
-
-          <input
-            type="text"
-            name="{{ form.code.html_name }}"
-            id="{{ form.code.id_for_label }}"
-            value="{{ form.code.value|default:'' }}"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-            maxlength="6"
-            pattern="[0-9]{6}"
-            placeholder="000000"
-            required
-            autofocus
-            class="block w-full rounded-[10px] border border-[#B8C1D1] bg-white px-4 py-4 text-center text-2xl font-semibold tracking-[0.45em] text-[#16203A] shadow-sm outline-none transition placeholder:text-[#B8C1D1] focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20"
-            aria-describedby="otp-help"
-          />
-
-          <p
-            id="otp-help"
-            class="mt-2 text-xs text-[#8A94A6]"
-          >
-            {% translate "Entrez les 6 chiffres reçus par e-mail." %}
-          </p>
-
-          {% if form.code.errors %}
-            <p
-              class="mt-2 text-sm font-medium text-red-600"
-              role="alert"
-            >
-              {{ form.code.errors|striptags }}
-            </p>
-          {% endif %}
-
+  <div class="mx-auto flex min-h-[70vh] max-w-md items-center justify-center">
+    <div class="w-full">
+      <!-- Header -->
+      <div class="mb-8 text-center">
+        <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF2F7]">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-7 w-7 text-[#1565C0]"
+               fill="none"
+               viewBox="0 0 24 24"
+               stroke="currentColor"
+               stroke-width="1.8"
+               aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
         </div>
-
-        <!-- Submit -->
-        <button
-          type="submit"
-          class="w-full rounded-[10px] bg-[#1565C0] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0D47A1] focus:outline-none focus:ring-2 focus:ring-[#1565C0] focus:ring-offset-2"
-        >
-          {% translate "Vérifier mon adresse e-mail" %}
-        </button>
-
-      </form>
-
-      <!-- Resend -->
-      <div class="mt-6 border-t border-[#E2E6ED] pt-6 text-center">
-
-        <p class="text-sm text-[#5A6478]">
-          {% translate "Vous n'avez pas reçu le code ?" %}
+        <h1 class="text-3xl font-bold tracking-tight text-[#16203A]">{% translate "Vérifiez votre adresse e-mail" %}</h1>
+        <p class="mt-3 text-sm leading-6 text-[#5A6478]">
+          {% translate "Nous avons envoyé un code de vérification à votre adresse e-mail." %}
         </p>
-
-        <form
-          method="post"
-          action="{% url 'users:verify-email' %}"
-          class="mt-2"
-        >
-          {% csrf_token %}
-
-          <button
-            type="submit"
-            name="resend"
-            value="1"
-            class="text-sm font-semibold text-[#1565C0] transition hover:text-[#0D47A1]"
-          >
-            {% translate "Renvoyer le code" %}
-          </button>
-
-        </form>
-
+        <p class="mt-1 text-sm font-medium text-[#16203A]">{{ request.user.email }}</p>
       </div>
-
+      <!-- Card -->
+      <div class="rounded-2xl border border-[#D6DCE6] bg-white p-6 shadow-sm sm:p-8">
+        <form method="post"
+              action="{% url 'users:verify-email' %}"
+              class="space-y-6">
+          {% csrf_token %}
+          <!-- Global errors -->
+          {% if form.non_field_errors %}
+            <div class="rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                 role="alert">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <!-- OTP -->
+          <div>
+            <label for="{{ form.code.id_for_label }}"
+                   class="mb-2 block text-sm font-semibold text-[#16203A]">
+              {% translate "Code de vérification" %}
+            </label>
+            <input type="text"
+                   name="{{ form.code.html_name }}"
+                   id="{{ form.code.id_for_label }}"
+                   value="{{ form.code.value|default:'' }}"
+                   inputmode="numeric"
+                   autocomplete="one-time-code"
+                   maxlength="6"
+                   pattern="[0-9]{6}"
+                   placeholder="000000"
+                   required
+                   autofocus
+                   class="block w-full rounded-[10px] border border-[#B8C1D1] bg-white px-4 py-4 text-center text-2xl font-semibold tracking-[0.45em] text-[#16203A] shadow-sm outline-none transition placeholder:text-[#B8C1D1] focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20"
+                   aria-describedby="otp-help" />
+            <p id="otp-help" class="mt-2 text-xs text-[#8A94A6]">{% translate "Entrez les 6 chiffres reçus par e-mail." %}</p>
+            {% if form.code.errors %}
+              <p class="mt-2 text-sm font-medium text-red-600" role="alert">{{ form.code.errors|striptags }}</p>
+            {% endif %}
+          </div>
+          <!-- Submit -->
+          <button type="submit"
+                  class="w-full rounded-[10px] bg-[#1565C0] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0D47A1] focus:outline-none focus:ring-2 focus:ring-[#1565C0] focus:ring-offset-2">
+            {% translate "Vérifier mon adresse e-mail" %}
+          </button>
+        </form>
+        <!-- Resend -->
+        <div class="mt-6 border-t border-[#E2E6ED] pt-6 text-center">
+          <p class="text-sm text-[#5A6478]">{% translate "Vous n'avez pas reçu le code ?" %}</p>
+          <form method="post" action="{% url 'users:verify-email' %}" class="mt-2">
+            {% csrf_token %}
+            <button type="submit"
+                    name="resend"
+                    value="1"
+                    class="text-sm font-semibold text-[#1565C0] transition hover:text-[#0D47A1]">
+              {% translate "Renvoyer le code" %}
+            </button>
+          </form>
+        </div>
+      </div>
+      <!-- Security information -->
+      <p class="mt-6 text-center text-xs leading-5 text-[#8A94A6]">
+        {% translate "Pour votre sécurité, ce code est temporaire et ne peut être utilisé qu'une seule fois." %}
+      </p>
     </div>
-
-    <!-- Security information -->
-    <p class="mt-6 text-center text-xs leading-5 text-[#8A94A6]">
-      {% translate "Pour votre sécurité, ce code est temporaire et ne peut être utilisé qu'une seule fois." %}
-    </p>
-
   </div>
-
-</div>
-
 {% endblock content %}
-

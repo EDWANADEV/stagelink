@@ -1,18 +1,17 @@
-
 from typing import ClassVar
 
+from stagelink.core.models import BaseModel
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 from django.db.models import CharField
 from django.db.models import EmailField
-from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from core.models import BaseModel
+from stagelink.utils.enums import Role
+
 from .managers import UserManager
 
-from utils.enums import Role
 
-    
 class User(AbstractUser):
     """
     Default custom user model for StageLink.
@@ -42,8 +41,8 @@ class User(AbstractUser):
 
     def get_absolute_url(self) -> str:
         return reverse("users:detail", kwargs={"pk": self.id})
-    
-    
+
+
 class OTPVerification(BaseModel):
     class OTPType(models.TextChoices):
         SIGNUP = "SIGNUP", _("Inscription")
@@ -74,7 +73,6 @@ class OTPVerification(BaseModel):
         _("Nombre de tentatives"),
         default=0,
     )
-    
 
     class Meta:
         ordering = ["-created_at"]
@@ -83,4 +81,3 @@ class OTPVerification(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.user.email} - {self.otp_type}"
-    
