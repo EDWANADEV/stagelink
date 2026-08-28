@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 import uuid
@@ -74,7 +75,7 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
         ordering = ["-created_at"]
-
+        
     def __str__(self) -> str:
         return f"{self.__class__.__name__} ({self.pk})"
 
@@ -101,3 +102,4 @@ class BaseModel(models.Model):
                 "updated_at",
             ],
         )
+

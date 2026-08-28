@@ -55,7 +55,7 @@ class OTPVerification(BaseModel):
     )
     code = models.CharField(
         _("Code OTP"),
-        max_length=6,
+        max_length=128,
     )
     otp_type = models.CharField(
         _("Type de vérification"),

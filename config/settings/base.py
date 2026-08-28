@@ -26,6 +26,27 @@ EMAIL_LOGO_PATH = env(
 
 OTP_EXPIRATION_MINUTES = env.int(
     "OTP_EXPIRATION_MINUTES",
+    default=5,
+)
+OTP_MAX_ATTEMPTS = env.int(
+    "DJANGO_OTP_MAX_ATTEMPTS",
+    default=5,
+)
+
+OTP_LENGTH = env.int(
+    "DJANGO_OTP_LENGTH",
+    default=6,
+)
+
+# File upload configuration
+
+MAX_CV_SIZE_MB = env.int(
+    "DJANGO_MAX_CV_SIZE_MB",
+    default=20,
+)
+
+MAX_COMPANY_LOGO_SIZE_MB = env.int(
+    "DJANGO_MAX_COMPANY_LOGO_SIZE_MB",
     default=10,
 )
 
@@ -120,6 +141,8 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "stagelink.users",
     "stagelink.core",
+    "stagelink.profiles",
+    "stagelink.offers",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

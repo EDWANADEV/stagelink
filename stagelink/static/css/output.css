@@ -296,6 +296,15 @@
   .h-\[17vh\] {
     height: 17vh;
   }
+  .h-\[20vh\] {
+    height: 20vh;
+  }
+  .h-\[30vh\] {
+    height: 30vh;
+  }
+  .h-\[vh\] {
+    height: vh;
+  }
   .min-h-14 {
     min-height: calc(var(--spacing) * 14);
   }
@@ -317,8 +326,23 @@
   .w-14 {
     width: calc(var(--spacing) * 14);
   }
+  .w-\[\%\] {
+    width: %;
+  }
+  .w-\[05\%\] {
+    width: 05%;
+  }
+  .w-\[5\%\] {
+    width: 5%;
+  }
   .w-\[75\%\] {
     width: 75%;
+  }
+  .w-\[85\%\] {
+    width: 85%;
+  }
+  .w-\[99\%\] {
+    width: 99%;
   }
   .w-full {
     width: 100%;
