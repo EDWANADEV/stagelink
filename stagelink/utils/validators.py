@@ -9,14 +9,15 @@ from PIL import Image
 from pypdf import PdfReader
 
 def validate_phone_number(value: str) -> None:
-    """Validate a phone number using the international E.164 format."""
-    if not re.fullmatch(r"\+[1-4]\d{1,9}", value):
-        raise ValidationError(
-            _(
-                "Le numéro de téléphone doit être au format "
-                "international E.164, par exemple : +237XXXXXXXXX."
-            ),
-        )
+    """
+    Validate that *value* is a well-formed international phone number.
+    (Does not modify the value - use normalize_phone_number() if you need
+    a normalized version.)
+    """
+    if not value:
+        return
+    # Just call normalize_phone_number - it raises on invalid input
+    normalize_phone_number(value)
 
 
 def validate_cv(file) -> None:
@@ -93,4 +94,3 @@ def validate_company_logo(file) -> None:
 
     finally:
         file.seek(0)
-        
