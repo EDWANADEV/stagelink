@@ -143,6 +143,7 @@ LOCAL_APPS = [
     "stagelink.core",
     "stagelink.profiles",
     "stagelink.offers",
+    "stagelink.application",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

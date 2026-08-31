@@ -1,6 +1,6 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
-from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from djmoney.models.fields import MoneyField
@@ -8,6 +8,10 @@ from djmoney.models.fields import MoneyField
 from stagelink.core.models import BaseModel
 from stagelink.profiles.models import CompanyProfile
 from stagelink.utils.enums import OfferStatus
+from stagelink.utils.enums import ApplicationMode
+from stagelink.utils.enums import SalaryPeriod
+from .managers import InternshipOfferManager
+
 
 
 class InternshipOffer(BaseModel):
@@ -15,11 +19,12 @@ class InternshipOffer(BaseModel):
 
     company = models.ForeignKey(
         CompanyProfile,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="internship_offers",
         verbose_name=_("Entreprise"),
     )
-
     title = models.CharField(
         _("Titre"),
         max_length=255,
@@ -78,11 +83,9 @@ class InternshipOffer(BaseModel):
 
     salary_period = models.CharField(
         _("Période de rémunération"),
-        max_length=20,
+        max_length=10,
+        choices=SalaryPeriod.choices,
         blank=True,
-        help_text=_(
-            "Exemple : jour, semaine ou mois."
-        ),
     )
 
     available_positions = models.PositiveIntegerField(
@@ -104,6 +107,18 @@ class InternshipOffer(BaseModel):
         blank=True,
         db_index=True,
     )
+    application_mode = models.CharField(
+        _("Mode de candidature"),
+        max_length=10,
+        choices=ApplicationMode.choices,
+        default=ApplicationMode.INTERNAL,
+    )
+
+    application_url = models.URLField(
+        _("URL de candidature externe"),
+        blank=True,
+    )
+    objects = InternshipOfferManager()
 
     class Meta:
         verbose_name = _("Offre de stage")
@@ -112,6 +127,35 @@ class InternshipOffer(BaseModel):
 
     def __str__(self) -> str:
         return self.title
+
+    def clean(self) -> None:
+        """Valide la cohérence du mode de candidature."""
+
+        super().clean()
+
+        if (
+            self.application_mode == ApplicationMode.EXTERNAL
+            and not self.application_url
+        ):
+            raise ValidationError(
+                {
+                    "application_url": _(
+                        "Une URL est requise pour une candidature externe.",
+                    ),
+                },
+            )
+
+        if (
+            self.application_mode == ApplicationMode.INTERNAL
+            and self.application_url
+        ):
+            raise ValidationError(
+                {
+                    "application_url": _(
+                        "Une candidature interne ne doit pas avoir d'URL externe.",
+                    ),
+                },
+            )
 
     @property
     def formatted_duration(self) -> str:

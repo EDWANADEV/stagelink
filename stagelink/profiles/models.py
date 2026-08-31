@@ -6,17 +6,13 @@ from stagelink.core.models import BaseModel
 from stagelink.utils.validators import validate_cv
 from stagelink.utils.validators import validate_company_logo
 from stagelink.utils.validators import validate_phone_number
+from stagelink.utils.enums import Language
 
 
 class StudentProfile(BaseModel):
     """
     Profile containing information specific to a StageLink student.
     """
-
-    LANGUAGE_CHOICES = [
-        ("fr", _("Français")),
-        ("en", _("English")),
-    ]
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -44,8 +40,8 @@ class StudentProfile(BaseModel):
     language = models.CharField(
         _("Langue"),
         max_length=2,
-        choices=LANGUAGE_CHOICES,
-        default="fr",
+        choices=Language.choices,
+        default=Language.FRENCH,
     )
 
     cv = models.FileField(
