@@ -29,7 +29,7 @@ class Application(BaseModel):
         _("Statut"),
         max_length=20,
         choices=ApplicationStatus.choices,
-        default=ApplicationStatus.received,
+        default=ApplicationStatus.RECEIVED,
         db_index=True,
     )
 

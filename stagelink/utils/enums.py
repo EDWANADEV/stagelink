@@ -36,4 +36,7 @@ class ApplicationStatus(models.TextChoices):
     REJECTED = "rejected", _("Refusée")
     WITHDRAWN = "withdrawn", _("Retirée")
 
-    
+class NotificationType(models.TextChoices):
+    APPLICATION = "application", _("Candidature")
+    OFFER = "offer", _("Offre")
+    SYSTEM = "system", _("Système")   
