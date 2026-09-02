@@ -38,8 +38,21 @@ OTP_LENGTH = env.int(
     default=6,
 )
 
-# File upload configuration
+# Configuration Flutterwave (Sécurisée avec valeurs par défaut)
+FLW_PUBLIC_KEY = env("FLW_PUBLIC_KEY", default="")
+FLW_SECRET_KEY = env("FLW_SECRET_KEY", default="")
+FLW_WEBHOOK_SECRET = env("FLW_WEBHOOK_SECRET", default="")
 
+# Configuration Stripe (Sécurisée avec valeurs par défaut)
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+
+# Reviews
+REVIEW_MIN_RATING = env.int("REVIEW_MIN_RATING", default=1)
+REVIEW_MAX_RATING = env.int("REVIEW_MAX_RATING", default=5)
+REVIEW_MAX_PER_USER = env.int("REVIEW_MAX_PER_USER", default=1)
+
+# File upload configuration
 MAX_CV_SIZE_MB = env.int(
     "DJANGO_MAX_CV_SIZE_MB",
     default=20,
@@ -145,6 +158,9 @@ LOCAL_APPS = [
     "stagelink.offers",
     "stagelink.application",
     "stagelink.notifications",
+    "stagelink.donation",
+    "stagelink.payments",
+    "stagelink.reviews"
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

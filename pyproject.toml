@@ -41,6 +41,8 @@ dependencies = [
   "django-countries>=9.0.0",
   "django-money>=3.6.1",
   "pypdf>=6.16.2",
+  "requests>=2.34.2",
+  "stripe>=15.6.1",
 ]
 
 [dependency-groups]

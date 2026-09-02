@@ -1,5 +1,5 @@
 from io import BytesIO
-import re
+import phonenumbers
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -8,16 +8,20 @@ from django.utils.translation import gettext_lazy as _
 from PIL import Image
 from pypdf import PdfReader
 
-def validate_phone_number(value: str) -> None:
-    """
-    Validate that *value* is a well-formed international phone number.
-    (Does not modify the value - use normalize_phone_number() if you need
-    a normalized version.)
-    """
+def normalize_phone_number(value:str) -> str:
     if not value:
-        return
-    # Just call normalize_phone_number - it raises on invalid input
-    normalize_phone_number(value)
+        return value
+    try:
+        parsed = phonenumbers.parse(value, "CM") # Cameroun par défaut si non préfixé
+        if not phonenumbers.is_valid_number(parsed):
+            raise ValidationError(_("Numéro de téléphone international invalide."))
+        return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+    except phonenumbers.NumberParseException as e:
+        raise ValidationError(_("Numéro de téléphone international invalide.")) from e
+
+def validate_phone_number(value: str) -> None:
+    if value:
+        normalize_phone_number(value)
 
 
 def validate_cv(file) -> None:

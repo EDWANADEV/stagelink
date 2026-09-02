@@ -62,7 +62,6 @@ class StudentProfile(BaseModel):
         return self.user.name or self.user.email
 
 
-
 class CompanyProfile(BaseModel):
     """
     Profil d'une entreprise présente sur StageLink.

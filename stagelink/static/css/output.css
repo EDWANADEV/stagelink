@@ -30,9 +30,6 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
     --tracking-tight: -0.025em;
-    --radius-sm: 0.25rem;
-    --radius-md: 0.375rem;
-    --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -293,17 +290,11 @@
   .h-100 {
     height: calc(var(--spacing) * 100);
   }
+  .h-\[15vh\] {
+    height: 15vh;
+  }
   .h-\[17vh\] {
     height: 17vh;
-  }
-  .h-\[20vh\] {
-    height: 20vh;
-  }
-  .h-\[30vh\] {
-    height: 30vh;
-  }
-  .h-\[vh\] {
-    height: vh;
   }
   .min-h-14 {
     min-height: calc(var(--spacing) * 14);
@@ -326,23 +317,20 @@
   .w-14 {
     width: calc(var(--spacing) * 14);
   }
-  .w-\[\%\] {
-    width: %;
+  .w-\[0\%\] {
+    width: 0%;
   }
-  .w-\[05\%\] {
-    width: 05%;
+  .w-\[10\%\] {
+    width: 10%;
   }
-  .w-\[5\%\] {
-    width: 5%;
+  .w-\[40\%\] {
+    width: 40%;
   }
-  .w-\[75\%\] {
-    width: 75%;
+  .w-\[50\%\] {
+    width: 50%;
   }
-  .w-\[85\%\] {
-    width: 85%;
-  }
-  .w-\[99\%\] {
-    width: 99%;
+  .w-\[90\%\] {
+    width: 90%;
   }
   .w-full {
     width: 100%;
@@ -373,6 +361,9 @@
   }
   .flex-col {
     flex-direction: column;
+  }
+  .flex-row {
+    flex-direction: row;
   }
   .items-center {
     align-items: center;

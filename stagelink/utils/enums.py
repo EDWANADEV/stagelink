@@ -39,4 +39,30 @@ class ApplicationStatus(models.TextChoices):
 class NotificationType(models.TextChoices):
     APPLICATION = "application", _("Candidature")
     OFFER = "offer", _("Offre")
-    SYSTEM = "system", _("Système")   
+    SYSTEM = "system", _("Système")  
+
+
+class DonationStatus(models.TextChoices):
+    PENDING = "pending", _("En attente")
+    COMPLETED = "completed", _("Effectué")
+    FAILED = "failed", _("Échoué")
+    CANCELLED = "cancelled", _("Annulé")
+
+
+class PaymentStatus(models.TextChoices):
+    PENDING = "pending", _("En attente")
+    SUCCESS = "success", _("Réussi")
+    FAILED = "failed", _("Échoué")
+    CANCELLED = "cancelled", _("Annulé")
+    REFUNDED = "refunded", _("Remboursé")
+    PARTIALLY_REFUNDED = "partially_refunded", _("Partiellement remboursé")
+
+
+class PaymentMethod(models.TextChoices):
+    CARD = "card", _("Carte bancaire")
+    MOBILE_MONEY = "mobile_money", _("Mobile Money")
+
+
+class PaymentProvider(models.TextChoices):
+    FLUTTERWAVE = "flutterwave", _("Flutterwave")
+    STRIPE = "stripe", _("Stripe")     
