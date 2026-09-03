@@ -290,9 +290,6 @@
   .h-100 {
     height: calc(var(--spacing) * 100);
   }
-  .h-\[15vh\] {
-    height: 15vh;
-  }
   .h-\[17vh\] {
     height: 17vh;
   }
@@ -316,18 +313,6 @@
   }
   .w-14 {
     width: calc(var(--spacing) * 14);
-  }
-  .w-\[0\%\] {
-    width: 0%;
-  }
-  .w-\[10\%\] {
-    width: 10%;
-  }
-  .w-\[40\%\] {
-    width: 40%;
-  }
-  .w-\[50\%\] {
-    width: 50%;
   }
   .w-\[90\%\] {
     width: 90%;
