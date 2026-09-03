@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from stagelink.application.models import Application
 from stagelink.offers.models import InternshipOffer
 from stagelink.profiles.models import StudentProfile
+from stagelink.utils.enums import ApplicationMode
 from stagelink.utils.enums import ApplicationStatus
 
 
@@ -40,11 +41,32 @@ class ApplicationService:
         offer: InternshipOffer,
         cover_letter: str = "",
     ) -> Application:
-        """Soumet une candidature."""
+        """
+        Soumet une candidature à une offre.
+
+        Une candidature ne peut être créée que si :
+        - l'offre est disponible ;
+        - l'offre n'est pas supprimée ;
+        - l'étudiant n'a pas déjà candidaté à cette offre ;
+        - la candidature est interne.
+        """
+
+        if offer.is_deleted:
+            raise ValidationError(
+                _("Cette offre a été supprimée.")
+            )
 
         if not offer.is_available:
             raise ValidationError(
                 _("Cette offre n'est plus disponible.")
+            )
+
+        if offer.application_mode != ApplicationMode.INTERNAL:
+            raise ValidationError(
+                _(
+                    "Cette offre utilise une procédure de "
+                    "candidature externe."
+                )
             )
 
         if Application.objects.filter(
@@ -55,12 +77,16 @@ class ApplicationService:
                 _("Vous avez déjà candidaté à cette offre.")
             )
 
-        return Application.objects.create(
+        application = Application.objects.create(
             student=student,
             offer=offer,
             status=ApplicationStatus.RECEIVED,
             cover_letter=cover_letter,
+            created_by=student.user,
+            updated_by=student.user,
         )
+
+        return application
 
     @classmethod
     @transaction.atomic
@@ -69,8 +95,17 @@ class ApplicationService:
         *,
         application: Application,
         new_status: ApplicationStatus,
+        updated_by=None,
     ) -> Application:
-        """Change le statut d'une candidature si la transition est autorisée."""
+        """
+        Change le statut d'une candidature si la transition
+        est autorisée par le diagramme d'états.
+        """
+
+        if application.is_deleted:
+            raise ValidationError(
+                _("Cette candidature a été supprimée.")
+            )
 
         current_status = application.status
 
@@ -91,14 +126,44 @@ class ApplicationService:
             )
 
         application.status = new_status
-        application.save(update_fields=["status", "updated_at"])
+
+        if updated_by is not None:
+            application.updated_by = updated_by
+
+        application.save(
+            update_fields=[
+                "status",
+                "updated_by",
+                "updated_at",
+            ]
+        )
 
         return application
 
-    @staticmethod
+    @classmethod
     @transaction.atomic
-    def withdraw(application: Application) -> Application:
-        """Permet à l'étudiant de retirer sa candidature."""
+    def withdraw(
+        cls,
+        *,
+        application: Application,
+        student=None,
+    ) -> Application:
+        """
+        Permet à l'étudiant de retirer sa candidature.
+
+        Si un StudentProfile est fourni, il doit être le propriétaire
+        de la candidature.
+        """
+
+        if application.is_deleted:
+            raise ValidationError(
+                _("Cette candidature a été supprimée.")
+            )
+
+        if student is not None and application.student_id != student.id:
+            raise ValidationError(
+                _("Vous ne pouvez pas retirer cette candidature.")
+            )
 
         if application.status in {
             ApplicationStatus.ACCEPTED,
@@ -110,7 +175,16 @@ class ApplicationService:
             )
 
         application.status = ApplicationStatus.WITHDRAWN
-        application.save(update_fields=["status", "updated_at"])
+
+        if student is not None:
+            application.updated_by = student.user
+
+        application.save(
+            update_fields=[
+                "status",
+                "updated_by",
+                "updated_at",
+            ]
+        )
 
         return application
-    

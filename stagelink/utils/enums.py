@@ -18,6 +18,11 @@ class OfferStatus(models.TextChoices):
     CLOSED = "CLOSED", _("Fermée")
 
 
+class OTPType(models.TextChoices):
+    SIGNUP = "SIGNUP", _("Inscription")
+    PASSWORD_RESET = "PASSWORD_RESET", _("Réinitialisation du mot de passe")
+
+
 class SalaryPeriod(models.TextChoices):
     DAY = "DAY", _("Jour")
     WEEK = "WEEK", _("Semaine")

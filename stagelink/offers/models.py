@@ -10,6 +10,7 @@ from stagelink.profiles.models import CompanyProfile
 from stagelink.utils.enums import OfferStatus
 from stagelink.utils.enums import ApplicationMode
 from stagelink.utils.enums import SalaryPeriod
+
 from .managers import InternshipOfferManager
 
 
@@ -190,11 +191,11 @@ class InternshipOffer(BaseModel):
             "months": months,
         }
 
-    @property
-    def is_available(self) -> bool:
-        """Indique si l'offre est actuellement disponible aux étudiants."""
-        return (
-            self.status == OfferStatus.PUBLISHED
-            and not self.is_deleted
-            and self.application_deadline >= timezone.now()
-        )
+@property
+def is_available(self) -> bool:
+    return (
+        self.status == OfferStatus.PUBLISHED
+        and not self.is_deleted
+        and self.available_positions > 0
+        and self.application_deadline >= timezone.now()
+    )

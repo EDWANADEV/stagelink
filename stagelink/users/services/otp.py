@@ -4,12 +4,11 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.hashers import make_password
-from django.core.mail import send_mail
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
 
 from stagelink.users.models import OTPVerification
 from stagelink.users.models import User
+from stagelink.users.tasks import send_otp_email
 
 
 class OTPService:
@@ -77,12 +76,16 @@ class OTPService:
                 update_fields=[
                     "attempts",
                     "is_used",
+                    "updated_at",
                 ],
             )
             return True
 
         verification.save(
-            update_fields=["attempts"],
+            update_fields=[
+                "attempts",
+                "updated_at",
+            ],
         )
 
         return False
@@ -92,18 +95,8 @@ class OTPService:
         verification: OTPVerification,
         code: str,
     ) -> None:
-        """Envoie le code OTP par e-mail."""
-        send_mail(
-            subject=_("Votre code de vérification StageLink"),
-            message=_(
-                "Votre code de vérification est : %(code)s\n\n"
-                "Ce code expire dans %(minutes)s minutes."
-            )
-            % {
-                "code": code,
-                "minutes": settings.OTP_EXPIRATION_MINUTES,
-            },
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[verification.user.email],
-            fail_silently=False,
+        """Planifie l'envoi du code OTP par e-mail."""
+        send_otp_email.delay(
+            str(verification.id),
+            code,
         )

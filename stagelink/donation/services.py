@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
-from stagelink.donations.models import Donation
+from stagelink.donation.models import Donation
 from stagelink.utils.enums import DonationStatus
 
 
@@ -27,4 +27,5 @@ class DonationService:
             donor=donor,
             amount=amount,
             status=DonationStatus.PENDING,
+            created_by=donor,
         )

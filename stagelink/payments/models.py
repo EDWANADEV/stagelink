@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from djmoney.models.fields import MoneyField
@@ -11,19 +10,20 @@ from stagelink.utils.enums import (
     PaymentStatus,
 )
 
+from .manager import PaymentManager
+
 
 class Payment(BaseModel):
     """
-    Represents a payment attempt associated with a donation.
+    Représente une tentative de paiement associée à un don.
 
-    A payment can be processed by different providers such as
-    Flutterwave or Stripe.
+    Un même don peut avoir plusieurs tentatives de paiement.
     """
 
-    donation = models.OneToOneField(
+    donation = models.ForeignKey(
         Donation,
         on_delete=models.PROTECT,
-        related_name="payment",
+        related_name="payments",
         verbose_name=_("Don"),
     )
 
@@ -101,6 +101,8 @@ class Payment(BaseModel):
         _("Motif de l'échec"),
         blank=True,
     )
+
+    objects = PaymentManager()
 
     class Meta:
         verbose_name = _("Paiement")

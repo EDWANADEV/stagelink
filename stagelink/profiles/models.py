@@ -49,7 +49,7 @@ class StudentProfile(BaseModel):
         upload_to="cv/",
         validators=[validate_cv],
         help_text=_(
-        "Format PDF uniquement, taille maximale de 20 Mo."
+            "Format PDF uniquement, taille maximale de 20 Mo."
             ),
         blank=True,
     )

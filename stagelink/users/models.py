@@ -8,6 +8,7 @@ from django.db.models import EmailField
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from stagelink.utils.enums import Role
+from stagelink.utils.enums import OTPType
 
 from .managers import UserManager
 
@@ -44,14 +45,11 @@ class User(AbstractUser):
 
 
 class OTPVerification(BaseModel):
-    class OTPType(models.TextChoices):
-        SIGNUP = "SIGNUP", _("Inscription")
-        PASSWORD_RESET = "PASSWORD_RESET", _("Réinitialisation du mot de passe")
-
     user = models.ForeignKey(
-        User,
+        "users.User",
         on_delete=models.CASCADE,
         related_name="otp_verifications",
+        verbose_name=_("Utilisateur"),
     )
     code = models.CharField(
         _("Code OTP"),
@@ -75,9 +73,9 @@ class OTPVerification(BaseModel):
     )
 
     class Meta:
-        ordering = ["-created_at"]
         verbose_name = _("Vérification OTP")
         verbose_name_plural = _("Vérifications OTP")
+        ordering = ["-created_at"]
 
     def __str__(self) -> str:
         return f"{self.user.email} - {self.otp_type}"

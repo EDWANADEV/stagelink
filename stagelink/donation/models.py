@@ -5,7 +5,7 @@ from djmoney.models.fields import MoneyField
 
 from stagelink.core.models import BaseModel
 from stagelink.utils.enums import DonationStatus
-
+from .managers import DonationManager
 
 class Donation(BaseModel):
     """Don volontaire effectué pour soutenir StageLink."""
@@ -33,6 +33,8 @@ class Donation(BaseModel):
         default=DonationStatus.PENDING,
         db_index=True,
     )
+
+    objects = DonationManager()
 
     class Meta:
         verbose_name = _("Don")

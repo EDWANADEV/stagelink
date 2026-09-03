@@ -1,41 +1,35 @@
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from .models import Review
+from .permissions import require_review_owner
 
 
 class ReviewService:
+    """Services métier liés aux avis de la plateforme."""
+
     @staticmethod
     @transaction.atomic
-    def create_review(*, user, rating, comment=""):
+    def create_review(
+        *,
+        user,
+        rating,
+        comment="",
+    ) -> Review:
+        """Crée un avis concernant la plateforme StageLink."""
+
         if not user.is_authenticated:
             raise ValidationError(
                 _("Vous devez être connecté pour laisser un avis.")
             )
 
-        if Review.objects.filter(user=user).count() >= settings.REVIEW_MAX_PER_USER:
+        if Review.objects.filter(user=user).exists():
             raise ValidationError(
-                _("Vous avez atteint le nombre maximum d'avis autorisés.")
+                _("Vous avez déjà laissé un avis.")
             )
 
-        if not (
-            settings.REVIEW_MIN_RATING
-            <= rating
-            <= settings.REVIEW_MAX_RATING
-        ):
-            raise ValidationError(
-                _(
-                    "La note doit être comprise entre %(minimum)s et %(maximum)s."
-                )
-                % {
-                    "minimum": settings.REVIEW_MIN_RATING,
-                    "maximum": settings.REVIEW_MAX_RATING,
-                }
-            )
-
-        return Review.objects.create(
+        review = Review(
             user=user,
             rating=rating,
             comment=comment,
@@ -43,27 +37,34 @@ class ReviewService:
             updated_by=user,
         )
 
+        review.full_clean()
+        review.save()
+
+        return review
+
     @staticmethod
     @transaction.atomic
-    def update_review(*, review, rating, comment=""):
-        if not (
-            settings.REVIEW_MIN_RATING
-            <= rating
-            <= settings.REVIEW_MAX_RATING
-        ):
+    def update_review(
+        *,
+        user,
+        review,
+        rating,
+        comment="",
+    ) -> Review:
+        """Modifie son propre avis."""
+
+        require_review_owner(user, review)
+
+        if review.is_deleted:
             raise ValidationError(
-                _(
-                    "La note doit être comprise entre %(minimum)s et %(maximum)s."
-                )
-                % {
-                    "minimum": settings.REVIEW_MIN_RATING,
-                    "maximum": settings.REVIEW_MAX_RATING,
-                }
+                _("Cet avis a été supprimé.")
             )
 
         review.rating = rating
         review.comment = comment
-        review.updated_by = review.user
+        review.updated_by = user
+
+        review.full_clean()
         review.save(
             update_fields=[
                 "rating",
@@ -74,4 +75,23 @@ class ReviewService:
         )
 
         return review
-    
+
+    @staticmethod
+    @transaction.atomic
+    def delete_review(
+        *,
+        user,
+        review,
+    ) -> Review:
+        """Supprime son propre avis via le soft delete."""
+
+        require_review_owner(user, review)
+
+        if review.is_deleted:
+            raise ValidationError(
+                _("Cet avis est déjà supprimé.")
+            )
+
+        review.soft_delete(user)
+
+        return review
