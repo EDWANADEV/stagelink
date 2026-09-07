@@ -1,3 +1,6 @@
+@import "tailwindcss";
+
+
 @font-face {
     font-family: "Inter";
     src: url("/static/fonts/Inter/Inter-Variable.ttf") format("truetype");
@@ -14,7 +17,6 @@
     font-display: swap;
 }
 
-@import "tailwindcss";
 
 @theme {
     /* ========================================
