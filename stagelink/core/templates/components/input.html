@@ -4,8 +4,11 @@
     Variables :
     - field : champ Django BoundField
     - type : text | email | password | number | date | ...
-    - placeholder : texte indicatif
+    - placeholder : texte indicatif déjà traduit
     - disabled : true | false
+
+    Les labels, textes d'aide et erreurs sont fournis par Django
+    et doivent être internationalisés au niveau du formulaire/modèle.
 {% endcomment %}
 
 <div class="w-full">
@@ -16,7 +19,12 @@
         {{ field.label }}
 
         {% if field.field.required %}
-            <span class="text-status-rejected-text" aria-hidden="true">*</span>
+            <span
+                class="text-status-rejected-text"
+                aria-hidden="true"
+            >
+                *
+            </span>
         {% endif %}
     </label>
 
@@ -57,6 +65,7 @@
             disabled:cursor-not-allowed
             disabled:bg-background
             disabled:opacity-60
+
             {% if field.errors %}
                 border-status-rejected-text
                 focus:border-status-rejected-text

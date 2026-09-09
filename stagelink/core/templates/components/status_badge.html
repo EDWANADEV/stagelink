@@ -3,31 +3,41 @@
 
     Variables :
     - status : valeur technique du statut
-    - label : libellé traduit à afficher
+    - label : libellé déjà traduit à afficher
 {% endcomment %}
 
 {% if status == "received" %}
-    <span class="inline-flex items-center rounded-badge bg-status-received-bg px-2.5 py-1 text-xs font-semibold text-status-received-text whitespace-nowrap">
+    <span
+        class="inline-flex items-center whitespace-nowrap rounded-badge bg-status-received-bg px-2.5 py-1 text-xs font-semibold text-status-received-text"
+    >
         {{ label }}
     </span>
 
 {% elif status == "viewed" %}
-    <span class="inline-flex items-center rounded-badge bg-status-viewed-bg px-2.5 py-1 text-xs font-semibold text-status-viewed-text whitespace-nowrap">
+    <span
+        class="inline-flex items-center whitespace-nowrap rounded-badge bg-status-viewed-bg px-2.5 py-1 text-xs font-semibold text-status-viewed-text"
+    >
         {{ label }}
     </span>
 
 {% elif status == "interview" %}
-    <span class="inline-flex items-center rounded-badge bg-status-interview-bg px-2.5 py-1 text-xs font-semibold text-status-interview-text whitespace-nowrap">
+    <span
+        class="inline-flex items-center whitespace-nowrap rounded-badge bg-status-interview-bg px-2.5 py-1 text-xs font-semibold text-status-interview-text"
+    >
         {{ label }}
     </span>
 
 {% elif status == "accepted" %}
-    <span class="inline-flex items-center rounded-badge bg-status-accepted-bg px-2.5 py-1 text-xs font-semibold text-status-accepted-text whitespace-nowrap">
+    <span
+        class="inline-flex items-center whitespace-nowrap rounded-badge bg-status-accepted-bg px-2.5 py-1 text-xs font-semibold text-status-accepted-text"
+    >
         {{ label }}
     </span>
 
 {% elif status == "rejected" %}
-    <span class="inline-flex items-center rounded-badge bg-status-rejected-bg px-2.5 py-1 text-xs font-semibold text-status-rejected-text whitespace-nowrap">
+    <span
+        class="inline-flex items-center whitespace-nowrap rounded-badge bg-status-rejected-bg px-2.5 py-1 text-xs font-semibold text-status-rejected-text"
+    >
         {{ label }}
     </span>
 {% endif %}

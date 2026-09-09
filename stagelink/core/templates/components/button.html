@@ -1,3 +1,5 @@
+{% load i18n %}
+
 {% comment %}
     Composant Button StageLink
 
@@ -26,7 +28,7 @@
                         class="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
                         aria-hidden="true"
                     ></span>
-                    <span>Chargement...</span>
+                    <span>{% translate "Chargement..." %}</span>
                 {% else %}
                     {{ label }}
                 {% endif %}
@@ -46,7 +48,7 @@
                         class="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
                         aria-hidden="true"
                     ></span>
-                    <span>Chargement...</span>
+                    <span>{% translate "Chargement..." %}</span>
                 {% else %}
                     {{ label }}
                 {% endif %}
@@ -66,7 +68,7 @@
                         class="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
                         aria-hidden="true"
                     ></span>
-                    <span>Chargement...</span>
+                    <span>{% translate "Chargement..." %}</span>
                 {% else %}
                     {{ label }}
                 {% endif %}
@@ -86,7 +88,7 @@
                         class="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
                         aria-hidden="true"
                     ></span>
-                    <span>Chargement...</span>
+                    <span>{% translate "Chargement..." %}</span>
                 {% else %}
                     {{ label }}
                 {% endif %}
