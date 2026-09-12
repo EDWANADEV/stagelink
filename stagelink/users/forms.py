@@ -1,13 +1,13 @@
-from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth import forms as admin_forms
-from django.contrib.auth import password_validation
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.password_validation import validate_password
 from django.forms import EmailField
 from django.utils.translation import gettext_lazy as _
 
-from .models import Role
 from .models import User
+from .models import UserProfile
 
 
 class UserAdminChangeForm(admin_forms.UserChangeForm):
@@ -19,7 +19,6 @@ class UserAdminChangeForm(admin_forms.UserChangeForm):
 class UserAdminCreationForm(admin_forms.AdminUserCreationForm):
     """
     Form for User Creation in the Admin Area.
-    To change user signup, see UserSignupForm and UserSocialSignupForm.
     """
 
     class Meta(admin_forms.UserCreationForm.Meta):
@@ -31,186 +30,237 @@ class UserAdminCreationForm(admin_forms.AdminUserCreationForm):
         }
 
 
-class UserSignupForm(forms.Form):
-    role = forms.ChoiceField(
-        label=_("Je suis"),
-        choices=Role.choices,
-        widget=forms.RadioSelect,
-        required=True,
-    )
+class UserSignupForm(UserCreationForm):
+    """
+    Standard signup form based on UserCreationForm.
+    Django automatically detects USERNAME_FIELD (email) and adapts the fields.
+    """
 
-    email = forms.EmailField(
-        label=_("Adresse e-mail"),
-        required=True,
-        widget=forms.EmailInput(
-            attrs={
-                "autocomplete": "email",
-                "placeholder": _("exemple@email.com"),
-            },
-        ),
-    )
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("email", "password1", "password2")
 
-    password = forms.CharField(
-        label=_("Mot de passe"),
-        required=True,
-        strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                "autocomplete": "new-password",
-                "placeholder": _("Votre mot de passe"),
-            },
-        ),
-    )
 
-    password_confirmation = forms.CharField(
-        label=_("Confirmer le mot de passe"),
-        required=True,
-        strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                "autocomplete": "new-password",
-                "placeholder": _("Confirmez votre mot de passe"),
-            },
-        ),
-    )
+class SigninForm(forms.Form):
+    email = forms.EmailField(label=_("Adresse e-mail"))
+    password = forms.CharField(label=_("Mot de passe"), strip=False, widget=forms.PasswordInput)
+    remember_me = forms.BooleanField(label=_("Rester connecté"), required=False)
 
-    def clean_email(self):
-        email = self.cleaned_data["email"].lower().strip()
-
-        if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError(
-                _("Cette adresse e-mail est déjà utilisée."),
-            )
-
-        return email
-
-    def clean_password(self):
-        password = self.cleaned_data["password"]
-
-        password_validation.validate_password(password)
-
-        return password
+    user = None
 
     def clean(self):
         cleaned_data = super().clean()
-
-        password = cleaned_data.get("password")
-        password_confirmation = cleaned_data.get("password_confirmation")
-
-        if password and password_confirmation and password != password_confirmation:
-            self.add_error(
-                "password_confirmation",
-                _("Les deux mots de passe ne correspondent pas."),
-            )
-
-        return cleaned_data
-
-
-class UserSocialSignupForm(SocialSignupForm):
-    """
-    Renders the form when user has signed up using social accounts.
-    Default fields will be added automatically.
-    See UserSignupForm otherwise.
-    """
-
-
-class LoginForm(forms.Form):
-    email = forms.EmailField(
-        label=_("Adresse e-mail"),
-        required=True,
-        widget=forms.EmailInput(
-            attrs={
-                "autocomplete": "email",
-                "placeholder": _("exemple@email.com"),
-                "class": (
-                    "mt-2 block w-full rounded-[10px] border "
-                    "border-[#D6DCE6] bg-white px-4 py-3 "
-                    "text-[#16203A] shadow-sm outline-none "
-                    "transition placeholder:text-[#8A94A6] "
-                    "focus:border-[#1565C0] focus:ring-2 "
-                    "focus:ring-[#1565C0]/20"
-                ),
-            },
-        ),
-    )
-
-    password = forms.CharField(
-        label=_("Mot de passe"),
-        required=True,
-        widget=forms.PasswordInput(
-            attrs={
-                "autocomplete": "current-password",
-                "placeholder": _("Votre mot de passe"),
-                "class": (
-                    "mt-2 block w-full rounded-[10px] border "
-                    "border-[#D6DCE6] bg-white px-4 py-3 "
-                    "text-[#16203A] shadow-sm outline-none "
-                    "transition placeholder:text-[#8A94A6] "
-                    "focus:border-[#1565C0] focus:ring-2 "
-                    "focus:ring-[#1565C0]/20"
-                ),
-            },
-        ),
-    )
-
-    def __init__(self, request=None, *args, **kwargs):
-        self.request = request
-        self.user_cache = None
-        super().__init__(*args, **kwargs)
-
-    def clean_email(self):
-        email = self.cleaned_data["email"].strip().lower()
-
-        if not User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError(
-                _("Aucun compte n'est associé à cette adresse e-mail."),
-            )
-
-        return email
-
-    def clean(self):
-        cleaned_data = super().clean()
-
         email = cleaned_data.get("email")
         password = cleaned_data.get("password")
-
         if not email or not password:
             return cleaned_data
 
-        self.user_cache = authenticate(
-            self.request,
-            username=email,
-            password=password,
-        )
-
-        if self.user_cache is None:
-            raise forms.ValidationError(
-                _("L'adresse e-mail ou le mot de passe est incorrect."),
-            )
-
-        if not self.user_cache.is_active:
-            raise forms.ValidationError(
-                _("Ce compte est actuellement désactivé."),
-            )
-
+        self.user = authenticate(email=email, password=password)
+        if self.user is None:
+            raise forms.ValidationError(_("Adresse e-mail ou mot de passe incorrect."))
+        if not self.user.is_active:
+            raise forms.ValidationError(_("Ce compte est désactivé."))
         return cleaned_data
 
-    def get_user(self):
-        return self.user_cache
+
+class SignupForm(forms.ModelForm):
+    password1 = forms.CharField(label=_("Mot de passe"), strip=False, widget=forms.PasswordInput)
+    password2 = forms.CharField(label=_("Confirmation du mot de passe"), strip=False, widget=forms.PasswordInput)
+    accept_terms = forms.BooleanField(label=_("Conditions d'utilisation"), required=True)
+
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name", "email", "password1", "password2", "accept_terms")
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].lower().strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(_("Un compte existe déjà avec cette adresse e-mail."))
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            self.add_error("password2", _("Les mots de passe ne correspondent pas."))
+        if password1:
+            try:
+                validate_password(password1)
+            except forms.ValidationError as error:
+                self.add_error("password1", error)
+        return cleaned_data
+
+    def save(self, *, commit=True):
+        user = super().save(commit=False)
+        user.email = user.email.lower().strip()
+        user.username = None
+        user.is_verified = False
+        user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+        return user
 
 
-class OTPVerificationForm(forms.Form):
-    code = forms.CharField(
-        label=_("Code de vérification"),
-        max_length=6,
-        min_length=6,
-        required=True,
-        widget=forms.TextInput(
-            attrs={
-                "inputmode": "numeric",
-                "autocomplete": "one-time-code",
-                "maxlength": "6",
-                "placeholder": "000000",
-            },
-        ),
-    )
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField(label=_("Adresse e-mail"))
+
+    def clean_email(self):
+        return self.cleaned_data["email"].lower().strip()
+
+
+class OtpVerificationForm(forms.Form):
+    token = forms.CharField(widget=forms.HiddenInput)
+    code = forms.CharField(label=_("Code OTP"), min_length=6, max_length=6)
+
+    def clean_code(self):
+        code = self.cleaned_data["code"].strip()
+        if not code.isdigit():
+            raise forms.ValidationError(_("Entrez le code à 6 chiffres reçu par e-mail."))
+        return code
+
+
+class PasswordResetConfirmForm(forms.Form):
+    token = forms.CharField(widget=forms.HiddenInput)
+    password1 = forms.CharField(label=_("Nouveau mot de passe"), strip=False, widget=forms.PasswordInput)
+    password2 = forms.CharField(label=_("Confirmation du mot de passe"), strip=False, widget=forms.PasswordInput)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            self.add_error("password2", _("Les mots de passe ne correspondent pas."))
+        if password1:
+            try:
+                validate_password(password1)
+            except forms.ValidationError as error:
+                self.add_error("password1", error)
+        return cleaned_data
+
+
+# ── Profil utilisateur ────────────────────────────────────────────────────────
+
+
+# class ProfileForm(forms.ModelForm):
+#     """Édition des informations personnelles de l'utilisateur (modèle User)."""
+
+#     biography = forms.CharField(
+#         label=_("Biographie"),
+#         max_length=500,
+#         required=False,
+#         widget=forms.Textarea,
+#     )
+
+#     class Meta:
+#         model = User
+#         fields = (
+#             "first_name",
+#             "last_name",
+#             "email",
+#             "phone_number",
+#             "job_title",
+#             "biography",
+#             "date_of_birth",
+#             "language",
+#         )
+#         widgets = {
+#             "date_of_birth": forms.DateInput(
+#                 format="%Y-%m-%d",
+#                 attrs={"type": "date"},
+#             ),
+#         }
+
+#     def __init__(self, *args, profile=None, **kwargs):
+#         self.profile = profile
+#         super().__init__(*args, **kwargs)
+#         # L'adresse e-mail est immuable : non modifiable côté formulaire.
+#         self.fields["email"].disabled = True
+#         if self.profile is None and self.instance.pk:
+#             self.profile = UserProfile.objects.filter(user=self.instance).first()
+#         if self.profile is not None:
+#             self.fields["biography"].initial = self.profile.biography
+
+#     def clean_email(self):
+#         email = self.cleaned_data["email"].lower().strip()
+#         if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+#             raise forms.ValidationError(_("Un compte existe déjà avec cette adresse e-mail."))
+#         return email
+
+#     def save(self, commit=True):  # noqa: FBT002
+#         # Garde de sécurité : l'adresse e-mail est immuable. On force sa valeur
+#         # d'origine quelle que soit la donnée soumise (ceinture + bretelles).
+#         original_email = self.instance.email
+#         user = super().save(commit=False)
+#         user.email = original_email
+#         if commit:
+#             user.save()
+#             profile = self.profile or UserProfile.objects.create(user=user)
+#             profile.biography = self.cleaned_data["biography"]
+#             profile.save(update_fields=["biography", "updated_at"])
+#         return user
+
+
+# class ProfileSocialForm(forms.ModelForm):
+#     """Édition des liens sociaux et de l'adresse (modèle UserProfile)."""
+
+#     class Meta:
+#         model = UserProfile
+#         fields = (
+#             "linkedin_url",
+#             "facebook_url",
+#             "twitter_url",
+#             "instagram_url",
+#             "country",
+#             "city",
+#             "postal_code",
+#         )
+
+
+# class ChangePasswordForm(forms.Form):
+#     """Changement de mot de passe depuis le profil (avec vérification de l'actuel)."""
+
+#     current_password = forms.CharField(
+#         label=_("Mot de passe actuel"),
+#         strip=False,
+#         widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}),
+#     )
+#     new_password1 = forms.CharField(
+#         label=_("Nouveau mot de passe"),
+#         strip=False,
+#         widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+#     )
+#     new_password2 = forms.CharField(
+#         label=_("Confirmation du nouveau mot de passe"),
+#         strip=False,
+#         widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+#     )
+
+#     def __init__(self, user=None, *args, **kwargs):
+#         self.user = user
+#         super().__init__(*args, **kwargs)
+
+#     def clean_current_password(self):
+#         current_password = self.cleaned_data["current_password"]
+#         if self.user is not None and not self.user.check_password(current_password):
+#             raise forms.ValidationError(_("Le mot de passe actuel est incorrect."))
+#         return current_password
+
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         password1 = cleaned_data.get("new_password1")
+#         password2 = cleaned_data.get("new_password2")
+#         if password1 and password2 and password1 != password2:
+#             self.add_error("new_password2", _("Les mots de passe ne correspondent pas."))
+#         if password1:
+#             try:
+#                 validate_password(password1, user=self.user)
+#             except forms.ValidationError as error:
+#                 self.add_error("new_password1", error)
+#         return cleaned_data
+
+
+# class AvatarUploadForm(forms.Form):
+#     """Téléversement de la photo de profil."""
+
+#     avatar = forms.ImageField(label=_("Photo de profil"))

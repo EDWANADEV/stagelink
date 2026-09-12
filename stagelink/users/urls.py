@@ -1,20 +1,24 @@
 from django.urls import path
 
-from .views import login_view
-from .views import logout_view
-from .views import signup_view
-from .views import user_detail_view
-from .views import user_redirect_view
-from .views import user_update_view
-from .views import verify_email_view
+from stagelink.users.views.forgot_password_views import ForgotPasswordView
+from stagelink.users.views.forgot_password_views import ResetPasswordView
+from stagelink.users.views.login_views import SigninView
+from stagelink.users.views.login_views import UserLogoutView
+from stagelink.users.views.login_views import UserRedirectView
+from stagelink.users.views.otp_views import ResendOtpView
+from stagelink.users.views.otp_views import VerifyOtpView
+from stagelink.users.views.register_views import SignupView
 
 app_name = "users"
+
 urlpatterns = [
-    path("~redirect/", view=user_redirect_view, name="redirect"),
-    path("~update/", view=user_update_view, name="update"),
-    path("<int:pk>/", view=user_detail_view, name="detail"),
-    path("login/", view=login_view, name="login"),
-    path("singnup/", view=signup_view, name="signup"),
-    path("verify-email/", view=verify_email_view, name="verify-email"),
-    path("logout/", view=logout_view, name="logout"),
+    path("signin/", SigninView.as_view(), name="signin"),
+    path("login/", SigninView.as_view(), name="account_login"),
+    path("logout/", UserLogoutView.as_view(), name="logout"),
+    path("signup/", SignupView.as_view(), name="signup"),
+    path("forgot-password/", ForgotPasswordView.as_view(), name="forgot_password"),
+    path("verify-otp/<str:purpose>/<str:token>/", VerifyOtpView.as_view(), name="verify_otp"),
+    path("verify-otp/<str:purpose>/<str:token>/resend/", ResendOtpView.as_view(), name="resend_otp"),
+    path("reset-password/<str:token>/", ResetPasswordView.as_view(), name="reset_password"),
+    path("~redirect/", UserRedirectView.as_view(), name="redirect"),
 ]

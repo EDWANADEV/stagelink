@@ -48,6 +48,15 @@
     --font-body: "Inter", sans-serif;
     --radius-badge: 6px;
     --radius-control: 10px;
+    --color-status-received-bg: #EDEEF0;
+    --color-status-received-text: #555555;
+    --color-status-viewed-bg: #E1EAF6;
+    --color-status-viewed-text: #0D47A1;
+    --color-status-interview-bg: #FBF0DA;
+    --color-status-interview-text: #B9821F;
+    --color-status-accepted-bg: #DEEBE0;
+    --color-status-accepted-text: #1F6E43;
+    --color-status-rejected-bg: #F6E4E2;
     --color-status-rejected-text: #B3402B;
   }
 }
@@ -363,20 +372,11 @@
   .shrink-0 {
     flex-shrink: 0;
   }
-  .border-collapse {
-    border-collapse: collapse;
-  }
-  .transform {
-    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
-  }
   .animate-spin {
     animation: var(--animate-spin);
   }
   .cursor-pointer {
     cursor: pointer;
-  }
-  .resize {
-    resize: both;
   }
   .grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -490,9 +490,6 @@
   .bg-\[\#EEF2F7\] {
     background-color: #EEF2F7;
   }
-  .bg-accent {
-    background-color: var(--color-accent);
-  }
   .bg-accent\/15 {
     background-color: color-mix(in srgb, #E3A72E 15%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -514,8 +511,23 @@
   .bg-red-50 {
     background-color: var(--color-red-50);
   }
+  .bg-status-accepted-bg {
+    background-color: var(--color-status-accepted-bg);
+  }
+  .bg-status-interview-bg {
+    background-color: var(--color-status-interview-bg);
+  }
+  .bg-status-received-bg {
+    background-color: var(--color-status-received-bg);
+  }
+  .bg-status-rejected-bg {
+    background-color: var(--color-status-rejected-bg);
+  }
   .bg-status-rejected-text {
     background-color: var(--color-status-rejected-text);
+  }
+  .bg-status-viewed-bg {
+    background-color: var(--color-status-viewed-bg);
   }
   .bg-surface {
     background-color: var(--color-surface);
@@ -528,9 +540,6 @@
   }
   .p-6 {
     padding: calc(var(--spacing) * 6);
-  }
-  .px-2 {
-    padding-inline: calc(var(--spacing) * 2);
   }
   .px-2\.5 {
     padding-inline: calc(var(--spacing) * 2.5);
@@ -648,8 +657,20 @@
   .text-red-700 {
     color: var(--color-red-700);
   }
+  .text-status-accepted-text {
+    color: var(--color-status-accepted-text);
+  }
+  .text-status-interview-text {
+    color: var(--color-status-interview-text);
+  }
+  .text-status-received-text {
+    color: var(--color-status-received-text);
+  }
   .text-status-rejected-text {
     color: var(--color-status-rejected-text);
+  }
+  .text-status-viewed-text {
+    color: var(--color-status-viewed-text);
   }
   .text-text {
     color: var(--color-text);
@@ -659,9 +680,6 @@
   }
   .text-white {
     color: var(--color-white);
-  }
-  .underline {
-    text-decoration-line: underline;
   }
   .antialiased {
     -webkit-font-smoothing: antialiased;
@@ -877,26 +895,6 @@
     font-family: var(--font-heading);
   }
 }
-@property --tw-rotate-x {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-rotate-y {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-rotate-z {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-skew-x {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-skew-y {
-  syntax: "*";
-  inherits: false;
-}
 @property --tw-space-y-reverse {
   syntax: "*";
   inherits: false;
@@ -1001,11 +999,6 @@
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
-      --tw-rotate-x: initial;
-      --tw-rotate-y: initial;
-      --tw-rotate-z: initial;
-      --tw-skew-x: initial;
-      --tw-skew-y: initial;
       --tw-space-y-reverse: 0;
       --tw-border-style: solid;
       --tw-leading: initial;
