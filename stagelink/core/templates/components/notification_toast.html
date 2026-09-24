@@ -1,0 +1,53 @@
+{% load i18n %}
+{% load stagelink_icon %}
+
+{% comment %}
+    Composant NotificationToast StageLink
+
+    Variables :
+    - message : message à afficher
+    - type : success | error | warning | info
+{% endcomment %}
+
+{% if message %}
+    <div
+        class="
+            flex
+            w-full
+            items-start
+            gap-3
+            rounded-control
+            border
+            bg-surface
+            p-4
+            shadow-sm
+        "
+        role="alert"
+        data-toast
+    >
+        <div class="shrink-0">
+            {% if type == "success" %}
+                {% icon "check" size="size-5" class_="text-status-accepted-text" %}
+            {% elif type == "error" %}
+                {% icon "x" size="size-5" class_="text-status-rejected-text" %}
+            {% elif type == "warning" %}
+                {% icon "bell" size="size-5" class_="text-status-interview-text" %}
+            {% else %}
+                {% icon "bell" size="size-5" class_="text-primary" %}
+            {% endif %}
+        </div>
+
+        <p class="flex-1 text-sm font-medium text-text">
+            {{ message }}
+        </p>
+
+        <button
+            type="button"
+            class="shrink-0 text-text-muted transition-colors hover:text-text"
+            data-toast-close
+            aria-label="{% translate 'Fermer' %}"
+        >
+            {% icon "x" size="size-5" %}
+        </button>
+    </div>
+{% endif %}

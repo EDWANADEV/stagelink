@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django.contrib import messages
 from django.db import IntegrityError
 from django.db import transaction
@@ -6,36 +8,85 @@ from django.utils.translation import get_language_from_request
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView
 
-from mtc_web.users.forms import SignupForm
-from mtc_web.users.mixins import RedirectToNextOrReferrerMixin
-from mtc_web.users.services import OtpEmailService
-from mtc_web.users.services import OtpRateLimitError
-from mtc_web.users.services import OtpService
-from mtc_web.utils.enums import OtpPurpose
+from stagelink.users.forms import SignupForm
+from stagelink.users.mixins import AnonymousRequiredMixin
+from stagelink.users.services import OtpEmailService
+from stagelink.users.services import OtpRateLimitError
+from stagelink.users.services import OtpService
+from stagelink.utils.enums import OTPType
 
 
-class SignupView(RedirectToNextOrReferrerMixin, FormView):
-    template_name = "home/pages/auth/signup.html"
+class SignupView(AnonymousRequiredMixin, FormView):
+    """
+    Crée un compte StageLink et démarre la vérification
+    de l'adresse e-mail.
+    """
+
+    template_name = "users/signup.html"
     form_class = SignupForm
 
     def form_valid(self, form):
         try:
             with transaction.atomic():
                 user = form.save()
-                otp, token = OtpService.create(user, OtpPurpose.SIGNUP)
-                OtpEmailService.send(user, otp, language=get_language_from_request(self.request))
+
+                otp, token = OtpService.create(
+                    user=user,
+                    otp_type=OTPType.SIGNUP,
+                )
+
+                OtpEmailService.send(
+                    user=user,
+                    otp=otp,
+                    language=get_language_from_request(
+                        self.request,
+                    ),
+                )
+
         except IntegrityError:
-            form.add_error("email", _("Un compte existe déjà avec cette adresse e-mail."))
-            messages.error(self.request, _("Veuillez corriger les informations d'inscription."))
+            form.add_error(
+                "email",
+                _(
+                    "Un compte existe déjà avec cette "
+                    "adresse e-mail."
+                ),
+            )
+
+            messages.error(
+                self.request,
+                _("Veuillez corriger les informations d'inscription."),
+            )
+
             return self.form_invalid(form)
+
         except OtpRateLimitError as error:
-            messages.warning(self.request, error)
+            messages.warning(
+                self.request,
+                error,
+            )
+
             return self.form_invalid(form)
 
         self.request.session["pending_signup_token"] = token
-        messages.success(self.request, _("Votre compte a été créé. Entrez le code reçu par e-mail pour l'activer."))
-        return redirect("users:verify_otp", purpose=OtpPurpose.SIGNUP, token=token)
+
+        messages.success(
+            self.request,
+            _(
+                "Votre compte a été créé. "
+                "Entrez le code reçu par e-mail pour le vérifier."
+            ),
+        )
+
+        return redirect(
+            "users:verify_otp",
+            purpose=OTPType.SIGNUP,
+            token=token,
+        )
 
     def form_invalid(self, form):
-        messages.error(self.request, _("Veuillez corriger les informations d'inscription."))
+        messages.error(
+            self.request,
+            _("Veuillez corriger les informations d'inscription."),
+        )
+
         return super().form_invalid(form)

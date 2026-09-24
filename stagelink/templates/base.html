@@ -1,106 +1,253 @@
 {% load static i18n %}
 
+
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
+
 <html lang="{{ LANGUAGE_CODE }}">
+
   <head>
+
     <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+
+    <meta
+      http-equiv="x-ua-compatible"
+      content="ie=edge"
+    />
+
     <title>
       {% block title %}
         StageLink
       {% endblock title %}
     </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description"
-          content="StageLink met en relation les étudiants et les entreprises autour du stage." />
-    <meta name="author" content="Adora" />
-    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
+    <meta
+      name="description"
+      content="{% translate 'StageLink met en relation les étudiants et les entreprises autour du stage.' %}"
+    />
+
+    <meta
+      name="author"
+      content="Adora"
+    />
+
+    <link
+      rel="icon"
+      href="{% static 'images/favicons/favicon.ico' %}"
+    />
+
     {% block css %}
-      <link rel="stylesheet" href="{% static 'css/output.css' %}" />
+      <link
+        rel="stylesheet"
+        href="{% static 'css/output.css' %}"
+      />
     {% endblock css %}
+
     {% block javascript %}
-      <script defer src="{% static 'js/project.js' %}"></script>
+      <script
+        defer
+        src="{% static 'js/project.js' %}"
+      ></script>
     {% endblock javascript %}
+
   </head>
-  <body class="flex min-h-screen flex-col bg-[#EEF2F7] text-[#16203A] antialiased">
+
+
+  <body
+    class="flex min-h-screen flex-col bg-[#EEF2F7] text-[#16203A] antialiased"
+  >
+
     {% block body %}
-      <!-- Navigation -->
-      <header class="border-b border-[#D6DCE6] bg-white">
-        <nav class="mx-auto flex min-h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
-             aria-label="Main navigation">
+
+      <!-- ====================================== -->
+      <!-- Header -->
+      <!-- ====================================== -->
+
+      <header
+        class="border-b border-[#D6DCE6] bg-white"
+      >
+
+        <nav
+          class="mx-auto flex min-h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+          aria-label="{% translate 'Navigation principale' %}"
+        >
+
           <!-- Logo -->
-          <a href="{% url 'home' %}"
-             class="font-['Fraunces'] text-2xl font-bold tracking-tight text-[#1565C0] flex flex-row">
-            <img src="{% static 'images/logo/logo.png' %}"
-                 alt="logo"
-                 class="h-[17vh] w-[90%] " />
+
+          <a
+            href="{% url 'home' %}"
+            class="flex items-center"
+            aria-label="StageLink"
+          >
+
+            <img
+              src="{% static 'images/logo/logo.png' %}"
+              alt="StageLink"
+              class="h-14 w-auto object-contain"
+            />
+
           </a>
-          <!-- Desktop navigation -->
-          <div class="hidden items-center gap-6 md:flex">
-            <a href="{% url 'home' %}"
-               class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">{% translate "Home" %}</a>
-            <a href="{% url 'about' %}"
-               class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">{% translate "About" %}</a>
+
+
+          <!-- Navigation -->
+
+          <div class="hidden items-center gap-3 md:flex">
+
+            <!-- Accueil -->
+
+            <a
+              href="{% url 'home' %}"
+              class="rounded-[10px] px-4 py-2 text-sm font-medium text-[#16203A] transition hover:bg-[#EEF2F7] hover:text-[#1565C0]"
+            >
+              {% translate "Accueil" %}
+            </a>
+
+
+            <!-- À propos -->
+
+            <a
+              href="{% url 'about' %}"
+              class="rounded-[10px] px-4 py-2 text-sm font-medium text-[#16203A] transition hover:bg-[#EEF2F7] hover:text-[#1565C0]"
+            >
+              {% translate "À propos" %}
+            </a>
+
+
             {% if request.user.is_authenticated %}
-              <a href="{% url 'users:detail' request.user.pk %}"
-                 class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">
-                {% translate "My Profile" %}
-              </a>
-              <form method="post" action="{% url 'users:logout' %}">
+
+              <!-- Utilisateur connecté -->
+
+              <form
+                method="post"
+                action="{% url 'users:logout' %}"
+                class="m-0"
+              >
+
                 {% csrf_token %}
-                <button type="submit"
-                        class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7]">
+
+                <button
+                  type="submit"
+                  class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7] hover:text-[#0D47A1]"
+                >
                   {% translate "Se déconnecter" %}
                 </button>
+
               </form>
+
             {% else %}
-              <a href="{% url 'users:login' %}"
-                 class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7]">
-                {% translate "Sign In" %}
+
+              <!-- Connexion -->
+
+              <a
+                href="{% url 'users:signin' %}"
+                class="rounded-[10px] px-4 py-2 text-sm font-semibold text-[#1565C0] transition hover:bg-[#EEF2F7] hover:text-[#0D47A1]"
+              >
+                {% translate "Se connecter" %}
               </a>
-              {% if ACCOUNT_ALLOW_REGISTRATION %}
-                <a id="sign-up-link"
-                   href="{% url 'users:signup' %}"
-                   class="rounded-[10px] bg-[#1565C0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0D47A1] focus:outline-none focus:ring-2 focus:ring-[#1565C0] focus:ring-offset-2">
-                  {% translate "Sign Up" %}
-                </a>
-              {% endif %}
+
+
+              <!-- Inscription -->
+
+              <a
+                href="{% url 'users:signup' %}"
+                class="rounded-[10px] bg-[#1565C0] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0D47A1] focus:outline-none focus:ring-2 focus:ring-[#1565C0] focus:ring-offset-2"
+              >
+                {% translate "Créer un compte" %}
+              </a>
+
             {% endif %}
+
           </div>
+
         </nav>
+
       </header>
-      <!-- Django messages -->
+
+
+      <!-- ====================================== -->
+      <!-- Messages Django -->
+      <!-- ====================================== -->
+
       {% if messages %}
-        <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+
+        <div
+          class="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8"
+        >
+
           <div class="space-y-3">
+
             {% for message in messages %}
-              <div class="rounded-[10px] border border-[#D6DCE6] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm"
-                   role="alert">{{ message }}</div>
+
+              <div
+                class="rounded-[10px] border border-[#D6DCE6] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm"
+                role="alert"
+              >
+
+                {{ message }}
+
+              </div>
+
             {% endfor %}
+
           </div>
+
         </div>
+
       {% endif %}
-      <!-- Main content -->
-      <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+
+
+      <!-- ====================================== -->
+      <!-- Contenu principal -->
+      <!-- ====================================== -->
+
+      <main
+        class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8"
+      >
+
         {% block main %}
+
           {% block content %}
-
-
-          
           {% endblock content %}
+
         {% endblock main %}
+
       </main>
+
+
+      <!-- ====================================== -->
       <!-- Footer -->
-      <footer class="border-t border-[#D6DCE6] bg-white">
-        <div class="mx-auto max-w-7xl px-4 py-6 text-center text-sm text-[#5A6478] sm:px-6 lg:px-8">
-          © {% now "Y" %} StageLink. {% translate "All rights reserved." %}
+      <!-- ====================================== -->
+
+      <footer
+        class="border-t border-[#D6DCE6] bg-white"
+      >
+
+        <div
+          class="mx-auto max-w-7xl px-4 py-6 text-center text-sm text-[#5A6478] sm:px-6 lg:px-8"
+        >
+
+          © {% now "Y" %} StageLink.
+          {% translate "Tous droits réservés." %}
+
         </div>
+
       </footer>
+
     {% endblock body %}
+
+
     {% block modal %}
     {% endblock modal %}
+
+
     {% block inline_javascript %}
     {% endblock inline_javascript %}
+
   </body>
+
 </html>

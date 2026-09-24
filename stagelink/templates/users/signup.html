@@ -26,7 +26,7 @@
         {% endif %}
         <!-- Role -->
         <div>
-          <label class="mb-3 block text-sm font-semibold text-[#16203A]">{% translate "Je suis" %}</label>
+          <label class="mb-3 block text-sm font-semibold text-[#16203A]"></label>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {% for value, label in form.role.field.choices %}
               <label class="relative cursor-pointer">
@@ -131,7 +131,7 @@
       <div class="mt-6 border-t border-[#E2E6ED] pt-6 text-center">
         <p class="text-sm text-[#5A6478]">
           {% translate "Vous avez déjà un compte ?" %}
-          <a href="{% url 'users:login' %}"
+          <a href="{% url 'users:signin' %}"
              class="font-semibold text-[#1565C0] hover:text-[#0D47A1]">{% translate "Se connecter" %}</a>
         </p>
       </div>
