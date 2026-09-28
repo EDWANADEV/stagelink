@@ -24,11 +24,15 @@ class SignupForm(UserCreationForm):
     """
 
     role = forms.ChoiceField(
-        label=_("Type de compte"),
-        choices=Role.choices,
-        initial=Role.STUDENT,
-        widget=forms.RadioSelect,
-    )
+    label=_("Type de compte"),
+    choices=Role.choices,
+    initial=Role.STUDENT,
+    widget=forms.RadioSelect(
+        attrs={
+            "class": "peer sr-only",
+        }
+    ),
+)
 
     email = forms.EmailField(
         label=_("Adresse e-mail"),

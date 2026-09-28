@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from django.contrib import messages
-from django.db import IntegrityError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.shortcuts import redirect
 from django.utils.translation import get_language_from_request
 from django.utils.translation import gettext_lazy as _
@@ -10,9 +9,11 @@ from django.views.generic import FormView
 
 from stagelink.users.forms import SignupForm
 from stagelink.users.mixins import AnonymousRequiredMixin
-from stagelink.users.services import OtpEmailService
-from stagelink.users.services import OtpRateLimitError
-from stagelink.users.services import OtpService
+from stagelink.users.services import (
+    OtpEmailService,
+    OtpRateLimitError,
+    OtpService,
+)
 from stagelink.utils.enums import OTPType
 
 
@@ -52,17 +53,12 @@ class SignupView(AnonymousRequiredMixin, FormView):
                 ),
             )
 
-            messages.error(
-                self.request,
-                _("Veuillez corriger les informations d'inscription."),
-            )
-
             return self.form_invalid(form)
 
         except OtpRateLimitError as error:
             messages.warning(
                 self.request,
-                error,
+                str(error),
             )
 
             return self.form_invalid(form)
@@ -84,9 +80,4 @@ class SignupView(AnonymousRequiredMixin, FormView):
         )
 
     def form_invalid(self, form):
-        messages.error(
-            self.request,
-            _("Veuillez corriger les informations d'inscription."),
-        )
-
         return super().form_invalid(form)
