@@ -38,6 +38,11 @@ OTP_LENGTH = env.int(
     default=6,
 )
 
+OTP_REQUEST_COOLDOWN_SECONDS = env.int(
+    "OTP_REQUEST_COOLDOWN_SECONDS",
+    default=60,
+)
+
 # Configuration Flutterwave (Sécurisée avec valeurs par défaut)
 FLW_PUBLIC_KEY = env("FLW_PUBLIC_KEY", default="")
 FLW_SECRET_KEY = env("FLW_SECRET_KEY", default="")
@@ -337,7 +342,7 @@ LOGGING = {
     "root": {"level": "INFO", "handlers": ["console"]},
 }
 
-REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
+REDIS_URL = env("REDIS_URL", default="redis://127.0.0.1:6379/0")
 REDIS_SSL = REDIS_URL.startswith("rediss://")
 
 # Celery

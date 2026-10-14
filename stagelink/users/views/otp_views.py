@@ -64,13 +64,13 @@ class VerifyOtpView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["otp_type"] = self.otp_type
+        context["purpose"] = self.otp_type
+        context["token"] = self.token
         context["is_password_reset"] = (
             self.otp_type == OTPType.PASSWORD_RESET
-        )
-
+    )
         return context
-
+    
     def form_valid(self, form):
         try:
             otp = OtpVerifyService.verify(
@@ -80,19 +80,12 @@ class VerifyOtpView(FormView):
             )
 
         except OtpVerificationError as error:
-            messages.error(
-                self.request,
-                error,
-            )
+            form.add_error("code", error)
             return self.form_invalid(form)
 
         except ValueError as error:
-            messages.error(
-                self.request,
-                str(error),
-            )
-            return self.form_invalid(form)
-
+            form.add_error("code", str(error))
+            return self.form_invalid(form)        
         user = otp.user
 
         # Vérification de l'adresse e-mail
@@ -105,6 +98,7 @@ class VerifyOtpView(FormView):
             login(
                 self.request,
                 user,
+                backend='django.contrib.auth.backends.ModelBackend'
             )
 
             messages.success(
@@ -141,13 +135,7 @@ class VerifyOtpView(FormView):
         return redirect("users:signin")
 
     def form_invalid(self, form):
-        messages.error(
-            self.request,
-            _("Le code de vérification est incorrect ou invalide."),
-        )
-
         return super().form_invalid(form)
-
 
 class ResendOtpView(View):
     """
@@ -173,11 +161,10 @@ class ResendOtpView(View):
             return redirect("users:signin")
 
         try:
-            otp = OtpVerifyService._resolve_otp(
-                token,
-                otp_type,
-            )
-
+            otp = OtpVerifyService.resolve_for_resend(
+            token,
+            otp_type,
+        )
             new_otp, new_token = OtpService.create(
                 user=otp.user,
                 otp_type=otp_type,
@@ -212,7 +199,7 @@ class ResendOtpView(View):
         messages.success(
             request,
             _("Un nouveau code vous a été envoyé."),
-        )
+        )    
 
         return redirect(
             "users:verify_otp",

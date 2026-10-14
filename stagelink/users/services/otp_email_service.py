@@ -28,11 +28,7 @@ class OtpEmailService:
                 "pour envoyer l'e-mail."
             )
 
-        validity = getattr(
-            settings,
-            "OTP_VALID_MINUTES",
-            10,
-        )
+        validity = settings.OTP_EXPIRATION_MINUTES
 
         lang = language or settings.LANGUAGE_CODE
         full_name = user.name or user.email
@@ -43,6 +39,7 @@ class OtpEmailService:
                 full_name=full_name,
                 code=raw_code,
                 validity=validity,
+                otp_type=otp.otp_type,
                 language=lang,
             )
         )

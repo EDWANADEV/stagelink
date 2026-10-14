@@ -11,6 +11,7 @@ from stagelink.users.models import OTPVerification, User
 from stagelink.users.otp_utils import (
     check_cooldown,
     create_otp_token,
+    decode_otp_token,
     generate_otp_code,
     hash_otp_code,
     set_cooldown,
@@ -48,14 +49,10 @@ class OtpService:
                 )
             )
 
-        validity = getattr(
-            settings,
-            "OTP_VALID_MINUTES",
-            10,
-        )
+        validity = settings.OTP_EXPIRATION_MINUTES
 
-        raw_code = generate_otp_code()
-
+        raw_code = generate_otp_code(settings.OTP_LENGTH)
+        
         expires_at = timezone.now() + timedelta(
             minutes=validity,
         )
@@ -79,7 +76,6 @@ class OtpService:
                 otp_type,
             )
 
-        # Le code brut existe uniquement en mémoire.
         otp._raw_code = raw_code
 
         token = create_otp_token(
@@ -186,3 +182,35 @@ class OtpVerifyService:
             )
 
             return otp
+
+    @staticmethod
+    def resolve_for_resend(
+        token: str,
+        otp_type: str,
+    ) -> OTPVerification:
+        """
+        Retrouve une vérification OTP à partir d'un token signé,
+        même si le token est arrivé à expiration.
+
+        Utilisé uniquement pour demander l'envoi d'un nouveau code.
+        """
+
+        token_data = decode_otp_token(
+            token,
+            otp_type,
+        )
+
+        try:
+            return (
+                OTPVerification.objects
+                .select_related("user")
+                .get(
+                    pk=token_data["otp_id"],
+                    user_id=token_data["user_id"],
+                    otp_type=otp_type,
+                )
+            )
+        except OTPVerification.DoesNotExist as error:
+            raise OtpVerificationError(
+                _("Cette vérification est introuvable.")
+            ) from error

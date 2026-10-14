@@ -14,6 +14,7 @@ def send_otp_email_task(
     full_name: str,
     code: str,
     validity: int,
+    otp_type: str,
     language: str | None = None,
 ) -> bool:
     """
@@ -21,6 +22,16 @@ def send_otp_email_task(
     """
 
     lang = language or settings.LANGUAGE_CODE
+
+    template_by_type = {
+        "SIGNUP": "emails/otp/signup.html",
+        "PASSWORD_RESET": "emails/otp/password_reset.html",
+    }
+
+    template = template_by_type.get(otp_type)
+
+    if not template:
+        return False
 
     with translation.override(lang):
         subject = _("Votre code de vérification StageLink")
@@ -32,7 +43,7 @@ def send_otp_email_task(
         }
 
         return EmailUtil.send_email_with_template(
-            template="emails/otp.html",
+            template=template,
             context=context,
             receivers=[email],
             subject=subject,

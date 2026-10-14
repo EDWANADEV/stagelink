@@ -75,6 +75,52 @@ def create_otp_token(
     return signer.sign(payload)
 
 
+def decode_otp_token(
+    signed_token: str,
+    purpose: str,
+) -> dict[str, str]:
+    """
+    Décode un token OTP signé sans vérifier sa durée de validité.
+
+    Cette fonction est destinée aux opérations qui doivent pouvoir
+    identifier une vérification OTP même après expiration du token,
+    notamment le renvoi d'un nouveau code.
+
+    La signature et le purpose restent obligatoirement vérifiés.
+    """
+
+    signer = TimestampSigner(
+        salt=f"otp-token-{purpose}",
+    )
+
+    try:
+        payload = signer.unsign(signed_token)
+    except BadSignature as error:
+        raise OtpTokenError(
+            "Le lien de vérification est invalide."
+        ) from error
+
+    parts = payload.split(_TOKEN_SEP)
+
+    if len(parts) != 3:
+        raise OtpTokenError(
+            "Le lien de vérification est invalide."
+        )
+
+    otp_id, user_id, embedded_purpose = parts
+
+    if embedded_purpose != purpose:
+        raise OtpTokenError(
+            "Ce code ne correspond pas à cette opération."
+        )
+
+    return {
+        "otp_id": otp_id,
+        "user_id": user_id,
+        "purpose": purpose,
+    }
+
+
 def validate_otp_token(
     signed_token: str,
     purpose: str,
