@@ -21,6 +21,7 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
     path("users/", include("stagelink.users.urls", namespace="users")),
+    path("profiles/", include("stagelink.profiles.urls")),
     # Your stuff: custom urls includes go here
     # ...
     # Media files
