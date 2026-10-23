@@ -95,6 +95,9 @@ class VerifyOtpView(FormView):
                 update_fields=["email_verified"],
             )
 
+            # Le token d'inscription n'est plus utile une fois l'e-mail vérifié.
+            self.request.session.pop("pending_signup_token", None)
+
             login(
                 self.request,
                 user,

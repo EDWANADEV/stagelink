@@ -18,14 +18,7 @@
             </p>
         </div>
 
-        {# Messages Django #}
-        {% if messages %}
-            <div class="mb-6 space-y-3">
-                {% for message in messages %}
-                    {% include "components/notification_toast.html" with message=message type=message.tags %}
-                {% endfor %}
-            </div>
-        {% endif %}
+        {# Les messages Django sont affichés par base.html #}
 
         {# Carte du formulaire #}
         <div class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">

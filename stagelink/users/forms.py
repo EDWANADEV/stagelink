@@ -11,6 +11,7 @@ from django.contrib.auth.forms import (
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from stagelink.core.forms import DesignSystemFormMixin
 from stagelink.users.models import User
 from stagelink.utils.enums import Role
 
@@ -86,7 +87,7 @@ class SignupForm(UserCreationForm):
         return email
 
 
-class SigninForm(AuthenticationForm):
+class SigninForm(DesignSystemFormMixin, AuthenticationForm):
     """
     Formulaire de connexion StageLink.
 

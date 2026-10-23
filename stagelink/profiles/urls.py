@@ -1,19 +1,19 @@
 from django.urls import path
 
-from stagelink.profiles.views import CompanyProfileView
-from stagelink.profiles.views import StudentProfileView
+from stagelink.profiles.views import DashboardView
+from stagelink.profiles.views import ProfileCompletionView
 
 app_name = "profiles"
 
 urlpatterns = [
     path(
-        "student/",
-        StudentProfileView.as_view(),
-        name="student_profile",
+        "complete/",
+        ProfileCompletionView.as_view(),
+        name="complete",
     ),
     path(
-        "company/",
-        CompanyProfileView.as_view(),
-        name="company_profile",
+        "dashboard/",
+        DashboardView.as_view(),
+        name="dashboard",
     ),
 ]

@@ -122,6 +122,14 @@
 
               <!-- Utilisateur connecté -->
 
+              <a
+                href="{% url 'profiles:dashboard' %}"
+                class="rounded-control px-4 py-2 text-sm font-medium text-text transition hover:bg-background hover:text-primary"
+              >
+                {% translate "Tableau de bord" %}
+              </a>
+
+
               <form
                 method="post"
                 action="{% url 'users:logout' %}"
@@ -182,16 +190,7 @@
           <div class="space-y-3">
 
             {% for message in messages %}
-
-              <div
-                class="rounded-[10px] border border-[#D6DCE6] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm"
-                role="alert"
-              >
-
-                {{ message }}
-
-              </div>
-
+              {% include "components/notification_toast.html" with message=message type=message.tags %}
             {% endfor %}
 
           </div>
