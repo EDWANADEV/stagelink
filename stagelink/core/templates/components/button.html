@@ -1,0 +1,28 @@
+{% load i18n %}
+
+{% comment %}
+    Composant Button StageLink
+
+    Variables :
+    - variant : primary | outline | ghost | danger
+    - type : button | submit | reset
+    - disabled : true | false
+    - loading : true | false
+    - label : texte du bouton
+    - full_width : true | false (le bouton occupe toute la largeur)
+
+    Les balises Django ne pouvant pas s'étendre sur plusieurs lignes,
+    les classes sont écrites directement dans l'attribut class.
+{% endcomment %}
+
+<button type="{{ type|default:'button' }}"
+        class="inline-flex items-center justify-center gap-2 rounded-control px-4 py-2.5 text-sm font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 {% if full_width %}w-full{% endif %} {% if variant == 'outline' %}border border-primary bg-surface text-primary hover:bg-primary hover:text-white active:bg-primary-dark{% elif variant == 'ghost' %}bg-transparent text-text hover:bg-background active:bg-border{% elif variant == 'danger' %}bg-status-rejected-text text-white hover:opacity-90 active:opacity-80{% else %}bg-primary text-white hover:bg-primary-dark active:bg-primary-dark{% endif %}"
+        {% if disabled or loading %}disabled{% endif %}>
+  {% if loading %}
+    <span class="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+          aria-hidden="true"></span>
+    <span>{% translate "Chargement..." %}</span>
+  {% else %}
+    {{ label }}
+  {% endif %}
+</button>

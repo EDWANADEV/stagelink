@@ -38,6 +38,11 @@ OTP_LENGTH = env.int(
     default=6,
 )
 
+OTP_REQUEST_COOLDOWN_SECONDS = env.int(
+    "OTP_REQUEST_COOLDOWN_SECONDS",
+    default=60,
+)
+
 # Configuration Flutterwave (Sécurisée avec valeurs par défaut)
 FLW_PUBLIC_KEY = env("FLW_PUBLIC_KEY", default="")
 FLW_SECRET_KEY = env("FLW_SECRET_KEY", default="")
@@ -183,7 +188,7 @@ AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 LOGIN_REDIRECT_URL = "users:redirect"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
-LOGIN_URL = "account_login"
+LOGIN_URL = "users:signin"
 
 # PASSWORDS
 # ------------------------------------------------------------------------------
@@ -220,6 +225,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "stagelink.users.middleware.ProfileCompletionMiddleware",
 ]
 
 # STATIC
@@ -337,7 +343,7 @@ LOGGING = {
     "root": {"level": "INFO", "handlers": ["console"]},
 }
 
-REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
+REDIS_URL = env("REDIS_URL", default="redis://127.0.0.1:6379/0")
 REDIS_SSL = REDIS_URL.startswith("rediss://")
 
 # Celery

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>{% block title %}StageLink{% endblock %}</title>
+</head>
+
+<body
+    style="
+        margin: 0;
+        padding: 0;
+        background-color: #EEF2F7;
+        color: #16203A;
+        font-family: Arial, Helvetica, sans-serif;
+    "
+>
+    <table
+        role="presentation"
+        width="100%"
+        cellspacing="0"
+        cellpadding="0"
+        border="0"
+        style="background-color: #EEF2F7; padding: 32px 16px;"
+    >
+        <tr>
+            <td align="center">
+
+                <table
+                    role="presentation"
+                    width="100%"
+                    cellspacing="0"
+                    cellpadding="0"
+                    border="0"
+                    style="
+                        max-width: 560px;
+                        background-color: #FFFFFF;
+                        border: 1px solid #D6DCE6;
+                        border-radius: 14px;
+                    "
+                >
+                    <!-- Logo / marque -->
+                    <tr>
+                        <td
+                            align="center"
+                            style="padding: 32px 32px 20px;"
+                        >
+                            <div
+                                style="
+                                    color: #1565C0;
+                                    font-size: 28px;
+                                    font-weight: 700;
+                                    letter-spacing: -0.5px;
+                                "
+                            >
+                                StageLink
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Contenu -->
+                    <tr>
+                        <td
+                            style="
+                                padding: 0 32px 32px;
+                                font-size: 15px;
+                                line-height: 1.6;
+                            "
+                        >
+                            {% block content %}{% endblock %}
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="
+                                border-top: 1px solid #D6DCE6;
+                                padding: 20px 32px;
+                                text-align: center;
+                                color: #5A6478;
+                                font-size: 12px;
+                                line-height: 1.5;
+                            "
+                        >
+                            <p style="margin: 0;">
+                                StageLink
+                            </p>
+
+                            <p style="margin: 6px 0 0;">
+                                Votre plateforme de mise en relation
+                                entre étudiants et entreprises.
+                            </p>
+
+                            <p style="margin: 10px 0 0;">
+                                Cet e-mail a été envoyé automatiquement.
+                                Merci de ne pas y répondre.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
