@@ -1,0 +1,23 @@
+{% load i18n %}
+<nav class="space-y-1" aria-label="{% translate 'Navigation de l’espace de travail' %}">
+  {% if request.user.role == "COMPANY" %}
+    {% url 'core:company-dashboard' as dashboard_url %}
+    {% url 'profiles:company-detail' as profile_url %}
+    {% url 'offers:company-list' as offers_url %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Tableau de bord") url=dashboard_url key="dashboard" %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Mes offres") url=offers_url key="company-offers" %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Candidatures reçues") %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Notifications") %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Profil de l’entreprise") url=profile_url key="profile" %}
+  {% else %}
+    {% url 'core:student-dashboard' as dashboard_url %}
+    {% url 'profiles:student-detail' as profile_url %}
+    {% url 'offers:list' as offers_url %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Tableau de bord") url=dashboard_url key="dashboard" %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Rechercher un stage") url=offers_url key="offers" %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Mes candidatures") %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Notifications") %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Mon profil") url=profile_url key="profile" %}
+    {% include "dashboard/partials/nav_item.html" with label=_("Faire un don") %}
+  {% endif %}
+</nav>

@@ -1,10 +1,12 @@
 import secrets
 from datetime import timedelta
+from django.db import transaction
 
 from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from stagelink.users.models import OTPVerification
 from stagelink.users.models import User
@@ -90,13 +92,62 @@ class OTPService:
 
         return False
 
+    @classmethod
+    def verify_otp(
+        cls,
+        user: User,
+        code: str,
+        otp_type: str,
+    ) -> tuple[bool, str]:
+        """Vérifie le dernier code OTP actif de l'utilisateur."""
+        verification = (
+            OTPVerification.objects.filter(
+                user=user,
+                otp_type=otp_type,
+                is_used=False,
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+        if verification is None:
+            return False, _("Aucun code actif. Demandez un nouveau code.")
+
+        if verification.expires_at <= timezone.now():
+            return False, _("Ce code a expiré. Demandez un nouveau code.")
+
+        if verification.attempts >= settings.OTP_MAX_ATTEMPTS:
+            return False, _(
+                "Nombre maximal de tentatives atteint. Demandez un nouveau code.",
+            )
+
+        if not cls.verify_code(verification, code):
+            return False, _("Le code saisi est incorrect.")
+
+        return True, _("Code vérifié.")
+
+    @staticmethod
+    def can_resend(user: User, otp_type: str) -> bool:
+        """Empêche l'envoi répété de codes dans un court intervalle."""
+        cooldown_start = timezone.now() - timedelta(
+            seconds=settings.OTP_REQUEST_COOLDOWN_SECONDS,
+        )
+
+        return not OTPVerification.objects.filter(
+            user=user,
+            otp_type=otp_type,
+            created_at__gte=cooldown_start,
+        ).exists()
+
     @staticmethod
     def send_otp(
         verification: OTPVerification,
         code: str,
-    ) -> None:
-        """Planifie l'envoi du code OTP par e-mail."""
-        send_otp_email.delay(
-            str(verification.id),
-            code,
+        ) -> None:
+        """Planifie l'envoi du code OTP après validation de la transaction."""
+        transaction.on_commit(
+            lambda: send_otp_email.delay(
+                str(verification.id),
+                code,
+            ),
         )

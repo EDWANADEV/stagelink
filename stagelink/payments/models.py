@@ -10,7 +10,7 @@ from stagelink.utils.enums import (
     PaymentStatus,
 )
 
-from .manager import PaymentManager
+from .managers import PaymentManager
 
 
 class Payment(BaseModel):

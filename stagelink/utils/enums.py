@@ -28,6 +28,15 @@ class SalaryPeriod(models.TextChoices):
     WEEK = "WEEK", _("Semaine")
     MONTH = "MONTH", _("Mois")
 
+
+# Devises proposées pour la rémunération (XAF par défaut sur le modèle).
+class SALARY_CURRENCY_CHOICES(models.TextChoices):
+    ("XAF", _("Franc CFA (XAF)")),
+    ("EUR", _("Euro (EUR)")),
+    ("USD", _("Dollar américain (USD)")),
+
+
+
 class ApplicationMode(models.TextChoices):
     INTERNAL = "INTERNAL", _("Candidature sur StageLink")
     EXTERNAL = "EXTERNAL", _("Candidature externe")

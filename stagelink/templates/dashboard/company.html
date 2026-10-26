@@ -1,0 +1,71 @@
+{% extends "dashboard/base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% translate "Tableau de bord" %} · StageLink
+{% endblock title %}
+{% block content %}
+  <div class="space-y-8">
+    <!-- En-tête -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{{ profile.company_name }}</h1>
+        <p class="mt-1 text-sm text-muted">{% translate "Gérez vos offres de stage et suivez les candidatures reçues." %}</p>
+      </div>
+      <a href="{% url 'offers:create' %}"
+         class="inline-flex justify-center rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+        {% translate "Publier une offre" %}
+      </a>
+    </div>
+    <!-- Rappel profil -->
+    {% if not profile.description or not profile.logo %}
+      <div class="flex flex-col gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm font-semibold text-ink">{% translate "Complétez la présentation de votre entreprise" %}</p>
+          <p class="text-sm text-muted">
+            {% translate "Une description et un logo aident les étudiants à mieux connaître votre entreprise." %}
+          </p>
+        </div>
+        <a href="{% url 'profiles:company-edit' %}"
+           class="inline-flex shrink-0 justify-center rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark">
+          {% translate "Modifier le profil" %}
+        </a>
+      </div>
+    {% endif %}
+    <!-- Indicateurs -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {% translate "Offres publiées" as label %}
+      {% include "dashboard/partials/stat.html" with label=label value=published_offers_count %}
+      {% translate "Brouillons" as label %}
+      {% include "dashboard/partials/stat.html" with label=label value=draft_offers_count %}
+      {% translate "Candidatures reçues" as label %}
+      {% include "dashboard/partials/stat.html" with label=label value=applications_count %}
+      {% translate "Notifications non lues" as label %}
+      {% include "dashboard/partials/stat.html" with label=label value=unread_notifications_count %}
+    </div>
+    <!-- Candidatures récentes -->
+    <section>
+      <h2 class="mb-3 text-lg font-semibold text-ink">{% translate "Dernières candidatures reçues" %}</h2>
+      {% if recent_applications %}
+        <ul class="divide-y divide-border rounded-2xl border border-border bg-surface shadow-sm">
+          {% for application in recent_applications %}
+            <li class="flex flex-col gap-1 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm font-semibold text-ink">
+                  {{ application.student.user.name|default:application.student.user.email }}
+                </p>
+                <p class="text-xs text-muted">{{ application.offer.title }} · {{ application.created_at|date:"d/m/Y" }}</p>
+              </div>
+              <span class="w-fit rounded-full bg-background px-3 py-1 text-xs font-semibold text-primary">{{ application.get_status_display }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% translate "Aucune candidature reçue" as title %}
+        {% translate "Publiez une offre : les candidatures des étudiants apparaîtront ici." as message %}
+        {% include "dashboard/partials/empty_state.html" with title=title message=message %}
+      {% endif %}
+    </section>
+  </div>
+{% endblock content %}

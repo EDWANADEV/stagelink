@@ -1,0 +1,61 @@
+{% extends view.is_completion|yesno:"base.html,dashboard/base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% if view.is_completion %}
+    {% translate "Compléter mon profil" %}
+  {% else %}
+    {% translate "Modifier mon profil" %}
+  {% endif %}
+  · StageLink
+{% endblock title %}
+{% block content %}
+  <div class="mx-auto max-w-2xl">
+    <div class="mb-8 {% if view.is_completion %}text-center{% endif %}">
+      {% if view.is_completion %}
+        <p class="text-sm font-semibold text-primary">{% translate "Dernière étape" %}</p>
+        <h1 class="mt-1 text-3xl font-bold tracking-tight text-ink">
+          {% if request.user.role == "COMPANY" %}
+            {% translate "Présentez votre entreprise" %}
+          {% else %}
+            {% translate "Complétez votre profil étudiant" %}
+          {% endif %}
+        </h1>
+        <p class="mt-2 text-sm text-muted">
+          {% translate "Ces informations sont nécessaires pour accéder à votre espace StageLink. Vous pourrez les modifier à tout moment." %}
+        </p>
+      {% else %}
+        <h1 class="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{% translate "Modifier mon profil" %}</h1>
+      {% endif %}
+    </div>
+    <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+               role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+          {% include "common/form_field.html" with field=field %}
+        {% endfor %}
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          {% if not view.is_completion %}
+            <a href="{% if request.user.role == 'COMPANY' %}{% url 'profiles:company-detail' %}{% else %}{% url 'profiles:student-detail' %}{% endif %}"
+               class="inline-flex justify-center rounded-[10px] px-5 py-3 text-sm font-semibold text-primary transition hover:bg-background">
+              {% translate "Annuler" %}
+            </a>
+          {% endif %}
+          <button type="submit"
+                  class="inline-flex justify-center rounded-[10px] bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+            {% if view.is_completion %}
+              {% translate "Accéder à mon espace" %}
+            {% else %}
+              {% translate "Enregistrer" %}
+            {% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

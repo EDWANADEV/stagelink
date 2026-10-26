@@ -1,0 +1,28 @@
+{% load i18n %}
+{% comment %}Pagination qui conserve les filtres de la page. Paramètres : page_obj, paginator.{% endcomment %}
+{% if page_obj.has_other_pages %}
+  <nav class="flex items-center justify-between gap-3 border-t border-border pt-6"
+       aria-label="{% translate 'Pagination' %}">
+    {% if page_obj.has_previous %}
+      <a href="{% querystring page=page_obj.previous_page_number %}"
+         rel="prev"
+         class="inline-flex rounded-[10px] border border-border bg-surface px-4 py-2 text-sm font-semibold text-primary transition hover:bg-background">
+        {% translate "Précédent" %}
+      </a>
+    {% else %}
+      <span></span>
+    {% endif %}
+    <p class="text-sm text-muted">
+      {% blocktranslate with number=page_obj.number total=paginator.num_pages %}Page {{ number }} sur {{ total }}{% endblocktranslate %}
+    </p>
+    {% if page_obj.has_next %}
+      <a href="{% querystring page=page_obj.next_page_number %}"
+         rel="next"
+         class="inline-flex rounded-[10px] border border-border bg-surface px-4 py-2 text-sm font-semibold text-primary transition hover:bg-background">
+        {% translate "Suivant" %}
+      </a>
+    {% else %}
+      <span></span>
+    {% endif %}
+  </nav>
+{% endif %}

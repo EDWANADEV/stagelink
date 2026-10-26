@@ -40,12 +40,14 @@
           <div class="hidden items-center gap-6 md:flex">
             <a href="{% url 'home' %}"
                class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">{% translate "Home" %}</a>
+            <a href="{% url 'offers:list' %}"
+               class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">{% translate "Offres de stage" %}</a>
             <a href="{% url 'about' %}"
                class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">{% translate "About" %}</a>
             {% if request.user.is_authenticated %}
-              <a href="{% url 'users:detail' request.user.pk %}"
+              <a href="{% url 'users:redirect' %}"
                  class="text-sm font-medium text-[#16203A] transition hover:text-[#1565C0]">
-                {% translate "My Profile" %}
+                {% translate "Mon espace" %}
               </a>
               <form method="post" action="{% url 'users:logout' %}">
                 {% csrf_token %}
@@ -72,14 +74,7 @@
       </header>
       <!-- Django messages -->
       {% if messages %}
-        <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-          <div class="space-y-3">
-            {% for message in messages %}
-              <div class="rounded-[10px] border border-[#D6DCE6] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm"
-                   role="alert">{{ message }}</div>
-            {% endfor %}
-          </div>
-        </div>
+        <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">{% include "common/messages.html" %}</div>
       {% endif %}
       <!-- Main content -->
       <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">

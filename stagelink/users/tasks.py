@@ -7,7 +7,10 @@ from django.utils.translation import gettext_lazy as _
 from .models import OTPVerification
 
 
-@shared_task
+# Tâche « fire-and-forget » : aucun appelant ne lit son résultat. Sans
+# ignore_result, .delay() s'abonne au result backend Redis (pub/sub) dès
+# l'envoi, ce qui fait dépendre la requête HTTP d'inscription de ce backend.
+@shared_task(ignore_result=True)
 def send_otp_email(
     verification_id: str,
     code: str,
@@ -20,13 +23,13 @@ def send_otp_email(
     )
 
     context = {
-        "code": code,
+        "otp_code": code,
         "expiration_minutes": settings.OTP_EXPIRATION_MINUTES,
         "user": verification.user,
     }
 
     html_message = render_to_string(
-        "emails/otp/verification.html",
+        "emails/otp/signup.html",
         context,
     )
 

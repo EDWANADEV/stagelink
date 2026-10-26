@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Charte graphique StageLink : utilisable via bg-primary, text-ink, border-border… */
+@theme {
+  --color-primary: #1565C0;
+  --color-primary-dark: #0D47A1;
+  --color-accent: #E3A72E;
+  --color-background: #EEF2F7;
+  --color-surface: #FFFFFF;
+  --color-border: #D6DCE6;
+  --color-ink: #16203A;
+  --color-muted: #5A6478;
+}

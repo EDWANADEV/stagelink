@@ -9,7 +9,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import DetailView
@@ -17,9 +16,10 @@ from django.views.generic import FormView
 from django.views.generic import RedirectView
 from django.views.generic import UpdateView
 
+from stagelink.core.permissions import get_workspace_url
 from stagelink.users.forms import OTPVerificationForm
-from stagelink.users.models import OTPVerification
 from stagelink.users.services.otp import OTPService
+from stagelink.utils.enums import OTPType
 
 from .forms import LoginForm
 from .forms import UserSignupForm
@@ -59,7 +59,9 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
     permanent = False
 
     def get_redirect_url(self) -> str:
-        return reverse("users:detail", kwargs={"pk": self.request.user.pk})
+        # Point d'entrée unique : renvoie vers l'étape suivante du parcours
+        # (vérification e-mail, complétion du profil ou espace de travail).
+        return get_workspace_url(self.request.user)
 
 
 user_redirect_view = UserRedirectView.as_view()
@@ -68,6 +70,12 @@ user_redirect_view = UserRedirectView.as_view()
 class LoginView(FormView):
     template_name = "users/login.html"
     form_class = LoginForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("users:redirect")
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -125,15 +133,16 @@ class SignupView(View):
             backend="django.contrib.auth.backends.ModelBackend",
         )
 
-        OTPService.send_otp(
+        verification, code = OTPService.create_otp(
             user=user,
-            otp_type=OTPVerification.OTPType.SIGNUP,
+            otp_type=OTPType.SIGNUP,
         )
+        OTPService.send_otp(verification, code)
 
         messages.success(
             request,
             _(
-                "Votre compte a été créé."
+                "Votre compte a été créé. "
                 "Un code de vérification vous a été envoyé par e-mail.",
             ),
         )
@@ -149,16 +158,44 @@ class VerifyEmailView(LoginRequiredMixin, FormView):
     form_class = OTPVerificationForm
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.email_verified:
+        if request.user.is_authenticated and request.user.email_verified:
             return redirect("users:redirect")
 
         return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if "resend" in request.POST:
+            return self.resend_code()
+
+        return super().post(request, *args, **kwargs)
+
+    def resend_code(self):
+        user = self.request.user
+
+        if not OTPService.can_resend(user, OTPType.SIGNUP):
+            messages.warning(
+                self.request,
+                _("Veuillez patienter quelques instants avant de demander un nouveau code."),
+            )
+            return redirect("users:verify-email")
+
+        verification, code = OTPService.create_otp(
+            user=user,
+            otp_type=OTPType.SIGNUP,
+        )
+        OTPService.send_otp(verification, code)
+
+        messages.success(
+            self.request,
+            _("Un nouveau code de vérification vous a été envoyé."),
+        )
+        return redirect("users:verify-email")
 
     def form_valid(self, form):
         success, message = OTPService.verify_otp(
             user=self.request.user,
             code=form.cleaned_data["code"],
-            otp_type=OTPVerification.OTPType.SIGNUP,
+            otp_type=OTPType.SIGNUP,
         )
 
         if not success:

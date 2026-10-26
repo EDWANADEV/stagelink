@@ -25,7 +25,7 @@ EMAIL_LOGO_PATH = env(
 )
 
 OTP_EXPIRATION_MINUTES = env.int(
-    "OTP_EXPIRATION_MINUTES",
+    "DJANGO_OTP_EXPIRATION_MINUTES",
     default=5,
 )
 OTP_MAX_ATTEMPTS = env.int(
@@ -36,6 +36,11 @@ OTP_MAX_ATTEMPTS = env.int(
 OTP_LENGTH = env.int(
     "DJANGO_OTP_LENGTH",
     default=6,
+)
+
+OTP_REQUEST_COOLDOWN_SECONDS = env.int(
+    "OTP_REQUEST_COOLDOWN_SECONDS",
+    default=60,
 )
 
 # Configuration Flutterwave (Sécurisée avec valeurs par défaut)
@@ -183,7 +188,7 @@ AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 LOGIN_REDIRECT_URL = "users:redirect"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
-LOGIN_URL = "account_login"
+LOGIN_URL = "users:login"
 
 # PASSWORDS
 # ------------------------------------------------------------------------------
