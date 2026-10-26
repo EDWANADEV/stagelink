@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load stagelink_icons %}
+
+{% block title %}
+  {% translate "Tableau de bord" %} | StageLink
+{% endblock title %}
+{% block content %}
+  <div class="space-y-8">
+    {# En-tête et accès au profil #}
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm text-text-muted">{% translate "Tableau de bord" %}</p>
+        <h1 class="mt-1 font-heading text-3xl font-bold tracking-tight text-text">
+          {% if user.role == "COMPANY" %}
+            {% blocktranslate with name=profile.company_name %}Bonjour, {{ name }}{% endblocktranslate %}
+          {% else %}
+            {% blocktranslate with name=user.name|default:user.email %}Bonjour, {{ name }}{% endblocktranslate %}
+          {% endif %}
+        </h1>
+      </div>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <a href="{% url 'profiles:complete' %}"
+           class="inline-flex items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white">
+          {% icon "edit" size="size-4" %}
+          {% translate "Modifier mon profil" %}
+        </a>
+        {% if user.role == "COMPANY" %}
+          <a href="{% url 'offers:company-list' %}"
+             class="inline-flex items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white">
+            {% translate "Mes offres" %}
+          </a>
+          <a href="{% url 'offers:create' %}"
+             class="inline-flex items-center justify-center gap-2 rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
+            {% translate "Publier une offre" %}
+          </a>
+        {% else %}
+          <a href="{% url 'offers:list' %}"
+             class="inline-flex items-center justify-center gap-2 rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
+            {% icon "search" size="size-4" %}
+            {% translate "Rechercher un stage" %}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    {% if user.role == "COMPANY" %}
+      {# Statistiques entreprise #}
+      <section aria-label="{% translate 'Statistiques' %}"
+               class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-card border border-border bg-surface p-5">
+          <p class="text-sm text-text-muted">{% translate "Offres créées" %}</p>
+          <p class="mt-2 font-heading text-3xl font-bold text-text">{{ stats.total }}</p>
+        </div>
+        <div class="rounded-card border border-border bg-surface p-5">
+          <p class="text-sm text-text-muted">{% translate "Offres publiées" %}</p>
+          <p class="mt-2 font-heading text-3xl font-bold text-primary">{{ stats.published }}</p>
+        </div>
+        <div class="rounded-card border border-border bg-surface p-5">
+          <p class="text-sm text-text-muted">{% translate "Brouillons" %}</p>
+          <p class="mt-2 font-heading text-3xl font-bold text-text">{{ stats.draft }}</p>
+        </div>
+        <div class="rounded-card border border-border bg-surface p-5">
+          <p class="text-sm text-text-muted">{% translate "Candidatures reçues" %}</p>
+          <p class="mt-2 font-heading text-3xl font-bold text-accent">{{ stats.applications }}</p>
+        </div>
+      </section>
+      {# Offres récentes #}
+      <section class="rounded-card border border-border bg-surface">
+        <h2 class="border-b border-border px-5 py-4 font-heading text-lg font-semibold text-text">
+          {% translate "Vos offres récentes" %}
+        </h2>
+        <ul class="divide-y divide-border">
+          {% for offer in recent_offers %}
+            <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+              <div class="min-w-0">
+                <a href="{% url 'offers:detail' pk=offer.pk %}"
+                   class="block truncate font-semibold text-text hover:text-primary">{{ offer.title }}</a>
+                <p class="text-sm text-text-muted">{{ offer.location }}</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-text-muted">
+                  {% blocktranslate count counter=offer.applications_count %}{{ counter }} candidature{% plural %}{{ counter }} candidatures{% endblocktranslate %}
+                </span>
+                {% include "components/badge.html" with label=offer.get_status_display variant="primary" %}
+              </div>
+            </li>
+          {% empty %}
+            <li class="px-5 py-10 text-center text-sm text-text-muted">
+              {% translate "Vous n'avez pas encore créé d'offre de stage." %}
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% else %}
+      {# Statistiques étudiant #}
+      <section aria-label="{% translate 'Statistiques' %}"
+               class="grid gap-4 sm:grid-cols-3">
+        <div class="rounded-card border border-border bg-surface p-5">
+          <p class="text-sm text-text-muted">{% translate "Candidatures envoyées" %}</p>
+          <p class="mt-2 font-heading text-3xl font-bold text-text">{{ stats.total }}</p>
+        </div>
+        <div class="rounded-card border border-border bg-surface p-5">
+          <p class="text-sm text-text-muted">{% translate "En cours" %}</p>
+          <p class="mt-2 font-heading text-3xl font-bold text-primary">{{ stats.in_progress }}</p>
+        </div>
+        <div class="rounded-card border border-border bg-surface p-5">
+          <p class="text-sm text-text-muted">{% translate "Acceptées" %}</p>
+          <p class="mt-2 font-heading text-3xl font-bold text-status-accepted-text">{{ stats.accepted }}</p>
+        </div>
+      </section>
+      {# Résumé du profil étudiant #}
+      <section class="rounded-card border border-border bg-surface p-5">
+        <h2 class="font-heading text-lg font-semibold text-text">{% translate "Mon profil" %}</h2>
+        <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-text-muted">{% translate "Domaine d'étude" %}</dt>
+            <dd class="mt-1 font-medium text-text">{{ profile.field_of_study }}</dd>
+          </div>
+          <div>
+            <dt class="text-text-muted">{% translate "Niveau d'étude" %}</dt>
+            <dd class="mt-1 font-medium text-text">{{ profile.level }}</dd>
+          </div>
+        </dl>
+        {% if profile.skills %}
+          <div class="mt-4 flex flex-wrap gap-2">
+            {% for skill in profile.skills %}
+              {% include "components/badge.html" with label=skill variant="neutral" %}
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if not profile.cv %}
+          <p class="mt-4 rounded-control bg-status-interview-bg px-4 py-3 text-sm text-status-interview-text">
+            {% translate "Ajoutez votre CV pour augmenter vos chances auprès des entreprises." %}
+          </p>
+        {% endif %}
+      </section>
+      {# Candidatures récentes #}
+      <section class="rounded-card border border-border bg-surface">
+        <h2 class="border-b border-border px-5 py-4 font-heading text-lg font-semibold text-text">
+          {% translate "Vos candidatures récentes" %}
+        </h2>
+        <ul class="divide-y divide-border">
+          {% for application in recent_applications %}
+            <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+              <div class="min-w-0">
+                <p class="truncate font-semibold text-text">{{ application.offer.title }}</p>
+                <p class="text-sm text-text-muted">{{ application.offer.company.company_name }}</p>
+              </div>
+              {% include "components/status_badge.html" with status=application.status label=application.get_status_display %}
+            </li>
+          {% empty %}
+            <li class="px-5 py-10 text-center text-sm text-text-muted">
+              {% translate "Vous n'avez pas encore postulé à une offre de stage." %}
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+  </div>
+{% endblock content %}

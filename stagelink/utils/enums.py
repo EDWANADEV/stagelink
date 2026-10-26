@@ -30,11 +30,10 @@ class SalaryPeriod(models.TextChoices):
 
 
 # Devises proposées pour la rémunération (XAF par défaut sur le modèle).
-class SALARY_CURRENCY_CHOICES(models.TextChoices):
-    ("XAF", _("Franc CFA (XAF)")),
-    ("EUR", _("Euro (EUR)")),
-    ("USD", _("Dollar américain (USD)")),
-
+class SALARY_CURRENCY_CHOICES(models.TextChoices):  # noqa: N801
+    XAF = "XAF", _("Franc CFA (XAF)")
+    EUR = "EUR", _("Euro (EUR)")
+    USD = "USD", _("Dollar américain (USD)")
 
 
 class ApplicationMode(models.TextChoices):

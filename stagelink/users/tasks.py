@@ -1,56 +1,54 @@
+from __future__ import annotations
+
 from celery import shared_task
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
+from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
-from .models import OTPVerification
+from stagelink.utils.email import EmailUtil
 
 
 # Tâche « fire-and-forget » : aucun appelant ne lit son résultat. Sans
 # ignore_result, .delay() s'abonne au result backend Redis (pub/sub) dès
 # l'envoi, ce qui fait dépendre la requête HTTP d'inscription de ce backend.
 @shared_task(ignore_result=True)
-def send_otp_email(
-    verification_id: str,
+def send_otp_email_task(
+    email: str,
+    full_name: str,
     code: str,
-) -> None:
-    """Envoie le code OTP par e-mail."""
-    verification = (
-        OTPVerification.objects
-        .select_related("user")
-        .get(id=verification_id)
-    )
+    validity: int,
+    otp_type: str,
+    language: str | None = None,
+) -> bool:
+    """
+    Envoie le code OTP de manière asynchrone avec Celery.
+    """
 
-    context = {
-        "otp_code": code,
-        "expiration_minutes": settings.OTP_EXPIRATION_MINUTES,
-        "user": verification.user,
+    lang = language or settings.LANGUAGE_CODE
+
+    template_by_type = {
+        "SIGNUP": "emails/otp/signup.html",
+        "PASSWORD_RESET": "emails/otp/password_reset.html",
     }
 
-    html_message = render_to_string(
-        "emails/otp/signup.html",
-        context,
-    )
+    template = template_by_type.get(otp_type)
 
-    text_message = _(
-        "Votre code de vérification StageLink est : %(code)s\n\n"
-        "Ce code expire dans %(minutes)s minutes."
-    ) % {
-        "code": code,
-        "minutes": settings.OTP_EXPIRATION_MINUTES,
-    }
+    if not template:
+        return False
 
-    email = EmailMultiAlternatives(
-        subject=_("Votre code de vérification StageLink"),
-        body=text_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[verification.user.email],
-    )
+    with translation.override(lang):
+        subject = _("Votre code de vérification StageLink")
 
-    email.attach_alternative(
-        html_message,
-        "text/html",
-    )
+        context = {
+            "full_name": full_name,
+            "code": code,
+            "validity": validity,
+        }
 
-    email.send(fail_silently=False)
+        return EmailUtil.send_email_with_template(
+            template=template,
+            context=context,
+            receivers=[email],
+            subject=subject,
+            language=lang,
+        )

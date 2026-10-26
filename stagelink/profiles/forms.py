@@ -1,55 +1,46 @@
+from __future__ import annotations
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from stagelink.utils.validators import normalize_phone_number
+from stagelink.core.forms import DesignSystemFormMixin
+from stagelink.utils.enums import Role
 
-from .models import CompanyProfile, StudentProfile
+from .models import CompanyProfile
+from .models import StudentProfile
 
-INPUT_CLASSES = (
-    "block w-full rounded-[10px] border border-border bg-surface px-4 py-3 "
-    "text-sm text-ink shadow-sm outline-none transition "
-    "placeholder:text-[#8A94A6] focus:border-primary focus:ring-2 "
-    "focus:ring-primary/20"
-)
-
-FILE_CLASSES = (
-    "block w-full text-sm text-muted file:mr-4 file:rounded-[10px] "
-    "file:border-0 file:bg-background file:px-4 file:py-2.5 "
-    "file:text-sm file:font-semibold file:text-primary "
-    "hover:file:bg-[#E1E8F2]"
-)
+# Séparateur utilisé pour saisir les compétences dans un champ texte.
+SKILLS_SEPARATOR = ","
 
 
-class StyledFormMixin:
-    """Applique les classes Tailwind de StageLink à tous les champs."""
+class StudentProfileForm(DesignSystemFormMixin, forms.ModelForm):
+    """
+    Formulaire de complétion et de modification du profil étudiant.
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    Le nom complet est stocké sur User ; il est saisi ici pour
+    finaliser l'inscription en une seule étape.
+    """
 
-        for field in self.fields.values():
-            widget = field.widget
-            if isinstance(widget, forms.ClearableFileInput):
-                widget.attrs.setdefault("class", FILE_CLASSES)
-            else:
-                widget.attrs.setdefault("class", INPUT_CLASSES)
-
-
-class StudentProfileForm(StyledFormMixin, forms.ModelForm):
-    # Le nom est stocké sur User : il n'est pas demandé à l'inscription,
-    # mais il est indispensable pour candidater.
     name = forms.CharField(
         label=_("Nom complet"),
         max_length=255,
+        widget=forms.TextInput(
+            attrs={
+                "autocomplete": "name",
+                "placeholder": _("Ex. : Marie Ngono"),
+            },
+        ),
     )
 
-    # Le modèle stocke une liste JSON ; l'étudiant saisit une liste
-    # séparée par des virgules, plus naturelle qu'un JSON brut.
     skills = forms.CharField(
         label=_("Compétences"),
         required=False,
         help_text=_("Séparez vos compétences par des virgules."),
         widget=forms.TextInput(
-            attrs={"placeholder": _("Comptabilité, Excel, Communication")},
+            attrs={
+                "placeholder": _("Ex. : Python, Excel, Communication"),
+                "autocomplete": "off",
+            },
         ),
     )
 
@@ -64,61 +55,60 @@ class StudentProfileForm(StyledFormMixin, forms.ModelForm):
         )
         widgets = {
             "field_of_study": forms.TextInput(
-                attrs={"placeholder": _("Ex. : Génie logiciel, Marketing, Droit")},
+                attrs={
+                    "placeholder": _("Ex. : Comptabilité"),
+                },
             ),
             "level": forms.TextInput(
-                attrs={"placeholder": _("Ex. : BTS 2, Licence 3, Master 1")},
+                attrs={
+                    "placeholder": _("Ex. : BTS 1"),
+                },
             ),
-            "cv": forms.ClearableFileInput(attrs={"accept": "application/pdf"}),
+            "cv": forms.ClearableFileInput(
+                attrs={
+                    "accept": ".pdf,application/pdf",
+                },
+            ),
         }
+
+    field_order = (
+        "name",
+        "field_of_study",
+        "level",
+        "skills",
+        "language",
+        "cv",
+    )
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = user
-
+        # Pré-remplit le nom et les compétences existantes.
         if user is not None:
             self.fields["name"].initial = user.name
+        if self.instance.pk and self.instance.skills:
+            self.initial["skills"] = f"{SKILLS_SEPARATOR} ".join(
+                self.instance.skills,
+            )
 
-        if self.instance.pk:
-            self.initial["skills"] = ", ".join(self.instance.skills or [])
+    def clean_name(self) -> str:
+        """Supprime les espaces superflus du nom."""
+        return " ".join(self.cleaned_data["name"].split())
 
-    def clean_skills(self):
-        raw = self.cleaned_data.get("skills", "")
-        skills = []
+    def clean_skills(self) -> list[str]:
+        """Convertit la saisie en liste de compétences uniques et non vides."""
+        raw_skills = self.cleaned_data.get("skills") or ""
+        cleaned_skills = []
 
-        for skill in raw.split(","):
-            skill = skill.strip()
-            if skill and skill.lower() not in (s.lower() for s in skills):
-                skills.append(skill)
+        for raw_skill in raw_skills.split(SKILLS_SEPARATOR):
+            skill = raw_skill.strip()
+            if skill and skill.lower() not in (s.lower() for s in cleaned_skills):
+                cleaned_skills.append(skill)
 
-        return skills
-
-    def save(self, commit=True):
-        profile = super().save(commit=False)
-
-        if self.user is not None:
-            profile.user = self.user
-            self.user.name = self.cleaned_data["name"]
-
-        if commit:
-            if self.user is not None:
-                self.user.save(update_fields=["name"])
-            profile.save()
-
-        return profile
+        return cleaned_skills
 
 
-class CompanyProfileForm(StyledFormMixin, forms.ModelForm):
-    # Saisie libre (espaces acceptés), puis normalisation au format E.164
-    # pour respecter la longueur maximale du modèle.
-    phone_number = forms.CharField(
-        label=_("Numéro de téléphone"),
-        max_length=25,
-        required=False,
-        widget=forms.TextInput(
-            attrs={"placeholder": "+237 6XX XX XX XX", "autocomplete": "tel"},
-        ),
-    )
+class CompanyProfileForm(DesignSystemFormMixin, forms.ModelForm):
+    """Formulaire de complétion et de modification du profil entreprise."""
 
     class Meta:
         model = CompanyProfile
@@ -131,30 +121,52 @@ class CompanyProfileForm(StyledFormMixin, forms.ModelForm):
             "logo",
         )
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "address": forms.TextInput(
-                attrs={"placeholder": _("Ex. : Akwa, Douala")},
+            "company_name": forms.TextInput(
+                attrs={
+                    "autocomplete": "organization",
+                    "placeholder": _("Nom de votre entreprise"),
+                },
             ),
-            "website": forms.URLInput(attrs={"placeholder": "https://"}),
+            "description": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "placeholder": _("Présentez brièvement votre entreprise."),
+                },
+            ),
+            "phone_number": forms.TextInput(
+                attrs={
+                    "type": "tel",
+                    "autocomplete": "tel",
+                    "placeholder": _("Ex. : +237 6 99 99 99 99"),
+                },
+            ),
+            "address": forms.TextInput(
+                attrs={
+                    "autocomplete": "street-address",
+                    "placeholder": _("Ville ou adresse de l'entreprise"),
+                },
+            ),
+            "website": forms.URLInput(
+                attrs={
+                    "autocomplete": "url",
+                    "placeholder": "https://example.com",
+                },
+            ),
             "logo": forms.ClearableFileInput(
-                attrs={"accept": "image/png,image/jpeg"},
+                attrs={
+                    "accept": "image/jpeg,image/png",
+                },
             ),
         }
 
     def __init__(self, *args, user=None, **kwargs):
+        # Le paramètre user est accepté pour garder la même signature
+        # que StudentProfileForm ; il n'est pas utilisé ici.
         super().__init__(*args, **kwargs)
-        self.user = user
 
-    def clean_phone_number(self):
-        return normalize_phone_number(self.cleaned_data.get("phone_number", ""))
 
-    def save(self, commit=True):
-        profile = super().save(commit=False)
-
-        if self.user is not None:
-            profile.user = self.user
-
-        if commit:
-            profile.save()
-
-        return profile
+# Formulaire de profil à utiliser selon le rôle de l'utilisateur.
+PROFILE_FORM_BY_ROLE = {
+    Role.STUDENT: StudentProfileForm,
+    Role.COMPANY: CompanyProfileForm,
+}

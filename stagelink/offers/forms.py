@@ -4,14 +4,15 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from djmoney.forms.fields import MoneyField
 
-from stagelink.profiles.forms import StyledFormMixin
+from stagelink.core.forms import BASE_FIELD_CLASSES
+from stagelink.core.forms import DesignSystemFormMixin
+from stagelink.utils.enums import SALARY_CURRENCY_CHOICES
 from stagelink.utils.enums import ApplicationMode
 
 from .models import InternshipOffer
 
-from utils.enums import SALARY_CURRENCY_CHOICES
 
-class OfferForm(StyledFormMixin, forms.ModelForm):
+class OfferForm(DesignSystemFormMixin, forms.ModelForm):
     """Saisie d'une offre par une entreprise (création et modification)."""
 
     # Le modèle stocke une liste JSON ; l'entreprise saisit une liste
@@ -31,7 +32,7 @@ class OfferForm(StyledFormMixin, forms.ModelForm):
         max_digits=12,
         decimal_places=2,
         default_currency="XAF",
-        currency_choices=SALARY_CURRENCY_CHOICES,
+        currency_choices=SALARY_CURRENCY_CHOICES.choices,
         min_value=0,
     )
 
@@ -101,10 +102,7 @@ class OfferForm(StyledFormMixin, forms.ModelForm):
 
         # Une date passée n'est bloquante que si elle a été modifiée :
         # on peut toujours corriger une autre information d'une offre ancienne.
-        if (
-            "application_deadline" in self.changed_data
-            and deadline <= timezone.now()
-        ):
+        if "application_deadline" in self.changed_data and deadline <= timezone.now():
             raise forms.ValidationError(
                 _("La date limite de candidature doit être dans le futur."),
             )
@@ -184,13 +182,7 @@ class OfferSearchForm(forms.Form):
         ]
 
         for field in self.fields.values():
-            field.widget.attrs.setdefault(
-                "class",
-                "block w-full rounded-[10px] border border-border bg-surface "
-                "px-3 py-2.5 text-sm text-ink outline-none transition "
-                "placeholder:text-[#8A94A6] focus:border-primary "
-                "focus:ring-2 focus:ring-primary/20",
-            )
+            field.widget.attrs.setdefault("class", BASE_FIELD_CLASSES)
 
     def filter_queryset(self, queryset):
         """Applique la recherche, les filtres et le tri au queryset."""

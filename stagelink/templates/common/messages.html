@@ -1,8 +1,0 @@
-{% if messages %}
-  <div class="space-y-3">
-    {% for message in messages %}
-      <div class="rounded-[10px] border border-[#D6DCE6] bg-white px-4 py-3 text-sm text-[#16203A] shadow-sm{% if message.tags == 'success' %} border-l-4 border-l-[#1565C0]{% elif message.tags == 'warning' or message.tags == 'error' %} border-l-4 border-l-[#E3A72E]{% endif %}"
-           role="alert">{{ message }}</div>
-    {% endfor %}
-  </div>
-{% endif %}

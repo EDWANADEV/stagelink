@@ -1,4 +1,4 @@
-{% extends "dashboard/base.html" %}
+{% extends "base.html" %}
 
 {% load i18n %}
 
@@ -10,34 +10,34 @@
     <!-- En-tête -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{% translate "Mes offres" %}</h1>
-        <p class="mt-1 text-sm text-muted">{% translate "Créez, publiez et fermez vos offres de stage." %}</p>
+        <h1 class="text-2xl font-bold tracking-tight text-text sm:text-3xl">{% translate "Mes offres" %}</h1>
+        <p class="mt-1 text-sm text-text-muted">{% translate "Créez, publiez et fermez vos offres de stage." %}</p>
       </div>
       <a href="{% url 'offers:create' %}"
-         class="inline-flex justify-center rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+         class="inline-flex justify-center rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
         {% translate "Nouvelle offre" %}
       </a>
     </div>
     <!-- Filtre par statut -->
     <nav class="flex flex-wrap gap-2" aria-label="{% translate 'Filtrer par statut' %}">
       <a href="{% url 'offers:company-list' %}"
-         class="rounded-full px-4 py-1.5 text-sm font-semibold transition {% if not status_filter %}bg-primary text-white{% else %}bg-surface text-ink hover:bg-primary/10{% endif %}"
+         class="rounded-full px-4 py-1.5 text-sm font-semibold transition {% if not status_filter %}bg-primary text-white{% else %}bg-surface text-text hover:bg-primary/10{% endif %}"
          {% if not status_filter %}aria-current="page"{% endif %}>{% translate "Toutes" %}</a>
       {% for value, label in status_choices %}
         <a href="?status={{ value }}"
-           class="rounded-full px-4 py-1.5 text-sm font-semibold transition {% if status_filter == value %}bg-primary text-white{% else %}bg-surface text-ink hover:bg-primary/10{% endif %}"
+           class="rounded-full px-4 py-1.5 text-sm font-semibold transition {% if status_filter == value %}bg-primary text-white{% else %}bg-surface text-text hover:bg-primary/10{% endif %}"
            {% if status_filter == value %}aria-current="page"{% endif %}>{{ label }}</a>
       {% endfor %}
     </nav>
     <!-- Liste -->
     {% if offers %}
-      <ul class="divide-y divide-border rounded-2xl border border-border bg-surface shadow-sm">
+      <ul class="divide-y divide-border rounded-card border border-border bg-surface shadow-sm">
         {% for offer in offers %}
           <li class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="min-w-0">
               <a href="{% url 'offers:detail' pk=offer.pk %}"
-                 class="text-sm font-semibold text-ink hover:text-primary">{{ offer.title }}</a>
-              <p class="mt-0.5 text-xs text-muted">
+                 class="text-sm font-semibold text-text hover:text-primary">{{ offer.title }}</a>
+              <p class="mt-0.5 text-xs text-text-muted">
                 {{ offer.location }} ·
                 {% blocktranslate with date=offer.application_deadline|date:"d/m/Y" %}Date limite : {{ date }}{% endblocktranslate %}
               </p>
@@ -61,7 +61,7 @@
         {% translate "Vous n'avez encore créé aucune offre" as title %}
         {% translate "Créez votre première offre de stage : elle restera en brouillon jusqu'à sa publication." as message %}
       {% endif %}
-      {% include "dashboard/partials/empty_state.html" with title=title message=message %}
+      {% include "offers/partials/empty_state.html" with title=title message=message %}
     {% endif %}
   </div>
 {% endblock content %}

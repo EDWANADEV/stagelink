@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load stagelink_icons %}
+
+{% block content %}
+
+<div class="min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-md">
+
+        {# En-tête #}
+        <div class="mb-8 text-center">
+            <h1 class="font-heading text-3xl font-bold tracking-tight text-text">
+                {% translate "Créer un compte" %}
+            </h1>
+
+            <p class="mt-2 text-sm text-text-muted">
+                {% translate "Rejoignez StageLink et commencez votre expérience." %}
+            </p>
+        </div>
+
+        {# Les messages Django sont affichés par base.html #}
+
+        {# Carte du formulaire #}
+        <div class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">
+
+            <form
+                method="post"
+                action="{% url 'users:signup' %}"
+                class="space-y-6"
+                novalidate
+            >
+                {% csrf_token %}
+
+                {# Erreurs générales #}
+                {% if form.non_field_errors %}
+                    <div
+                        class="rounded-control border border-status-rejected-text bg-status-rejected-bg p-3 text-sm text-status-rejected-text"
+                        role="alert"
+                    >
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                {# Type de compte #}
+                <fieldset>
+                    <legend class="mb-3 text-sm font-semibold text-text">
+                        {% translate "Type de compte" %}
+
+                        <span
+                            class="text-status-rejected-text"
+                            aria-hidden="true"
+                        >
+                            *
+                        </span>
+                    </legend>
+
+                    <div class="grid grid-cols-2 gap-3">
+
+                        {% for radio in form.role %}
+                            <label class="group cursor-pointer">
+
+                                {# Vrai champ radio Django #}
+                                {{ radio.tag }}
+
+                                {# Carte animée #}
+                                <span
+                                    class="
+                                        flex min-h-28 flex-col
+                                        items-center justify-center
+                                        gap-2
+                                        rounded-control
+                                        border border-border
+                                        bg-surface
+                                        px-3 py-4
+                                        text-center
+                                        text-sm font-semibold
+                                        text-text
+
+                                        transition-all
+                                        duration-300
+                                        ease-out
+
+                                        hover:-translate-y-0.5
+                                        hover:border-primary/60
+
+                                        peer-checked:-translate-y-1
+                                        peer-checked:scale-[1.03]
+                                        peer-checked:border-primary
+                                        peer-checked:bg-primary/5
+                                        peer-checked:text-primary
+                                        peer-checked:shadow-sm
+                                    "
+                                >
+                                    {# Icône animée #}
+                                    <span
+                                        class="
+                                            transition-transform
+                                            duration-300
+                                            ease-out
+                                            peer-checked:scale-110
+                                        "
+                                    >
+                                        {% icon "user" size="size-6" %}
+                                    </span>
+
+                                    {# Nom du rôle #}
+                                    <span>
+                                        {{ radio.choice_label }}
+                                    </span>
+
+                                    {# Indicateur de sélection #}
+                                    <span
+                                        class="
+                                            mt-0.5
+                                            h-1
+                                            w-1
+                                            rounded-full
+                                            bg-primary
+                                            opacity-0
+                                            transition-all
+                                            duration-300
+                                            peer-checked:scale-100
+                                            peer-checked:opacity-100
+                                        "
+                                        aria-hidden="true"
+                                    ></span>
+                                </span>
+                            </label>
+                        {% endfor %}
+
+                    </div>
+
+                    {% if form.role.errors %}
+                        <p
+                            class="mt-1.5 text-sm text-status-rejected-text"
+                            role="alert"
+                        >
+                            {{ form.role.errors|striptags }}
+                        </p>
+                    {% endif %}
+                </fieldset>
+
+                {# Adresse e-mail #}
+                {% include "components/input.html" with field=form.email type="email" placeholder=form.email.field.widget.attrs.placeholder %}
+
+                {# Mot de passe #}
+                {% include "components/input.html" with field=form.password1 type="password" placeholder=form.password1.field.widget.attrs.placeholder %}
+
+                {# Confirmation du mot de passe #}
+                {% include "components/input.html" with field=form.password2 type="password" placeholder=form.password2.field.widget.attrs.placeholder %}
+
+                {# Action principale #}
+                <button
+                    type="submit"
+                    class="
+                        inline-flex
+                        w-full
+                        items-center
+                        justify-center
+                        rounded-control
+                        bg-primary
+                        px-4 py-2.5
+                        text-sm font-semibold
+                        text-white
+                        transition-colors
+                        duration-150
+                        hover:bg-primary-dark
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-primary/20
+                        disabled:cursor-not-allowed
+                        disabled:opacity-60
+                    "
+                >
+                    {% translate "Créer mon compte" %}
+                </button>
+
+            </form>
+
+            {# Lien vers la connexion #}
+            <div class="mt-6 border-t border-border pt-6 text-center">
+                <p class="text-sm text-text-muted">
+                    {% translate "Vous avez déjà un compte ?" %}
+
+                    <a
+                        href="{% url 'users:signin' %}"
+                        class="
+                            font-semibold
+                            text-primary
+                            transition-colors
+                            hover:text-primary-dark
+                        "
+                    >
+                        {% translate "Se connecter" %}
+                    </a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

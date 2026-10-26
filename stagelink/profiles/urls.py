@@ -1,26 +1,19 @@
 from django.urls import path
 
-from .views import company_profile_complete_view
-from .views import company_profile_detail_view
-from .views import company_profile_update_view
-from .views import student_profile_complete_view
-from .views import student_profile_detail_view
-from .views import student_profile_update_view
+from stagelink.profiles.views import DashboardView
+from stagelink.profiles.views import ProfileCompletionView
 
 app_name = "profiles"
+
 urlpatterns = [
-    path("student/", view=student_profile_detail_view, name="student-detail"),
     path(
-        "student/complete/",
-        view=student_profile_complete_view,
-        name="student-complete",
+        "complete/",
+        ProfileCompletionView.as_view(),
+        name="complete",
     ),
-    path("student/edit/", view=student_profile_update_view, name="student-edit"),
-    path("company/", view=company_profile_detail_view, name="company-detail"),
     path(
-        "company/complete/",
-        view=company_profile_complete_view,
-        name="company-complete",
+        "dashboard/",
+        DashboardView.as_view(),
+        name="dashboard",
     ),
-    path("company/edit/", view=company_profile_update_view, name="company-edit"),
 ]

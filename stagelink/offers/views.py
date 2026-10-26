@@ -1,6 +1,8 @@
 from urllib.parse import urlsplit
 
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.http import Http404
@@ -15,8 +17,7 @@ from django.views.generic import DetailView
 from django.views.generic import ListView
 from django.views.generic import UpdateView
 
-from stagelink.core.permissions import CompanyRequiredMixin
-from stagelink.core.permissions import get_profile
+from stagelink.profiles.services import get_profile
 from stagelink.utils.enums import ApplicationMode
 from stagelink.utils.enums import OfferStatus
 from stagelink.utils.enums import Role
@@ -33,33 +34,31 @@ OFFERS_PER_PAGE = 12
 COMPANY_OFFERS_PER_PAGE = 20
 
 
-class WorkspaceLayoutMixin:
+class CompanyRequiredMixin(LoginRequiredMixin):
     """
-    Affiche les pages publiques des offres dans l'espace de travail
-    pour un utilisateur ayant terminé son parcours d'inscription,
-    et dans la mise en page publique pour les visiteurs.
+    Réserve la vue aux entreprises ayant complété leur profil.
+
+    La vérification de l'e-mail et la complétion du profil sont imposées
+    par ProfileCompletionMiddleware ; ce mixin vérifie le rôle et expose
+    le profil entreprise dans self.profile (double sécurité si le
+    middleware est désactivé ou pour l'équipe d'administration).
     """
 
-    active_nav = "offers"
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
 
-    def get_base_template(self) -> str:
-        user = self.request.user
+        if request.user.role != Role.COMPANY:
+            raise PermissionDenied
 
-        if (
-            user.is_authenticated
-            and user.email_verified
-            and get_profile(user) is not None
-        ):
-            return "dashboard/base.html"
+        self.profile = get_profile(request.user)
+        if self.profile is None:
+            return redirect("profiles:complete")
 
-        return "base.html"
-
-    def get_context_data(self, **kwargs):
-        kwargs.setdefault("base_template", self.get_base_template())
-        return super().get_context_data(**kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
 
-class OfferListView(WorkspaceLayoutMixin, ListView):
+class OfferListView(ListView):
     """Liste publique des offres disponibles, avec recherche et filtres."""
 
     template_name = "offers/offer_list.html"
@@ -69,9 +68,7 @@ class OfferListView(WorkspaceLayoutMixin, ListView):
     def get_queryset(self):
         available = InternshipOffer.objects.available()
         domains = (
-            available.order_by("domain")
-            .values_list("domain", flat=True)
-            .distinct()
+            available.order_by("domain").values_list("domain", flat=True).distinct()
         )
         self.search_form = OfferSearchForm(self.request.GET, domains=domains)
 
@@ -91,7 +88,7 @@ class OfferListView(WorkspaceLayoutMixin, ListView):
         return context
 
 
-class OfferDetailView(WorkspaceLayoutMixin, DetailView):
+class OfferDetailView(DetailView):
     """
     Détail d'une offre.
 
@@ -151,8 +148,6 @@ class OfferApplyRedirectView(View):
 
 class CompanyOfferMixin(CompanyRequiredMixin):
     """Restreint les vues aux offres de l'entreprise connectée."""
-
-    active_nav = "company-offers"
 
     def get_queryset(self):
         return InternshipOffer.objects.filter(

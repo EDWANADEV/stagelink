@@ -85,9 +85,7 @@ class TestUserRedirectView:
         request.user = user
 
         view.request = request
-        # Nouvel utilisateur (e-mail non vérifié) : étape de vérification.
-        # Le parcours complet est testé dans stagelink/core/tests.py.
-        assert view.get_redirect_url() == "/users/verify-email/"
+        assert view.get_redirect_url() == f"/users/{user.pk}/"
 
 
 class TestUserDetailView:

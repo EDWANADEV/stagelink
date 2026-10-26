@@ -1,4 +1,5 @@
 from datetime import timedelta
+from http import HTTPStatus
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -9,6 +10,7 @@ from stagelink.offers.admin import InternshipOfferAdminForm
 from stagelink.offers.models import InternshipOffer
 from stagelink.offers.services import publish_offer
 from stagelink.offers.services import update_offer
+from stagelink.offers.views import OFFERS_PER_PAGE
 from stagelink.profiles.models import CompanyProfile
 from stagelink.profiles.models import StudentProfile
 from stagelink.users.tests.factories import UserFactory
@@ -91,8 +93,11 @@ class TestModel:
         ).is_available
 
     def test_is_relayed(self, company):
-        assert make_offer(None, application_mode=ApplicationMode.EXTERNAL,
-                          application_url="https://example.com").is_relayed
+        assert make_offer(
+            None,
+            application_mode=ApplicationMode.EXTERNAL,
+            application_url="https://example.com",
+        ).is_relayed
         assert not make_offer(company).is_relayed
 
 
@@ -113,7 +118,7 @@ class TestOfferList:
 
         response = client.get(self.url)
 
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         assert list(response.context["offers"]) == [visible]
 
     def test_search_and_filters(self, client, company):
@@ -139,38 +144,40 @@ class TestOfferList:
 
         response = client.get(self.url, {"domain": "Inconnu"})
 
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         assert len(response.context["offers"]) == 1
 
     def test_pagination_keeps_filters(self, client, company):
-        for index in range(13):
+        for index in range(OFFERS_PER_PAGE + 1):
             make_offer(company, title=f"Offre {index}")
 
         response = client.get(self.url, {"q": "Offre"})
 
         assert response.context["is_paginated"]
-        assert len(response.context["offers"]) == 12
+        assert len(response.context["offers"]) == OFFERS_PER_PAGE
         assert "?q=Offre&amp;page=2" in response.content.decode()
-        assert len(client.get(self.url, {"q": "Offre", "page": 2}).context["offers"]) == 1
+        assert (
+            len(client.get(self.url, {"q": "Offre", "page": 2}).context["offers"]) == 1
+        )
 
 
 class TestOfferDetail:
     def test_published_offer_is_public(self, client, company):
         offer = make_offer(company)
         response = client.get(reverse("offers:detail", kwargs={"pk": offer.pk}))
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
 
     def test_draft_visible_only_by_owner(self, client, company):
         offer = make_offer(company, status=OfferStatus.DRAFT)
         url = reverse("offers:detail", kwargs={"pk": offer.pk})
 
-        assert client.get(url).status_code == 404
+        assert client.get(url).status_code == HTTPStatus.NOT_FOUND
 
         client.force_login(make_company("Autre").user)
-        assert client.get(url).status_code == 404
+        assert client.get(url).status_code == HTTPStatus.NOT_FOUND
 
         client.force_login(company.user)
-        assert client.get(url).status_code == 200
+        assert client.get(url).status_code == HTTPStatus.OK
 
 
 class TestExternalRedirect:
@@ -183,7 +190,7 @@ class TestExternalRedirect:
 
         response = client.get(reverse("offers:apply-external", kwargs={"pk": offer.pk}))
 
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response["Location"] == "https://jobs.example.com/stage/42"
 
     def test_no_redirect_for_internal_or_closed_offer(self, client, company):
@@ -197,7 +204,7 @@ class TestExternalRedirect:
 
         for offer in (internal, closed):
             url = reverse("offers:apply-external", kwargs={"pk": offer.pk})
-            assert client.get(url).status_code == 404
+            assert client.get(url).status_code == HTTPStatus.NOT_FOUND
 
 
 class TestCompanyManagement:
@@ -206,18 +213,27 @@ class TestCompanyManagement:
         StudentProfile.objects.create(user=student, field_of_study="Droit", level="L2")
         client.force_login(student)
 
-        assert client.get(reverse("offers:create")).status_code == 403
+        assert client.get(reverse("offers:create")).status_code == HTTPStatus.FORBIDDEN
 
     def test_anonymous_redirected_to_login(self, client):
         response = client.get(reverse("offers:company-list"))
-        assert response.status_code == 302
-        assert reverse("users:login") in response["Location"]
+        assert response.status_code == HTTPStatus.FOUND
+        assert reverse("users:signin") in response["Location"]
+
+    def test_create_form_renders(self, company_client):
+        response = company_client.get(reverse("offers:create"))
+
+        content = response.content.decode()
+        assert response.status_code == HTTPStatus.OK
+        assert 'name="salary_0"' in content
+        assert 'value="XAF"' in content
+        assert 'value="EUR"' in content
 
     def test_create_offer_as_draft(self, company_client, company):
         response = company_client.post(reverse("offers:create"), offer_post_data())
 
         offer = InternshipOffer.objects.get()
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert offer.company == company
         assert offer.created_by == company.user
         assert offer.status == OfferStatus.DRAFT
@@ -228,7 +244,7 @@ class TestCompanyManagement:
 
         response = company_client.post(reverse("offers:create"), data)
 
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         assert "application_deadline" in response.context["form"].errors
         assert not InternshipOffer.objects.exists()
 
@@ -257,9 +273,11 @@ class TestCompanyManagement:
         for name in ("update", "publish", "close"):
             url = reverse(f"offers:{name}", kwargs={"pk": other.pk})
             response = (
-                company_client.get(url) if name == "update" else company_client.post(url)
+                company_client.get(url)
+                if name == "update"
+                else company_client.post(url)
             )
-            assert response.status_code == 404
+            assert response.status_code == HTTPStatus.NOT_FOUND
 
         other.refresh_from_db()
         assert other.status == OfferStatus.DRAFT
@@ -279,19 +297,22 @@ class TestCompanyManagement:
     def test_status_actions_reject_get(self, company_client, company):
         offer = make_offer(company, status=OfferStatus.DRAFT)
         url = reverse("offers:publish", kwargs={"pk": offer.pk})
-        assert company_client.get(url).status_code == 405
+        assert company_client.get(url).status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     def test_closed_offer_not_editable(self, company_client, company):
         offer = make_offer(company, status=OfferStatus.CLOSED)
         url = reverse("offers:update", kwargs={"pk": offer.pk})
-        assert company_client.get(url).status_code == 404
+        assert company_client.get(url).status_code == HTTPStatus.NOT_FOUND
 
     def test_company_list_filters_by_status(self, company_client, company):
         make_offer(company, status=OfferStatus.DRAFT)
         published = make_offer(company)
         make_offer(make_company("Autre"))
 
-        response = company_client.get(reverse("offers:company-list"), {"status": "PUBLISHED"})
+        response = company_client.get(
+            reverse("offers:company-list"),
+            {"status": "PUBLISHED"},
+        )
 
         assert list(response.context["offers"]) == [published]
 
@@ -339,4 +360,24 @@ class TestAdmin:
             reverse("admin:offers_internshipoffer_changelist"),
             {"q": "Acme"},
         )
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
+
+
+class TestDashboardLinks:
+    def test_company_dashboard_links_to_offers(self, company_client, company):
+        offer = make_offer(company)
+
+        content = company_client.get(reverse("profiles:dashboard")).content.decode()
+
+        assert reverse("offers:create") in content
+        assert reverse("offers:company-list") in content
+        assert reverse("offers:detail", kwargs={"pk": offer.pk}) in content
+
+    def test_student_dashboard_links_to_search(self, client):
+        student = UserFactory(role=Role.STUDENT, email_verified=True)
+        StudentProfile.objects.create(user=student, field_of_study="Droit", level="L2")
+        client.force_login(student)
+
+        content = client.get(reverse("profiles:dashboard")).content.decode()
+
+        assert reverse("offers:list") in content

@@ -1,0 +1,93 @@
+{% comment %}
+    Composant Input StageLink
+
+    Variables :
+    - field : champ Django BoundField
+    - type : text | email | password | number | date | ...
+    - placeholder : texte indicatif déjà traduit
+    - disabled : true | false
+
+    Les labels, textes d'aide et erreurs sont fournis par Django
+    et doivent être internationalisés au niveau du formulaire/modèle.
+{% endcomment %}
+
+<div class="w-full">
+    <label
+        for="{{ field.id_for_label }}"
+        class="mb-2 block text-sm font-semibold text-text"
+    >
+        {{ field.label }}
+
+        {% if field.field.required %}
+            <span
+                class="text-status-rejected-text"
+                aria-hidden="true"
+            >
+                *
+            </span>
+        {% endif %}
+    </label>
+
+    <input
+        id="{{ field.id_for_label }}"
+        name="{{ field.html_name }}"
+        type="{{ type|default:field.field.widget.input_type }}"
+        value="{{ field.value|default_if_none:'' }}"
+        {% if placeholder %}
+            placeholder="{{ placeholder }}"
+        {% endif %}
+        {% if field.field.required %}
+            required
+        {% endif %}
+        {% if disabled %}
+            disabled
+        {% endif %}
+        {% if field.errors %}
+            aria-invalid="true"
+            aria-describedby="{{ field.id_for_label }}-error"
+        {% endif %}
+        class="
+            w-full
+            rounded-control
+            border
+            bg-surface
+            px-4
+            py-2.5
+            text-sm
+            text-text
+            placeholder:text-text-muted
+            transition-colors
+            duration-150
+            focus:border-primary
+            focus:outline-none
+            focus:ring-2
+            focus:ring-primary/20
+            disabled:cursor-not-allowed
+            disabled:bg-background
+            disabled:opacity-60
+
+            {% if field.errors %}
+                border-status-rejected-text
+                focus:border-status-rejected-text
+                focus:ring-status-rejected-text/20
+            {% else %}
+                border-border
+            {% endif %}
+        "
+    />
+
+    {% if field.help_text %}
+        <p class="mt-1.5 text-xs text-text-muted">
+            {{ field.help_text }}
+        </p>
+    {% endif %}
+
+    {% if field.errors %}
+        <p
+            id="{{ field.id_for_label }}-error"
+            class="mt-1.5 text-sm text-status-rejected-text"
+        >
+            {{ field.errors|striptags }}
+        </p>
+    {% endif %}
+</div>

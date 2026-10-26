@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load stagelink_icons %}
+
+{% block title %}
+  {% translate "Vérifier votre adresse e-mail" %}
+{% endblock title %}
+
+{% block content %}
+  <div class="min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
+    <div class="mx-auto flex min-h-[70vh] w-full max-w-md items-center justify-center">
+
+      <div class="w-full">
+
+        
+        <div class="mb-8 text-center">
+
+          
+
+          <h1 class="font-heading text-3xl font-bold tracking-tight text-text">
+            {% translate "Vérifiez votre adresse e-mail" %}
+          </h1>
+
+          <p class="mx-auto mt-3 max-w-sm text-sm leading-6 text-text-muted">
+            {% translate "Nous avons envoyé un code de vérification à votre adresse e-mail." %}
+          </p>
+
+          {% if email %}
+            <p class="mt-2 truncate text-sm font-semibold text-text">
+              {{ email }}
+            </p>
+          {% endif %}
+
+        </div>
+
+
+        
+        <div class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">
+
+          <form
+            method="post"
+            action="{% url 'users:verify_otp' purpose=purpose token=token %}"
+            class="space-y-6"
+            novalidate
+          >
+            {% csrf_token %}
+              {{ form.token.as_hidden }}
+
+            {# Global errors #}
+            {% if form.non_field_errors %}
+              <div
+                class="rounded-control border border-status-rejected-text bg-status-rejected-bg px-4 py-3 text-sm text-status-rejected-text"
+                role="alert"
+              >
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+
+            {# OTP field #}
+            <div>
+              <label
+                for="{{ form.code.id_for_label }}"
+                class="mb-2 block text-sm font-semibold text-text"
+              >
+                {% translate "Code de vérification" %}
+                <span
+                  class="text-status-rejected-text"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
+
+              <input
+                type="text"
+                name="{{ form.code.html_name }}"
+                id="{{ form.code.id_for_label }}"
+                value="{{ form.code.value|default:'' }}"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="6"
+                pattern="[0-9]{6}"
+                placeholder="000000"
+                required
+                autofocus
+                aria-describedby="{{ form.code.id_for_label }}-help{% if form.code.errors %} {{ form.code.id_for_label }}-error{% endif %}"
+                class="
+                  w-full rounded-control border border-border
+                  bg-surface px-4 py-4
+                  text-center text-2xl font-semibold tracking-[0.45em]
+                  text-text
+                  placeholder:text-border
+                  transition-colors duration-150
+                  focus:border-primary
+                  focus:outline-none
+                  focus:ring-2 focus:ring-primary/20
+                  {% if form.code.errors %}
+                    border-status-rejected-text
+                    focus:border-status-rejected-text
+                    focus:ring-status-rejected-text/20
+                  {% endif %}
+                "
+              />
+
+              <p
+                id="{{ form.code.id_for_label }}-help"
+                class="mt-2 text-xs text-text-muted"
+              >
+                {% translate "Entrez les 6 chiffres reçus par e-mail." %}
+              </p>
+
+              {% if form.code.errors %}
+                <p
+                  id="{{ form.code.id_for_label }}-error"
+                  class="mt-1.5 text-sm text-status-rejected-text"
+                  role="alert"
+                >
+                  {{ form.code.errors|striptags }}
+                </p>
+              {% endif %}
+            </div>
+
+
+            {# Submit #}
+            <button
+              type="submit"
+              class="
+                inline-flex w-full items-center justify-center
+                rounded-control bg-primary
+                px-4 py-2.5
+                text-sm font-semibold text-white
+                transition-colors duration-150
+                hover:bg-primary-dark
+                focus:outline-none
+                focus:ring-2 focus:ring-primary/20
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+              "
+            >
+              {% translate "Vérifier mon adresse e-mail" %}
+            </button>
+
+          </form>
+
+
+          
+          <div class="mt-6 border-t border-border pt-6 text-center">
+
+            <p class="text-sm text-text-muted">
+              {% translate "Vous n'avez pas reçu le code ?" %}
+            </p>
+
+            <form
+              method="post"
+              action="{% url 'users:resend_otp' purpose=purpose token=token %}"
+              class="mt-2"
+            >
+              {% csrf_token %}
+
+              <button
+                type="submit"
+                class="
+                  text-sm font-semibold text-primary
+                  transition-colors duration-150
+                  hover:text-primary-dark
+                  focus:outline-none
+                  focus:ring-2 focus:ring-primary/20
+                  focus:ring-offset-2
+                "
+              >
+                {% translate "Renvoyer le code" %}
+              </button>
+
+            </form>
+
+          </div>
+
+        </div>
+
+
+        
+        <div class="mt-6 flex items-start justify-center gap-2 px-4 text-center">
+
+          {% icon "check" size="size-4" class_="mt-0.5 text-text-muted" %}
+
+          <p class="text-xs leading-5 text-text-muted">
+            {% translate "Pour votre sécurité, ce code est temporaire et ne peut être utilisé qu'une seule fois." %}
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+{% endblock content %}
