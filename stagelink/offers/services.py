@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from stagelink.utils.enums import OfferStatus
 
@@ -67,7 +68,7 @@ def create_offer(user, data: dict) -> InternshipOffer:
         company_profile = user.company_profile
     except AttributeError as exc:
         raise ValidationError(
-            "L'utilisateur ne possède pas encore de profil entreprise.",
+            _("L'utilisateur ne possède pas encore de profil entreprise."),
         ) from exc
 
     offer_data = _clean_offer_data(data)
@@ -136,7 +137,12 @@ def update_offer(
 
     if offer.is_deleted:
         raise ValidationError(
-            "Une offre supprimée ne peut pas être modifiée.",
+            _("Une offre supprimée ne peut pas être modifiée."),
+        )
+
+    if offer.status == OfferStatus.CLOSED:
+        raise ValidationError(
+            _("Une offre fermée ne peut plus être modifiée."),
         )
 
     offer_data = _clean_offer_data(data)
@@ -165,12 +171,20 @@ def publish_offer(
 
     if offer.is_deleted:
         raise ValidationError(
-            "Une offre supprimée ne peut pas être publiée.",
+            _("Une offre supprimée ne peut pas être publiée."),
         )
 
     if offer.status != OfferStatus.DRAFT:
         raise ValidationError(
-            "Seules les offres en brouillon peuvent être publiées.",
+            _("Seules les offres en brouillon peuvent être publiées."),
+        )
+
+    if offer.application_deadline <= timezone.now():
+        raise ValidationError(
+            _(
+                "La date limite de candidature est dépassée : "
+                "modifiez-la avant de publier l'offre.",
+            ),
         )
 
     offer.status = OfferStatus.PUBLISHED
@@ -196,12 +210,12 @@ def close_offer(
 
     if offer.is_deleted:
         raise ValidationError(
-            "Une offre supprimée ne peut pas être fermée.",
+            _("Une offre supprimée ne peut pas être fermée."),
         )
 
     if offer.status != OfferStatus.PUBLISHED:
         raise ValidationError(
-            "Seules les offres publiées peuvent être fermées.",
+            _("Seules les offres publiées peuvent être fermées."),
         )
 
     offer.status = OfferStatus.CLOSED
@@ -227,7 +241,7 @@ def delete_offer(
 
     if offer.is_deleted:
         raise ValidationError(
-            "Cette offre est déjà supprimée.",
+            _("Cette offre est déjà supprimée."),
         )
 
     offer.soft_delete(user)

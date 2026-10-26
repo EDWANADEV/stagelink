@@ -8,7 +8,10 @@ from django.utils.translation import gettext_lazy as _
 from stagelink.utils.email import EmailUtil
 
 
-@shared_task
+# Tâche « fire-and-forget » : aucun appelant ne lit son résultat. Sans
+# ignore_result, .delay() s'abonne au result backend Redis (pub/sub) dès
+# l'envoi, ce qui fait dépendre la requête HTTP d'inscription de ce backend.
+@shared_task(ignore_result=True)
 def send_otp_email_task(
     email: str,
     full_name: str,

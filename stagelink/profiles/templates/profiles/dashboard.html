@@ -20,11 +20,29 @@
           {% endif %}
         </h1>
       </div>
-      <a href="{% url 'profiles:complete' %}"
-         class="inline-flex items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white">
-        {% icon "edit" size="size-4" %}
-        {% translate "Modifier mon profil" %}
-      </a>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <a href="{% url 'profiles:complete' %}"
+           class="inline-flex items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white">
+          {% icon "edit" size="size-4" %}
+          {% translate "Modifier mon profil" %}
+        </a>
+        {% if user.role == "COMPANY" %}
+          <a href="{% url 'offers:company-list' %}"
+             class="inline-flex items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white">
+            {% translate "Mes offres" %}
+          </a>
+          <a href="{% url 'offers:create' %}"
+             class="inline-flex items-center justify-center gap-2 rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
+            {% translate "Publier une offre" %}
+          </a>
+        {% else %}
+          <a href="{% url 'offers:list' %}"
+             class="inline-flex items-center justify-center gap-2 rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
+            {% icon "search" size="size-4" %}
+            {% translate "Rechercher un stage" %}
+          </a>
+        {% endif %}
+      </div>
     </div>
     {% if user.role == "COMPANY" %}
       {# Statistiques entreprise #}
@@ -56,7 +74,8 @@
           {% for offer in recent_offers %}
             <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
               <div class="min-w-0">
-                <p class="truncate font-semibold text-text">{{ offer.title }}</p>
+                <a href="{% url 'offers:detail' pk=offer.pk %}"
+                   class="block truncate font-semibold text-text hover:text-primary">{{ offer.title }}</a>
                 <p class="text-sm text-text-muted">{{ offer.location }}</p>
               </div>
               <div class="flex items-center gap-3">

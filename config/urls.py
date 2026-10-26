@@ -23,7 +23,7 @@ urlpatterns = [
     path("users/", include("stagelink.users.urls", namespace="users")),
     path("profiles/", include("stagelink.profiles.urls")),
     # Your stuff: custom urls includes go here
-    # ...
+    path("offers/", include("stagelink.offers.urls", namespace="offers")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]

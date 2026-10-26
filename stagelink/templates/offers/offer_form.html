@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% if object %}
+    {% translate "Modifier l'offre" %}
+  {% else %}
+    {% translate "Nouvelle offre" %}
+  {% endif %}
+  · StageLink
+{% endblock title %}
+{% block content %}
+  <div class="mx-auto max-w-2xl">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold tracking-tight text-text sm:text-3xl">
+        {% if object %}
+          {% translate "Modifier l'offre" %}
+        {% else %}
+          {% translate "Nouvelle offre de stage" %}
+        {% endif %}
+      </h1>
+      {% if not object %}
+        <p class="mt-1 text-sm text-text-muted">
+          {% translate "L'offre est enregistrée en brouillon : vous pourrez la relire avant de la publier." %}
+        </p>
+      {% endif %}
+    </div>
+    <div class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">
+      <form method="post" class="space-y-6" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+               role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+          {% include "components/form_field.html" with field=field %}
+        {% endfor %}
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <a href="{% if object %}{% url 'offers:detail' pk=object.pk %}{% else %}{% url 'offers:company-list' %}{% endif %}"
+             class="inline-flex justify-center rounded-control px-5 py-3 text-sm font-semibold text-primary transition hover:bg-background">
+            {% translate "Annuler" %}
+          </a>
+          <button type="submit"
+                  class="inline-flex justify-center rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+            {% if object %}
+              {% translate "Enregistrer" %}
+            {% else %}
+              {% translate "Enregistrer le brouillon" %}
+            {% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

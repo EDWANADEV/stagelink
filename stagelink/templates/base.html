@@ -118,6 +118,16 @@
             </a>
 
 
+            <!-- Offres de stage -->
+
+            <a
+              href="{% url 'offers:list' %}"
+              class="rounded-control px-4 py-2 text-sm font-medium text-text transition hover:bg-background hover:text-primary"
+            >
+              {% translate "Offres de stage" %}
+            </a>
+
+
             {% if request.user.is_authenticated %}
 
               <!-- Utilisateur connecté -->
