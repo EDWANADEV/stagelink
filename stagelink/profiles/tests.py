@@ -90,6 +90,7 @@ def test_student_cv_download_is_private_and_attachment(client):
 
     assert response.status_code == HTTPStatus.OK
     assert response["Content-Disposition"].startswith("attachment;")
+    assert response["Cache-Control"] == "private, no-store"
     assert b"".join(response.streaming_content) == b"%PDF-1.4\nCV"
 
 
