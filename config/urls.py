@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.http import HttpResponseNotFound
 from django.urls import include
 from django.urls import path
 from django.views import defaults as default_views
@@ -9,6 +10,11 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView
 from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
+
+
+def private_cv_media_not_found(request, *args, **kwargs):
+    """Empêche le service des CV via la route média publique."""
+    return HttpResponseNotFound()
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="base.html"), name="home"),
@@ -24,6 +30,12 @@ urlpatterns = [
     path("profiles/", include("stagelink.profiles.urls")),
     # Your stuff: custom urls includes go here
     path("offers/", include("stagelink.offers.urls", namespace="offers")),
+    # Les CV sont servis par la vue protégée de profiles, jamais par MEDIA_URL.
+    path(
+        "media/cv/<path:file_path>",
+        private_cv_media_not_found,
+        name="private-cv-media",
+    ),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]

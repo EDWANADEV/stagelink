@@ -11,7 +11,8 @@ from django.urls import resolve
 from django.utils.translation import get_language_from_request
 from django.utils.translation import gettext_lazy as _
 
-from stagelink.profiles.services import has_completed_profile
+from stagelink.profiles.services import get_profile
+from stagelink.profiles.services import is_profile_complete
 from stagelink.users.otp_utils import OtpTokenError
 from stagelink.users.otp_utils import decode_otp_token
 from stagelink.users.services import OtpEmailService
@@ -42,7 +43,7 @@ EXEMPT_URL_NAMES = frozenset(
         "users:resend_otp",
         "users:forgot_password",
         "users:reset_password",
-        "profiles:complete",
+        "private-cv-media",
     },
 )
 
@@ -86,12 +87,15 @@ class ProfileCompletionMiddleware:
         if not user.email_verified:
             return self._redirect_to_email_verification(request, user)
 
-        if not has_completed_profile(user):
+        profile = get_profile(user)
+        if profile is None or not is_profile_complete(user, profile):
             messages.info(
                 request,
                 _("Veuillez compléter votre profil pour continuer."),
             )
             return redirect("profiles:complete")
+
+        request.stagelink_profile = profile
 
         return self.get_response(request)
 
@@ -104,16 +108,21 @@ class ProfileCompletionMiddleware:
         if request.path_info.startswith(self.exempt_path_prefixes):
             return False
 
-        return not self._is_exempt_view(request)
+        return not self._is_exempt_view(request, user)
 
     @staticmethod
-    def _is_exempt_view(request: HttpRequest) -> bool:
+    def _is_exempt_view(request: HttpRequest, user: User) -> bool:
         """Vérifie si l'URL demandée correspond à une vue exclue."""
         try:
             match = resolve(request.path_info)
         except Resolver404:
             # Laisse Django produire la page 404 habituelle.
             return True
+
+        if match.view_name == "profiles:complete":
+            # La page de complétion n'est accessible qu'après vérification
+            # de l'adresse ; elle reste ensuite accessible pour modifier le profil.
+            return user.email_verified
 
         return match.view_name in EXEMPT_URL_NAMES
 

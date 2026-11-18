@@ -9,6 +9,7 @@ from django.db.models import Q
 from stagelink.application.models import Application
 from stagelink.offers.models import InternshipOffer
 from stagelink.utils.enums import ApplicationStatus
+from stagelink.utils.enums import Language
 from stagelink.utils.enums import OfferStatus
 from stagelink.utils.enums import Role
 
@@ -29,6 +30,16 @@ PROFILE_MODEL_BY_ROLE = {
 # Nombre d'éléments récents affichés sur le tableau de bord.
 DASHBOARD_RECENT_ITEMS = 5
 
+# Reprend les champs obligatoires des formulaires et des modèles existants.
+# Le nom est saisi dans StudentProfileForm même s'il est stocké sur User.
+REQUIRED_PROFILE_FIELDS_BY_ROLE = {
+    Role.STUDENT: ("name", "field_of_study", "level", "language"),
+    Role.COMPANY: ("company_name", "address"),
+}
+REQUIRED_PROFILE_CHOICES_BY_FIELD = {
+    "language": Language.values,
+}
+
 
 def get_profile(user: User) -> StudentProfile | CompanyProfile | None:
     """
@@ -43,18 +54,35 @@ def get_profile(user: User) -> StudentProfile | CompanyProfile | None:
     return profile_model.objects.select_related("user").filter(user=user).first()
 
 
+def is_profile_complete(
+    user: User,
+    profile: StudentProfile | CompanyProfile | None = None,
+) -> bool:
+    """Vérifie les champs obligatoires du formulaire associé au rôle."""
+    if profile is None:
+        profile = get_profile(user)
+    if profile is None:
+        return False
+
+    required_fields = REQUIRED_PROFILE_FIELDS_BY_ROLE.get(user.role)
+    if required_fields is None:
+        return False
+
+    for field_name in required_fields:
+        instance = user if field_name == "name" else profile
+        value = getattr(instance, field_name, None)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return False
+        allowed_values = REQUIRED_PROFILE_CHOICES_BY_FIELD.get(field_name)
+        if allowed_values is not None and value not in allowed_values:
+            return False
+
+    return True
+
+
 def has_completed_profile(user: User) -> bool:
-    """
-    Indique si l'utilisateur a complété le profil correspondant à son rôle.
-
-    Une seule requête EXISTS est exécutée. Les rôles sans profil
-    sont considérés comme complets.
-    """
-    profile_model = PROFILE_MODEL_BY_ROLE.get(user.role)
-    if profile_model is None:
-        return True
-
-    return profile_model.objects.filter(user_id=user.pk).exists()
+    """Indique si le profil de l'utilisateur est entièrement complété."""
+    return is_profile_complete(user)
 
 
 @transaction.atomic
@@ -141,13 +169,17 @@ def get_company_dashboard_data(profile: CompanyProfile) -> dict:
     }
 
 
-def get_dashboard_data(user: User) -> dict:
+def get_dashboard_data(
+    user: User,
+    profile: StudentProfile | CompanyProfile | None = None,
+) -> dict:
     """
     Construit le contexte du tableau de bord selon le rôle.
 
     Retourne un dictionnaire vide si l'utilisateur n'a pas de profil.
     """
-    profile = get_profile(user)
+    if profile is None:
+        profile = get_profile(user)
     if profile is None:
         return {}
 
