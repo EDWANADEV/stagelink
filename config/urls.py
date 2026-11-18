@@ -16,18 +16,27 @@ def private_cv_media_not_found(request, *args, **kwargs):
     """Empêche le service des CV via la route média publique."""
     return HttpResponseNotFound()
 
+
 urlpatterns = [
     path("", TemplateView.as_view(template_name="base.html"), name="home"),
     path(
-    "about/",
-    TemplateView.as_view(template_name="home/pages/about.html"),
-    name="about",
-),
+        "about/",
+        TemplateView.as_view(template_name="home/pages/about.html"),
+        name="about",
+    ),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
     path("users/", include("stagelink.users.urls", namespace="users")),
     path("profiles/", include("stagelink.profiles.urls")),
+    path(
+        "applications/",
+        include("stagelink.application.urls", namespace="application"),
+    ),
+    path(
+        "notifications/",
+        include("stagelink.notifications.urls", namespace="notifications"),
+    ),
     # Your stuff: custom urls includes go here
     path("offers/", include("stagelink.offers.urls", namespace="offers")),
     # Les CV sont servis par la vue protégée de profiles, jamais par MEDIA_URL.

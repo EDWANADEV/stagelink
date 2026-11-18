@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% translate "Notifications" %} · StageLink
+{% endblock title %}
+{% block content %}
+  <main class="mx-auto max-w-4xl space-y-6">
+    <header>
+      <h1 class="font-heading text-3xl font-bold text-text">{% translate "Notifications" %}</h1>
+      <p class="mt-2 text-sm text-text-muted">{% translate "Les mises à jour de votre activité sur StageLink." %}</p>
+    </header>
+    <section class="overflow-hidden rounded-card border border-border bg-surface">
+      <ul class="divide-y divide-border">
+        {% for notification in notifications %}
+          <li class="flex items-start justify-between gap-4 p-5 {% if not notification.is_read %}bg-primary/5{% endif %}">
+            <div>
+              <p class="text-sm text-text">{{ notification.message }}</p>
+              <p class="mt-2 text-xs text-text-muted">{{ notification.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            {% if not notification.is_read %}
+              <form method="post" action="{% url 'notifications:read' pk=notification.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="whitespace-nowrap text-sm font-semibold text-primary">{% translate "Marquer comme lue" %}</button>
+              </form>
+            {% else %}
+              <span class="whitespace-nowrap text-xs text-text-muted">{% translate "Lue" %}</span>
+            {% endif %}
+          </li>
+        {% empty %}
+          <li class="p-8 text-center text-sm text-text-muted">{% translate "Vous n'avez aucune notification." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% if is_paginated %}
+      <nav class="flex justify-between" aria-label="{% translate 'Pagination' %}">
+        {% if page_obj.has_previous %}<a class="text-sm font-semibold text-primary" href="?page={{ page_obj.previous_page_number }}">{% translate "Précédent" %}</a>{% else %}<span></span>{% endif %}
+        <span class="text-sm text-text-muted">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a class="text-sm font-semibold text-primary" href="?page={{ page_obj.next_page_number }}">{% translate "Suivant" %}</a>{% endif %}
+      </nav>
+    {% endif %}
+  </main>
+{% endblock content %}

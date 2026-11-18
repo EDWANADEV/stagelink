@@ -139,6 +139,29 @@
                 {% translate "Tableau de bord" %}
               </a>
 
+              {% if request.user.role == "STUDENT" %}
+                <a
+                  href="{% url 'application:student-list' %}"
+                  class="rounded-control px-4 py-2 text-sm font-medium text-text transition hover:bg-background hover:text-primary"
+                >
+                  {% translate "Mes candidatures" %}
+                </a>
+              {% elif request.user.role == "COMPANY" %}
+                <a
+                  href="{% url 'application:company-list' %}"
+                  class="rounded-control px-4 py-2 text-sm font-medium text-text transition hover:bg-background hover:text-primary"
+                >
+                  {% translate "Candidatures reçues" %}
+                </a>
+              {% endif %}
+
+              <a
+                href="{% url 'notifications:list' %}"
+                class="rounded-control px-4 py-2 text-sm font-medium text-text transition hover:bg-background hover:text-primary"
+              >
+                {% translate "Notifications" %}
+              </a>
+
 
               <form
                 method="post"

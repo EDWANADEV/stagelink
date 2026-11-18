@@ -1,11 +1,15 @@
 from datetime import timedelta
 from http import HTTPStatus
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
+from django.contrib.admin.sites import AdminSite
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
 
+from stagelink.offers.admin import InternshipOfferAdmin
 from stagelink.offers.admin import InternshipOfferAdminForm
 from stagelink.offers.models import InternshipOffer
 from stagelink.offers.services import publish_offer
@@ -352,6 +356,30 @@ class TestServices:
 
 
 class TestAdmin:
+    def test_admin_can_publish_relayed_external_offer(self):
+        admin_user = UserFactory(is_staff=True)
+        offer = make_offer(
+            None,
+            status=OfferStatus.DRAFT,
+            published_at=None,
+            application_mode=ApplicationMode.EXTERNAL,
+            application_url="https://source.example/jobs/1",
+        )
+        offer.created_by = admin_user
+        offer.save(update_fields=["created_by"])
+        model_admin = InternshipOfferAdmin(InternshipOffer, AdminSite())
+        model_admin.message_user = Mock()
+
+        model_admin.publish_selected(
+            SimpleNamespace(user=admin_user),
+            InternshipOffer.objects.filter(pk=offer.pk),
+        )
+
+        offer.refresh_from_db()
+        assert offer.status == OfferStatus.PUBLISHED
+        assert offer.published_at is not None
+        assert offer.company is None
+
     def test_relayed_offer_must_be_external(self):
         data = {
             "title": "Stage relayé",
