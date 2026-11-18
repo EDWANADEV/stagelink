@@ -208,6 +208,24 @@ class TestExternalRedirect:
 
 
 class TestCompanyManagement:
+    def test_incomplete_staff_company_cannot_bypass_profile_completion(self, client):
+        company_user = UserFactory(
+            role=Role.COMPANY,
+            email_verified=False,
+            is_staff=True,
+        )
+        CompanyProfile.objects.create(
+            user=company_user,
+            company_name="",
+            address="",
+        )
+        client.force_login(company_user)
+
+        response = client.get(reverse("offers:create"))
+
+        assert response.status_code == HTTPStatus.FOUND
+        assert response["Location"] == reverse("profiles:complete")
+
     def test_requires_company_role(self, client):
         student = UserFactory(role=Role.STUDENT, email_verified=True)
         StudentProfile.objects.create(user=student, field_of_study="Droit", level="L2")

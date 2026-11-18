@@ -134,9 +134,11 @@ class StudentCVView(LoginRequiredMixin, View):
         if not request.user.is_staff and not is_owner and not is_related_company:
             raise PermissionDenied
 
-        return FileResponse(
+        response = FileResponse(
             profile.cv.open("rb"),
             as_attachment=True,
             filename=Path(profile.cv.name).name,
             content_type="application/pdf",
         )
+        response["Cache-Control"] = "private, no-store"
+        return response

@@ -18,6 +18,7 @@ from django.views.generic import ListView
 from django.views.generic import UpdateView
 
 from stagelink.profiles.services import get_profile
+from stagelink.profiles.services import is_profile_complete
 from stagelink.utils.enums import ApplicationMode
 from stagelink.utils.enums import OfferStatus
 from stagelink.utils.enums import Role
@@ -44,6 +45,8 @@ class CompanyRequiredMixin(LoginRequiredMixin):
     middleware est désactivé ou pour l'équipe d'administration).
     """
 
+    login_url = "users:signin"
+
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
@@ -51,8 +54,13 @@ class CompanyRequiredMixin(LoginRequiredMixin):
         if request.user.role != Role.COMPANY:
             raise PermissionDenied
 
-        self.profile = get_profile(request.user)
+        self.profile = getattr(request, "stagelink_profile", None)
         if self.profile is None:
+            self.profile = get_profile(request.user)
+        if self.profile is None or not is_profile_complete(
+            request.user,
+            self.profile,
+        ):
             return redirect("profiles:complete")
 
         return super().dispatch(request, *args, **kwargs)
