@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% translate "Mes offres" %} · StageLink
+{% endblock title %}
+{% block content %}
+  <div class="space-y-6">
+    <!-- En-tête -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-text sm:text-3xl">{% translate "Mes offres" %}</h1>
+        <p class="mt-1 text-sm text-text-muted">{% translate "Créez, publiez et fermez vos offres de stage." %}</p>
+      </div>
+      <a href="{% url 'offers:create' %}"
+         class="inline-flex justify-center rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+        {% translate "Nouvelle offre" %}
+      </a>
+    </div>
+    <!-- Filtre par statut -->
+    <nav class="flex flex-wrap gap-2" aria-label="{% translate 'Filtrer par statut' %}">
+      <a href="{% url 'offers:company-list' %}"
+         class="rounded-full px-4 py-1.5 text-sm font-semibold transition {% if not status_filter %}bg-primary text-white{% else %}bg-surface text-text hover:bg-primary/10{% endif %}"
+         {% if not status_filter %}aria-current="page"{% endif %}>{% translate "Toutes" %}</a>
+      {% for value, label in status_choices %}
+        <a href="?status={{ value }}"
+           class="rounded-full px-4 py-1.5 text-sm font-semibold transition {% if status_filter == value %}bg-primary text-white{% else %}bg-surface text-text hover:bg-primary/10{% endif %}"
+           {% if status_filter == value %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+    <!-- Liste -->
+    {% if offers %}
+      <ul class="divide-y divide-border rounded-card border border-border bg-surface shadow-sm">
+        {% for offer in offers %}
+          <li class="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="min-w-0">
+              <a href="{% url 'offers:detail' pk=offer.pk %}"
+                 class="text-sm font-semibold text-text hover:text-primary">{{ offer.title }}</a>
+              <p class="mt-0.5 text-xs text-text-muted">
+                {{ offer.location }} ·
+                {% blocktranslate with date=offer.application_deadline|date:"d/m/Y" %}Date limite : {{ date }}{% endblocktranslate %}
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              {% include "offers/partials/status_badge.html" with offer=offer %}
+              {% if offer.status != "CLOSED" %}
+                <a href="{% url 'offers:update' pk=offer.pk %}"
+                   class="text-sm font-semibold text-primary hover:text-primary-dark">{% translate "Modifier" %}</a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      {% include "offers/partials/pagination.html" %}
+    {% else %}
+      {% if status_filter %}
+        {% translate "Aucune offre avec ce statut" as title %}
+        {% translate "Choisissez un autre statut ou affichez toutes vos offres." as message %}
+      {% else %}
+        {% translate "Vous n'avez encore créé aucune offre" as title %}
+        {% translate "Créez votre première offre de stage : elle restera en brouillon jusqu'à sa publication." as message %}
+      {% endif %}
+      {% include "offers/partials/empty_state.html" with title=title message=message %}
+    {% endif %}
+  </div>
+{% endblock content %}

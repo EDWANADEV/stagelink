@@ -1,1 +1,98 @@
 @import "tailwindcss";
+
+
+@font-face {
+    font-family: "Inter";
+    src: url("/static/fonts/Inter/Inter-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Fraunces";
+    src: url("/static/fonts/Fraunces/Fraunces-Variable.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+
+@theme {
+    /* ========================================
+       COLORS
+       ======================================== */
+
+    --color-primary: #1565C0;
+    --color-primary-dark: #0D47A1;
+    --color-accent: #E3A72E;
+
+    --color-background: #EEF2F7;
+    --color-surface: #FFFFFF;
+    --color-border: #D6DCE6;
+
+    --color-text: #16203A;
+    --color-text-muted: #5A6478;
+
+
+    /* ========================================
+       TYPOGRAPHY
+       ======================================== */
+
+    --font-heading: "Fraunces", serif;
+    --font-body: "Inter", sans-serif;
+
+
+    /* ========================================
+       BORDER RADIUS
+       ======================================== */
+
+    --radius-badge: 6px;
+    --radius-control: 10px;
+    --radius-card: 14px;
+
+
+    /* ========================================
+       APPLICATION STATUS
+       ======================================== */
+
+    --color-status-received-bg: #EDEEF0;
+    --color-status-received-text: #555555;
+
+    --color-status-viewed-bg: #E1EAF6;
+    --color-status-viewed-text: #0D47A1;
+
+    --color-status-interview-bg: #FBF0DA;
+    --color-status-interview-text: #B9821F;
+
+    --color-status-accepted-bg: #DEEBE0;
+    --color-status-accepted-text: #1F6E43;
+
+    --color-status-rejected-bg: #F6E4E2;
+    --color-status-rejected-text: #B3402B;
+}
+
+
+/* ========================================
+   BASE
+   ======================================== */
+
+@layer base {
+    html {
+        font-family: var(--font-body);
+    }
+
+    body {
+        background-color: var(--color-background);
+        color: var(--color-text);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: var(--font-heading);
+    }
+}

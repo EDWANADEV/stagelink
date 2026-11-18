@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% translate "Offres de stage" %} · StageLink
+{% endblock title %}
+{% block content %}
+  <div class="space-y-8">
+    <!-- En-tête -->
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-text sm:text-3xl">{% translate "Offres de stage" %}</h1>
+      <p class="mt-1 text-sm text-text-muted">
+        {% blocktranslate count counter=paginator.count %}{{ counter }} offre disponible{% plural %}{{ counter }} offres disponibles{% endblocktranslate %}
+      </p>
+    </div>
+    <!-- Recherche et filtres -->
+    <form method="get"
+          role="search"
+          class="grid gap-4 rounded-card border border-border bg-surface p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-6">
+      <div class="sm:col-span-2">
+        <label for="{{ search_form.q.id_for_label }}"
+               class="mb-1.5 block text-xs font-semibold text-text">{{ search_form.q.label }}</label>
+        {{ search_form.q }}
+      </div>
+      <div>
+        <label for="{{ search_form.domain.id_for_label }}"
+               class="mb-1.5 block text-xs font-semibold text-text">{{ search_form.domain.label }}</label>
+        {{ search_form.domain }}
+      </div>
+      <div>
+        <label for="{{ search_form.location.id_for_label }}"
+               class="mb-1.5 block text-xs font-semibold text-text">{{ search_form.location.label }}</label>
+        {{ search_form.location }}
+      </div>
+      <div>
+        <label for="{{ search_form.application_mode.id_for_label }}"
+               class="mb-1.5 block text-xs font-semibold text-text">{{ search_form.application_mode.label }}</label>
+        {{ search_form.application_mode }}
+      </div>
+      <div>
+        <label for="{{ search_form.sort.id_for_label }}"
+               class="mb-1.5 block text-xs font-semibold text-text">{{ search_form.sort.label }}</label>
+        {{ search_form.sort }}
+      </div>
+      <div class="flex flex-col-reverse gap-3 sm:col-span-2 sm:flex-row sm:justify-end lg:col-span-6">
+        {% if is_filtered %}
+          <a href="{% url 'offers:list' %}"
+             class="inline-flex justify-center rounded-control px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-background">
+            {% translate "Réinitialiser" %}
+          </a>
+        {% endif %}
+        <button type="submit"
+                class="inline-flex justify-center rounded-control bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+          {% translate "Rechercher" %}
+        </button>
+      </div>
+    </form>
+    <!-- Résultats -->
+    {% if offers %}
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {% for offer in offers %}
+          {% include "offers/partials/offer_card.html" with offer=offer %}
+        {% endfor %}
+      </div>
+      {% include "offers/partials/pagination.html" %}
+    {% else %}
+      {% if is_filtered %}
+        {% translate "Aucune offre ne correspond à votre recherche" as title %}
+        {% translate "Essayez d'autres mots-clés ou retirez certains filtres." as message %}
+      {% else %}
+        {% translate "Aucune offre disponible pour le moment" as title %}
+        {% translate "Les nouvelles offres de stage apparaîtront ici dès leur publication." as message %}
+      {% endif %}
+      {% include "offers/partials/empty_state.html" with title=title message=message %}
+    {% endif %}
+  </div>
+{% endblock content %}

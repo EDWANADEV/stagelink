@@ -1,0 +1,4 @@
+{% comment %}Badge de statut d'une offre. Paramètre : offer.{% endcomment %}
+<span class="inline-flex w-fit items-center rounded-badge px-2.5 py-1 text-xs font-semibold {% if offer.status == 'PUBLISHED' %}bg-primary/10 text-primary{% elif offer.status == 'CLOSED' %}bg-accent/15 text-text{% else %}bg-background text-text-muted{% endif %}">
+  {{ offer.get_status_display }}
+</span>

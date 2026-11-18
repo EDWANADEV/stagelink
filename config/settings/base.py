@@ -25,7 +25,7 @@ EMAIL_LOGO_PATH = env(
 )
 
 OTP_EXPIRATION_MINUTES = env.int(
-    "OTP_EXPIRATION_MINUTES",
+    "DJANGO_OTP_EXPIRATION_MINUTES",
     default=5,
 )
 OTP_MAX_ATTEMPTS = env.int(
@@ -36,6 +36,11 @@ OTP_MAX_ATTEMPTS = env.int(
 OTP_LENGTH = env.int(
     "DJANGO_OTP_LENGTH",
     default=6,
+)
+
+OTP_REQUEST_COOLDOWN_SECONDS = env.int(
+    "OTP_REQUEST_COOLDOWN_SECONDS",
+    default=60,
 )
 
 # Configuration Flutterwave (Sécurisée avec valeurs par défaut)
@@ -220,6 +225,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "stagelink.users.middleware.ProfileCompletionMiddleware",
 ]
 
 # STATIC
@@ -337,7 +343,7 @@ LOGGING = {
     "root": {"level": "INFO", "handlers": ["console"]},
 }
 
-REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
+REDIS_URL = env("REDIS_URL", default="redis://127.0.0.1:6379/0")
 REDIS_SSL = REDIS_URL.startswith("rediss://")
 
 # Celery

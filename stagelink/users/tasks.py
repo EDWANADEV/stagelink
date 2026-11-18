@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 from celery import shared_task
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
+from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
-from .models import OTPVerification
+from stagelink.utils.email import EmailUtil
 
 
 @shared_task(ignore_result=True)
@@ -59,9 +60,10 @@ def send_otp_email(
         to=[verification.user.email],
     )
 
-    email.attach_alternative(
-        html_message,
-        "text/html",
-    )
+        context = {
+            "full_name": full_name,
+            "code": code,
+            "validity": validity,
+        }
 
     email.send(fail_silently=False)

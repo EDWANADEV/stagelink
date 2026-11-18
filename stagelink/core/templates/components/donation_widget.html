@@ -1,0 +1,137 @@
+{% load i18n %}
+
+{% comment %}
+    Composant DonationWidget StageLink
+
+    Variables :
+    - action : URL du formulaire
+    - amount : montant éventuellement présélectionné
+    - currency : devise affichée
+{% endcomment %}
+
+<div
+    class="
+        w-full
+        rounded-card
+        border
+        border-border
+        bg-surface
+        p-5
+        sm:p-6
+    "
+>
+    <div class="mb-5">
+        <h2
+            class="
+                font-heading
+                text-xl
+                font-semibold
+                text-text
+            "
+        >
+            {% translate "Soutenir StageLink" %}
+        </h2>
+
+        <p class="mt-1 text-sm leading-6 text-text-muted">
+            {% translate "Votre contribution aide à maintenir et améliorer la plateforme." %}
+        </p>
+    </div>
+
+    <form
+        method="post"
+        action="{{ action }}"
+        class="space-y-5"
+    >
+        {% csrf_token %}
+
+        <div>
+            <label
+                for="donation-amount"
+                class="mb-2 block text-sm font-semibold text-text"
+            >
+                {% translate "Montant du don" %}
+
+                <span
+                    class="text-status-rejected-text"
+                    aria-hidden="true"
+                >
+                    *
+                </span>
+            </label>
+
+            <div class="relative">
+                <input
+                    id="donation-amount"
+                    name="amount"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="{{ amount|default:'' }}"
+                    placeholder="{% translate 'Ex. 5000' %}"
+                    required
+                    class="
+                        w-full
+                        rounded-control
+                        border
+                        border-border
+                        bg-surface
+                        px-4
+                        py-2.5
+                        pr-16
+                        text-sm
+                        text-text
+                        placeholder:text-text-muted
+                        transition-colors
+                        duration-150
+                        focus:border-primary
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-primary/20
+                    "
+                />
+
+                <span
+                    class="
+                        pointer-events-none
+                        absolute
+                        right-4
+                        top-1/2
+                        -translate-y-1/2
+                        text-sm
+                        font-semibold
+                        text-text-muted
+                    "
+                >
+                    {{ currency|default:"XAF" }}
+                </span>
+            </div>
+        </div>
+
+        <button
+            type="submit"
+            class="
+                inline-flex
+                w-full
+                items-center
+                justify-center
+                rounded-control
+                bg-primary
+                px-4
+                py-2.5
+                text-sm
+                font-semibold
+                text-white
+                transition-colors
+                duration-150
+                hover:bg-primary-dark
+                focus:outline-none
+                focus:ring-2
+                focus:ring-primary/20
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+            "
+        >
+            {% translate "Faire un don" %}
+        </button>
+    </form>
+</div>

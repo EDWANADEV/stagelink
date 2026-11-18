@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% if is_completion %}
+    {% translate "Compléter mon profil" %}
+  {% else %}
+    {% translate "Modifier mon profil" %}
+  {% endif %}
+  | StageLink
+{% endblock title %}
+{% block content %}
+  <div class="mx-auto w-full max-w-2xl py-4">
+    {# En-tête : le texte dépend de l'étape et du rôle #}
+    <div class="mb-8 text-center">
+      {% if is_completion %}
+        <p class="text-xs font-semibold uppercase tracking-wide text-accent">{% translate "Dernière étape" %}</p>
+        <h1 class="mt-2 font-heading text-3xl font-bold tracking-tight text-text">{% translate "Complétez votre profil" %}</h1>
+      {% else %}
+        <h1 class="font-heading text-3xl font-bold tracking-tight text-text">{% translate "Modifier mon profil" %}</h1>
+      {% endif %}
+      <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-text-muted">
+        {% if user.role == "COMPANY" %}
+          {% translate "Présentez votre entreprise pour publier des offres de stage." %}
+        {% else %}
+          {% translate "Renseignez votre parcours pour postuler aux offres de stage." %}
+        {% endif %}
+      </p>
+    </div>
+    {# Carte du formulaire #}
+    <div class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">
+      <form method="post"
+            action="{% url 'profiles:complete' %}"
+            enctype="multipart/form-data"
+            class="space-y-6"
+            novalidate>
+        {% csrf_token %}
+        {# Erreurs générales #}
+        {% if form.non_field_errors %}
+          <div class="rounded-control border border-status-rejected-text bg-status-rejected-bg px-4 py-3 text-sm text-status-rejected-text"
+               role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+        {% endif %}
+        {# Champs générés selon le formulaire du rôle #}
+        {% for field in form %}
+          {% include "components/form_field.html" with field=field %}
+        {% endfor %}
+        <div class="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
+          {% if not is_completion %}
+            <a href="{% url 'profiles:dashboard' %}"
+               class="inline-flex items-center justify-center rounded-control px-4 py-2.5 text-sm font-semibold text-text transition-colors hover:bg-background">
+              {% translate "Annuler" %}
+            </a>
+          {% endif %}
+          {% if is_completion %}
+            {% translate "Valider mon profil" as submit_label %}
+          {% else %}
+            {% translate "Enregistrer" as submit_label %}
+          {% endif %}
+          {% include "components/button.html" with type="submit" label=submit_label %}
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

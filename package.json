@@ -8,8 +8,8 @@
     "test": "tests"
   },
   "scripts": {
-  "dev": "npx @tailwindcss/cli -i ./stagelink/static/css/input.css -o ./stagelink/static/css/output.css --watch",
-  "build": "npx @tailwindcss/cli -i ./stagelink/static/css/input.css -o ./stagelink/static/css/output.css --minify"
+    "dev": "npx @tailwindcss/cli -i ./stagelink/static/css/input.css -o ./stagelink/static/css/output.css --watch",
+    "build": "npx @tailwindcss/cli -i ./stagelink/static/css/input.css -o ./stagelink/static/css/output.css --minify"
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/HooYia/stagelink#readme",
   "dependencies": {
+    "@tabler/icons": "^3.46.0",
     "@tailwindcss/cli": "^4.3.3",
     "tailwindcss": "^4.3.3"
   }

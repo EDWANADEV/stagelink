@@ -191,11 +191,16 @@ class InternshipOffer(BaseModel):
             "months": months,
         }
 
-@property
-def is_available(self) -> bool:
-    return (
-        self.status == OfferStatus.PUBLISHED
-        and not self.is_deleted
-        and self.available_positions > 0
-        and self.application_deadline >= timezone.now()
-    )
+    @property
+    def is_available(self) -> bool:
+        return (
+            self.status == OfferStatus.PUBLISHED
+            and not self.is_deleted
+            and self.available_positions > 0
+            and self.application_deadline >= timezone.now()
+        )
+
+    @property
+    def is_relayed(self) -> bool:
+        """Offre relayée par l'administration (sans entreprise StageLink)."""
+        return self.company_id is None

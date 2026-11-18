@@ -68,6 +68,17 @@ if env("USE_DOCKER") == "yes":
 INSTALLED_APPS += ["django_extensions"]
 # Celery
 # ------------------------------------------------------------------------------
+# Hors Docker, l'hôte « redis » n'existe pas : on vise le Redis local par défaut.
+REDIS_URL = env(
+    "REDIS_URL",
+    default=(
+        "redis://redis:6379/0"
+        if env("USE_DOCKER") == "yes"
+        else "redis://localhost:6379/0"
+    ),
+)
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
 
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-eager-propagates
 CELERY_TASK_EAGER_PROPAGATES = True

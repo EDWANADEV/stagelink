@@ -1,0 +1,25 @@
+{% load i18n %}
+
+{% comment %}
+    Composant StatusBadgeGroup StageLink
+
+    Variables :
+    - statuses : liste de dictionnaires contenant :
+        - value : valeur technique du statut
+        - label : libellé traduit du statut
+{% endcomment %}
+
+<div
+    class="flex flex-wrap items-center gap-2"
+    role="list"
+    aria-label="{% translate 'Statuts' %}"
+>
+    {% for item in statuses %}
+        <div role="listitem">
+            {% include "components/status_badge.html" with
+                status=item.value
+                label=item.label
+            %}
+        </div>
+    {% endfor %}
+</div>

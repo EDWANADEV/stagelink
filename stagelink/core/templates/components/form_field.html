@@ -1,0 +1,37 @@
+{% comment %}
+    Composant FormField StageLink
+
+    Affiche n'importe quel champ Django (input, textarea, select, fichier, case à cocher)
+    avec son label, son texte d'aide et ses erreurs.
+    Les classes Tailwind du widget sont fournies par core.forms.DesignSystemFormMixin.
+
+    Variables :
+    - field : champ Django BoundField
+{% endcomment %}
+
+{% if field.is_hidden %}
+  {{ field }}
+{% elif field.widget_type == "checkbox" %}
+  <div class="flex items-center gap-2">
+    {{ field }}
+    <label for="{{ field.id_for_label }}"
+           class="text-sm text-text">{{ field.label }}</label>
+  </div>
+{% else %}
+  <div class="w-full">
+    <label for="{{ field.id_for_label }}"
+           class="mb-2 block text-sm font-semibold text-text">
+      {{ field.label }}
+      {% if field.field.required %}
+        <span class="text-status-rejected-text" aria-hidden="true">*</span>
+      {% endif %}
+    </label>
+    {{ field }}
+    {% if field.help_text %}<p class="mt-1.5 text-xs text-text-muted">{{ field.help_text }}</p>{% endif %}
+    {% if field.errors %}
+      <p id="{{ field.id_for_label }}-error"
+         class="mt-1.5 text-sm text-status-rejected-text"
+         role="alert">{{ field.errors|striptags }}</p>
+    {% endif %}
+  </div>
+{% endif %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% translate "Connexion" %} | StageLink
+{% endblock title %}
+{% block content %}
+  <div class="flex min-h-[70vh] items-center justify-center py-8">
+    <div class="w-full max-w-md">
+      {# En-tête #}
+      <div class="mb-8 text-center">
+        <h1 class="font-heading text-3xl font-bold tracking-tight text-text">{% translate "Bienvenue sur StageLink" %}</h1>
+        <p class="mt-3 text-sm leading-6 text-text-muted">{% translate "Connectez-vous pour accéder à votre espace." %}</p>
+      </div>
+      {# Carte du formulaire #}
+      <div class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">
+        {# L'action conserve le paramètre "next" éventuel #}
+        <form method="post"
+              action="{{ request.get_full_path }}"
+              class="space-y-5"
+              novalidate>
+          {% csrf_token %}
+          {# Erreurs générales #}
+          {% if form.non_field_errors %}
+            <div class="rounded-control border border-status-rejected-text bg-status-rejected-bg px-4 py-3 text-sm text-status-rejected-text"
+                 role="alert">
+              {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+          {% endif %}
+          {% include "components/form_field.html" with field=form.username %}
+          {% include "components/form_field.html" with field=form.password %}
+          <div class="flex items-center justify-between">
+            {% include "components/form_field.html" with field=form.remember_me %}
+            <a href="{% url 'users:forgot_password' %}"
+               class="text-xs font-medium text-primary transition-colors hover:text-primary-dark">
+              {% translate "Mot de passe oublié ?" %}
+            </a>
+          </div>
+          {% translate "Se connecter" as submit_label %}
+          {% include "components/button.html" with type="submit" label=submit_label full_width=True %}
+        </form>
+        {# Lien vers l'inscription #}
+        <div class="mt-6 border-t border-border pt-6 text-center">
+          <p class="text-sm text-text-muted">
+            {% translate "Vous n'avez pas encore de compte ?" %}
+            <a href="{% url 'users:signup' %}"
+               class="font-semibold text-primary transition-colors hover:text-primary-dark">
+              {% translate "Créer un compte" %}
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
