@@ -1,18 +1,27 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
+from django.http import FileResponse
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.utils.translation import gettext_lazy as _
+from django.views import View
 from django.views.generic import FormView
 from django.views.generic import TemplateView
 
+from stagelink.application.models import Application
 from stagelink.profiles.forms import PROFILE_FORM_BY_ROLE
+from stagelink.profiles.models import StudentProfile
 from stagelink.profiles.services import get_dashboard_data
 from stagelink.profiles.services import get_profile
-from stagelink.profiles.services import has_completed_profile
+from stagelink.profiles.services import is_profile_complete
 from stagelink.profiles.services import save_profile
+from stagelink.utils.enums import Role
 
 
 class ProfileCompletionView(LoginRequiredMixin, FormView):
@@ -48,6 +57,7 @@ class ProfileCompletionView(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_completion"] = self.profile is None
+        context["profile"] = self.profile
         return context
 
     def form_valid(self, form):
@@ -85,13 +95,48 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         # Double sécurité si le middleware est désactivé.
-        if request.user.is_authenticated and not has_completed_profile(
-            request.user,
-        ):
-            return redirect("profiles:complete")
+        if request.user.is_authenticated:
+            self.profile = getattr(request, "stagelink_profile", None)
+            if self.profile is None:
+                self.profile = get_profile(request.user)
+            if self.profile is None or not is_profile_complete(
+                request.user,
+                self.profile,
+            ):
+                return redirect("profiles:complete")
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(get_dashboard_data(self.request.user))
+        context.update(get_dashboard_data(self.request.user, self.profile))
         return context
+
+
+class StudentCVView(LoginRequiredMixin, View):
+    """Téléchargement privé du CV par son propriétaire ou le staff."""
+
+    def get(self, request, profile_pk):
+        profile = get_object_or_404(
+            StudentProfile.objects.select_related("user"),
+            pk=profile_pk,
+        )
+        if not profile.cv:
+            raise Http404
+
+        is_owner = profile.user_id == request.user.pk
+        is_related_company = (
+            request.user.role == Role.COMPANY
+            and Application.objects.filter(
+                student=profile,
+                offer__company__user_id=request.user.pk,
+            ).exists()
+        )
+        if not request.user.is_staff and not is_owner and not is_related_company:
+            raise PermissionDenied
+
+        return FileResponse(
+            profile.cv.open("rb"),
+            as_attachment=True,
+            filename=Path(profile.cv.name).name,
+            content_type="application/pdf",
+        )

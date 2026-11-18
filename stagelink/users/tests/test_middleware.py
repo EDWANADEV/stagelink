@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from django.core.cache import cache
 from django.urls import reverse
 
 from stagelink.profiles.models import CompanyProfile
@@ -19,6 +20,11 @@ pytestmark = pytest.mark.django_db
 
 # Page protégée quelconque, interceptée par le middleware.
 PROTECTED_URL = "/about/"
+
+
+@pytest.fixture(autouse=True)
+def clear_otp_cache():
+    cache.clear()
 
 
 @pytest.fixture
@@ -57,18 +63,19 @@ class TestProfileCompletionMiddleware:
             kwargs={"purpose": OTPType.SIGNUP, "token": token},
         )
 
-    def test_unverified_user_receives_new_otp(self, client, mailoutbox):
+    def test_unverified_user_receives_new_otp(self, client):
         user = UserFactory(role=Role.STUDENT)
         client.force_login(user)
 
-        response = client.get(PROTECTED_URL)
+        with patch("stagelink.users.middleware.OtpEmailService.send") as send:
+            response = client.get(PROTECTED_URL)
 
         token = client.session[PENDING_SIGNUP_TOKEN_SESSION_KEY]
         assert response.url == reverse(
             "users:verify_otp",
             kwargs={"purpose": OTPType.SIGNUP, "token": token},
         )
-        assert len(mailoutbox) == 1
+        send.assert_called_once()
 
     def test_unverified_user_is_logged_out_when_rate_limited(self, client):
         client.force_login(UserFactory(role=Role.STUDENT))
@@ -102,6 +109,54 @@ class TestProfileCompletionMiddleware:
 
         assert response.url == reverse("profiles:complete")
 
+    def test_unverified_user_cannot_open_profile_completion(self, client):
+        user = UserFactory(role=Role.STUDENT)
+        client.force_login(user)
+        token = create_otp_token("otp-id", str(user.pk), OTPType.SIGNUP)
+
+        with (
+            patch(
+                "stagelink.users.middleware.OtpService.create",
+                return_value=(None, token),
+            ),
+            patch("stagelink.users.middleware.OtpEmailService.send"),
+        ):
+            response = client.get(reverse("profiles:complete"))
+
+        assert response.url == reverse(
+            "users:verify_otp",
+            kwargs={"purpose": OTPType.SIGNUP, "token": token},
+        )
+
+    def test_incomplete_profile_is_redirected_from_direct_workspace_url(self, client):
+        user = UserFactory(role=Role.STUDENT, email_verified=True, name=" ")
+        StudentProfile.objects.create(
+            user=user,
+            field_of_study="Informatique",
+            level="Licence",
+        )
+        client.force_login(user)
+
+        response = client.get(reverse("profiles:dashboard"))
+
+        assert response.url == reverse("profiles:complete")
+
+    def test_incomplete_company_profile_is_redirected_from_offer_workspace(
+        self,
+        client,
+    ):
+        user = UserFactory(role=Role.COMPANY, email_verified=True)
+        CompanyProfile.objects.create(
+            user=user,
+            company_name=" ",
+            address="Douala",
+        )
+        client.force_login(user)
+
+        response = client.get(reverse("offers:company-list"))
+
+        assert response.url == reverse("profiles:complete")
+
     def test_soft_deleted_profile_counts_as_missing(
         self,
         client,
@@ -129,6 +184,36 @@ class TestProfileCompletionMiddleware:
         client.force_login(user)
 
         response = client.get(PROTECTED_URL)
+
+        assert response.status_code == HTTPStatus.OK
+
+    def test_completed_student_can_open_student_workspace(self, client):
+        user = UserFactory(
+            role=Role.STUDENT,
+            email_verified=True,
+            name="Étudiante StageLink",
+        )
+        StudentProfile.objects.create(
+            user=user,
+            field_of_study="Informatique",
+            level="Licence",
+        )
+        client.force_login(user)
+
+        response = client.get(reverse("profiles:dashboard"))
+
+        assert response.status_code == HTTPStatus.OK
+
+    def test_completed_company_can_open_company_workspace(self, client):
+        user = UserFactory(role=Role.COMPANY, email_verified=True)
+        CompanyProfile.objects.create(
+            user=user,
+            company_name="StageLink",
+            address="Douala",
+        )
+        client.force_login(user)
+
+        response = client.get(reverse("offers:company-list"))
 
         assert response.status_code == HTTPStatus.OK
 
