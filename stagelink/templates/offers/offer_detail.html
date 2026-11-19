@@ -98,14 +98,16 @@
                  class="inline-flex w-full justify-center rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:w-auto">
                 {% translate "Se connecter pour postuler" %}
               </a>
+            {% elif request.user.role == "STUDENT" and has_applied %}
+              <a href="{% url 'application:student-list' %}"
+                 class="inline-flex w-full justify-center rounded-control border border-primary px-5 py-3 text-sm font-semibold text-primary sm:w-auto">
+                {% translate "Candidature envoyée" %}
+              </a>
             {% elif request.user.role == "STUDENT" %}
-              <!-- Sera relié au dépôt de candidature lorsque la fonctionnalité sera développée. -->
-              <button type="button"
-                      disabled
-                      title="{% translate 'Bientôt disponible' %}"
-                      class="inline-flex w-full cursor-not-allowed justify-center rounded-control bg-primary/50 px-5 py-3 text-sm font-semibold text-white sm:w-auto">
-                {% translate "Postuler" %} · {% translate "Bientôt" %}
-              </button>
+              <a href="{% url 'application:submit' offer_pk=offer.pk %}"
+                 class="inline-flex w-full justify-center rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark sm:w-auto">
+                {% translate "Postuler" %}
+              </a>
             {% endif %}
           {% elif offer.status != "DRAFT" %}
             <p class="rounded-control border border-accent/40 bg-accent/10 px-4 py-3 text-sm font-semibold text-text">

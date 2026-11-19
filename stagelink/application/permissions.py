@@ -35,6 +35,9 @@ def require_application_owner(user, application) -> None:
     if not user.is_authenticated:
         raise PermissionDenied
 
+    if user.role != Role.STUDENT or not user.email_verified:
+        raise PermissionDenied
+
     if application.student.user_id != user.id:
         raise PermissionDenied
 
@@ -45,6 +48,9 @@ def require_offer_company(user, application) -> None:
     propriétaire de l'offre concernée.
     """
     if not user.is_authenticated:
+        raise PermissionDenied
+
+    if user.role != Role.COMPANY or not user.email_verified:
         raise PermissionDenied
 
     if application.offer.company is None:

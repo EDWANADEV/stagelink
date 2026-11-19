@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% translate "Mes candidatures" %} · StageLink
+{% endblock title %}
+{% block content %}
+  <main class="mx-auto max-w-5xl space-y-6">
+    <header>
+      <h1 class="font-heading text-3xl font-bold text-text">{% translate "Mes candidatures" %}</h1>
+      <p class="mt-2 text-sm text-text-muted">{% translate "Suivez l'évolution de vos candidatures aux offres internes." %}</p>
+    </header>
+    <section class="overflow-hidden rounded-card border border-border bg-surface">
+      <ul class="divide-y divide-border">
+        {% for application in applications %}
+          <li class="flex flex-wrap items-start justify-between gap-4 p-5">
+            <div class="min-w-0">
+              <a href="{% url 'offers:detail' pk=application.offer_id %}"
+                 class="font-semibold text-text hover:text-primary">{{ application.offer.title }}</a>
+              <p class="mt-1 text-sm text-text-muted">
+                {% if application.offer.company %}
+                  {{ application.offer.company.company_name }}
+                {% else %}
+                  {% translate "Offre relayée par StageLink" %}
+                {% endif %}
+              </p>
+              <p class="mt-1 text-xs text-text-muted">{% blocktranslate with date=application.created_at|date:"d/m/Y H:i" %}Envoyée le {{ date }}{% endblocktranslate %}</p>
+            </div>
+            {% include "components/status_badge.html" with status=application.status label=application.get_status_display %}
+          </li>
+          {% if application.status == "received" or application.status == "viewed" or application.status == "interview" %}
+            <li class="border-t border-border px-5 py-4">
+              {% if application.status == "interview" and application.interview_at %}
+                <p class="mb-3 text-sm text-text-muted">{% blocktranslate with date=application.interview_at|date:"d/m/Y H:i" %}Entretien prévu le {{ date }}. Tout retrait doit être fait au moins 24 heures à l'avance et comporter un motif.{% endblocktranslate %}</p>
+              {% endif %}
+              {% if application.status != "interview" or application.interview_at %}
+                <form method="post" action="{% url 'application:withdraw' pk=application.pk %}" class="flex flex-wrap items-end gap-3">
+                  {% csrf_token %}
+                  {% if application.status == "interview" %}
+                    <div class="min-w-64 flex-1">
+                      <label for="{{ application.withdraw_form.reason.id_for_label }}" class="mb-1 block text-sm font-semibold text-text">{{ application.withdraw_form.reason.label }}</label>
+                      {{ application.withdraw_form.reason }}
+                    </div>
+                  {% endif %}
+                  <button type="submit" class="rounded-control border border-status-rejected-text px-3 py-2 text-sm font-semibold text-status-rejected-text">{% translate "Retirer ma candidature" %}</button>
+                </form>
+              {% endif %}
+            </li>
+          {% endif %}
+          <li class="border-t border-border px-5 py-4">
+            <details>
+              <summary class="cursor-pointer text-sm font-semibold text-primary">{% translate "Historique de la candidature" %}</summary>
+              <ol class="mt-3 space-y-2">
+                {% for event in application.status_history.all %}
+                  <li class="text-sm text-text-muted">
+                    {{ event.created_at|date:"d/m/Y H:i" }} · {{ event.get_new_status_display }}
+                    {% if event.reason %}<p class="mt-1 whitespace-pre-line">{{ event.reason }}</p>{% endif %}
+                  </li>
+                {% empty %}
+                  <li class="text-sm text-text-muted">{% translate "Aucun changement enregistré." %}</li>
+                {% endfor %}
+              </ol>
+            </details>
+          </li>
+        {% empty %}
+          <li class="p-8 text-center text-sm text-text-muted">{% translate "Vous n'avez pas encore postulé à une offre interne." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% if is_paginated %}
+      <nav class="flex justify-between" aria-label="{% translate 'Pagination' %}">
+        {% if page_obj.has_previous %}<a class="text-sm font-semibold text-primary" href="?page={{ page_obj.previous_page_number }}">{% translate "Précédent" %}</a>{% else %}<span></span>{% endif %}
+        <span class="text-sm text-text-muted">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a class="text-sm font-semibold text-primary" href="?page={{ page_obj.next_page_number }}">{% translate "Suivant" %}</a>{% endif %}
+      </nav>
+    {% endif %}
+  </main>
+{% endblock content %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+  {% translate "Postuler" %} · {{ offer.title }} · StageLink
+{% endblock title %}
+{% block content %}
+  <main class="mx-auto max-w-3xl space-y-6">
+    <a href="{% url 'offers:detail' pk=offer.pk %}" class="text-sm font-semibold text-primary">← {% translate "Retour à l'offre" %}</a>
+    <section class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">
+      <h1 class="font-heading text-2xl font-bold text-text">{% translate "Postuler à cette offre" %}</h1>
+      <p class="mt-2 text-sm text-text-muted">{{ offer.title }} · {{ offer.company.company_name }}</p>
+      <form method="post" class="mt-6 space-y-5">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div role="alert" class="rounded-control bg-status-rejected-bg p-3 text-sm text-status-rejected-text">{{ form.non_field_errors }}</div>{% endif %}
+        <div>
+          <label for="{{ form.cover_letter.id_for_label }}" class="mb-1.5 block text-sm font-semibold text-text">{{ form.cover_letter.label }}</label>
+          {{ form.cover_letter }}
+          {% if form.cover_letter.errors %}<p class="mt-1 text-sm text-status-rejected-text">{{ form.cover_letter.errors }}</p>{% endif %}
+          <p class="mt-1 text-xs text-text-muted">{% translate "La lettre est facultative. Un CV enregistré dans votre profil est obligatoire pour postuler." %} <a href="{% url 'profiles:complete' %}" class="font-semibold text-primary hover:underline">{% translate "Gérer mon profil" %}</a></p>
+        </div>
+        <button type="submit" class="inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark">{% translate "Envoyer ma candidature" %}</button>
+      </form>
+    </section>
+  </main>
+{% endblock content %}

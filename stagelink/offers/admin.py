@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib import admin
 from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
@@ -9,6 +11,7 @@ from stagelink.utils.enums import ApplicationMode
 from stagelink.utils.enums import OfferStatus
 
 from .models import InternshipOffer
+from .services import validate_available_positions
 
 
 class RelayedOfferFilter(admin.SimpleListFilter):
@@ -38,6 +41,16 @@ class InternshipOfferAdminForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        positions = cleaned_data.get("available_positions")
+        if (
+            not self.instance._state.adding  # noqa: SLF001
+            and positions is not None
+        ):
+            try:
+                validate_available_positions(self.instance, positions)
+            except ValidationError as exc:
+                self.add_error("available_positions", exc)
 
         # Une offre relayée n'a pas d'entreprise StageLink pour traiter
         # les candidatures : l'étudiant doit être redirigé vers la source.
@@ -97,7 +110,10 @@ class InternshipOfferAdmin(admin.ModelAdmin):
 
     actions = ("publish_selected", "close_selected")
 
+    @transaction.atomic
     def save_model(self, request, obj, form, change):
+        if change:
+            validate_available_positions(obj, obj.available_positions)
         if not change:
             obj.created_by = request.user
         obj.updated_by = request.user

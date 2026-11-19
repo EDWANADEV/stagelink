@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import Application
+from .models import ApplicationStatusHistory
 
 
 @admin.register(Application)
@@ -27,6 +28,10 @@ class ApplicationAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         "id",
+        "student",
+        "offer",
+        "status",
+        "interview_at",
         "created_at",
         "updated_at",
         "created_by",
@@ -35,3 +40,43 @@ class ApplicationAdmin(admin.ModelAdmin):
 
     ordering = ("-created_at",)
 
+    def has_delete_permission(self, request, obj=None):
+        """Keep candidature rows and their audit history in the database."""
+        return False
+
+
+@admin.register(ApplicationStatusHistory)
+class ApplicationStatusHistoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "application",
+        "previous_status",
+        "new_status",
+        "changed_by",
+        "created_at",
+    )
+    list_filter = ("new_status", "created_at")
+    search_fields = (
+        "application__student__user__email",
+        "application__student__user__name",
+        "application__offer__title",
+    )
+    readonly_fields = (
+        "application",
+        "previous_status",
+        "new_status",
+        "changed_by",
+        "reason",
+        "created_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

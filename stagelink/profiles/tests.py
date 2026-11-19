@@ -94,6 +94,25 @@ def test_student_cv_download_is_private_and_attachment(client):
     assert b"".join(response.streaming_content) == b"%PDF-1.4\nCV"
 
 
+def test_staff_can_download_student_cv(client):
+    owner = UserFactory(role=Role.STUDENT, email_verified=True)
+    profile = StudentProfile.objects.create(
+        user=owner,
+        field_of_study="Informatique",
+        level="Licence",
+    )
+    profile.cv.save("resume.pdf", ContentFile(b"%PDF-1.4\nCV"), save=True)
+    staff_user = UserFactory(is_staff=True)
+    client.force_login(staff_user)
+
+    response = client.get(
+        reverse("profiles:student-cv", kwargs={"profile_pk": profile.pk}),
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response["Content-Disposition"].startswith("attachment;")
+
+
 def test_another_student_cannot_download_cv(client):
     owner = UserFactory(role=Role.STUDENT, email_verified=True)
     profile = StudentProfile.objects.create(

@@ -17,6 +17,7 @@ from django.views.generic import DetailView
 from django.views.generic import ListView
 from django.views.generic import UpdateView
 
+from stagelink.application.models import Application
 from stagelink.profiles.services import get_profile
 from stagelink.profiles.services import is_profile_complete
 from stagelink.utils.enums import ApplicationMode
@@ -125,6 +126,17 @@ class OfferDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         offer = self.object
+        context["has_applied"] = False
+        if (
+            self.request.user.is_authenticated
+            and self.request.user.role == Role.STUDENT
+        ):
+            profile = getattr(self.request, "stagelink_profile", None)
+            if profile is not None:
+                context["has_applied"] = Application.objects.filter(
+                    student=profile,
+                    offer=offer,
+                ).exists()
         context["is_owner"] = (
             self.request.user.is_authenticated
             and offer.created_by_id == self.request.user.pk
