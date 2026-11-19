@@ -18,7 +18,7 @@
           <label for="{{ form.cover_letter.id_for_label }}" class="mb-1.5 block text-sm font-semibold text-text">{{ form.cover_letter.label }}</label>
           {{ form.cover_letter }}
           {% if form.cover_letter.errors %}<p class="mt-1 text-sm text-status-rejected-text">{{ form.cover_letter.errors }}</p>{% endif %}
-          <p class="mt-1 text-xs text-text-muted">{% translate "La lettre est facultative. Votre profil et votre CV, s'il est disponible, seront transmis à l'entreprise." %}</p>
+          <p class="mt-1 text-xs text-text-muted">{% translate "La lettre est facultative. Un CV enregistré dans votre profil est obligatoire pour postuler." %} <a href="{% url 'profiles:complete' %}" class="font-semibold text-primary hover:underline">{% translate "Gérer mon profil" %}</a></p>
         </div>
         <button type="submit" class="inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark">{% translate "Envoyer ma candidature" %}</button>
       </form>

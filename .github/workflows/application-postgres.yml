@@ -1,0 +1,85 @@
+name: Application PostgreSQL checks
+
+on:
+  push:
+    branches:
+      - feat/day-4-applications-notifications
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  application-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: stagelink
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d stagelink"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/stagelink
+      DJANGO_READ_DOT_ENV_FILE: "false"
+      DJANGO_SECRET_KEY: ci-only-test-key
+      DJANGO_SETTINGS_MODULE: config.settings.test
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --group dev
+
+      - name: Check Django configuration
+        run: uv run python manage.py check
+
+      - name: Check migrations
+        run: uv run python manage.py makemigrations --check --dry-run
+
+      - name: Lint changed application files
+        run: >-
+          uv run ruff check --no-cache
+          config/urls.py
+          stagelink/application/admin.py
+          stagelink/application/forms.py
+          stagelink/application/models.py
+          stagelink/application/permissions.py
+          stagelink/application/services.py
+          stagelink/application/tests.py
+          stagelink/application/urls.py
+          stagelink/application/views.py
+          stagelink/notifications/services.py
+          stagelink/notifications/tests.py
+          stagelink/notifications/urls.py
+          stagelink/notifications/views.py
+          stagelink/offers/admin.py
+          stagelink/offers/services.py
+          stagelink/offers/tests.py
+          stagelink/offers/views.py
+          stagelink/profiles/tests.py
+
+      - name: Run application and related regression tests on PostgreSQL
+        run: >-
+          uv run pytest --create-db
+          stagelink/application/tests.py
+          stagelink/profiles/tests.py
+          stagelink/notifications/tests.py
+          stagelink/offers/tests.py

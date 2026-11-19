@@ -108,6 +108,11 @@ class ApplicationSubmitView(ApplicationRoleMixin, FormView):
     template_name = "application/submit.html"
     form_class = ApplicationSubmissionForm
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["student_profile"] = self.profile
+        return kwargs
+
     def get_offer(self):
         if not hasattr(self, "offer"):
             self.offer = get_object_or_404(

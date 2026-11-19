@@ -1,14 +1,16 @@
+from django.apps import apps
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from stagelink.utils.enums import ApplicationStatus
 from stagelink.utils.enums import OfferStatus
 
 from .models import InternshipOffer
 from .permissions import require_admin
 from .permissions import require_company
 from .permissions import require_offer_owner
-
 
 # Champs qu'une entreprise ou un administrateur
 # peut fournir lors de la création d'une offre.
@@ -31,6 +33,30 @@ OFFER_INPUT_FIELDS = (
 
 # Champs modifiables après création.
 OFFER_EDITABLE_FIELDS = OFFER_INPUT_FIELDS
+
+
+def validate_available_positions(offer, positions):
+    """Lock an offer and ensure capacity remains above accepted applications.
+
+    Callers must run this inside the transaction that saves the offer. The
+    application acceptance service takes the same offer-row lock.
+    """
+    locked_offer = InternshipOffer.all_objects.select_for_update().get(
+        pk=offer.pk,
+    )
+    application_model = apps.get_model("application", "Application")
+    accepted_count = application_model.all_objects.filter(
+        offer=locked_offer,
+        status=ApplicationStatus.ACCEPTED,
+    ).count()
+    if positions < accepted_count:
+        raise ValidationError(
+            _(
+                "Le nombre de places ne peut pas être inférieur aux "
+                "candidatures déjà acceptées (%(count)s).",
+            ) % {"count": accepted_count},
+        )
+    return locked_offer
 
 
 def _clean_offer_data(data: dict) -> dict:
@@ -114,6 +140,7 @@ def create_relayed_offer(user, data: dict) -> InternshipOffer:
     return offer
 
 
+@transaction.atomic
 def update_offer(
     user,
     offer: InternshipOffer,
@@ -135,6 +162,8 @@ def update_offer(
     """
     require_offer_owner(user, offer)
 
+    offer = InternshipOffer.all_objects.select_for_update().get(pk=offer.pk)
+
     if offer.is_deleted:
         raise ValidationError(
             _("Une offre supprimée ne peut pas être modifiée."),
@@ -146,6 +175,12 @@ def update_offer(
         )
 
     offer_data = _clean_offer_data(data)
+
+    if "available_positions" in offer_data:
+        offer = validate_available_positions(
+            offer,
+            offer_data["available_positions"],
+        )
 
     for field, value in offer_data.items():
         setattr(offer, field, value)

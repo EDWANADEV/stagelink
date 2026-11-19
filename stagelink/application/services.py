@@ -143,6 +143,10 @@ class ApplicationService:
         require_student(student.user)
         if not student.user.email_verified:
             raise PermissionDenied
+        if not student.cv:
+            raise ValidationError(
+                _("Ajoutez un CV à votre profil avant de postuler."),
+            )
 
         application, created = Application.all_objects.get_or_create(
             student=student,
@@ -165,7 +169,7 @@ class ApplicationService:
             new_status=ApplicationStatus.RECEIVED,
             changed_by=student.user,
         )
-        NotificationService.create_on_commit(
+        NotificationService.create(
             recipient_id=offer.company.user_id,
             notification_type=NotificationType.APPLICATION,
             message=_("%(student)s a candidaté à l'offre « %(offer)s ».")
@@ -198,7 +202,7 @@ class ApplicationService:
             raise ValidationError(_("Statut de candidature inconnu.")) from exc
 
         application = (
-            Application.all_objects.select_for_update()
+            Application.all_objects.select_for_update(of=("self",))
             .select_related("student__user", "offer__company")
             .get(pk=application.pk)
         )
@@ -234,7 +238,7 @@ class ApplicationService:
             new_status=new_status,
             changed_by=updated_by,
         )
-        NotificationService.create_on_commit(
+        NotificationService.create(
             recipient_id=application.student.user_id,
             notification_type=NotificationType.APPLICATION,
             message=(
@@ -268,7 +272,7 @@ class ApplicationService:
         """
 
         application = (
-            Application.all_objects.select_for_update()
+            Application.all_objects.select_for_update(of=("self",))
             .select_related("student__user", "offer__company")
             .get(pk=application.pk)
         )
@@ -333,7 +337,7 @@ class ApplicationService:
             changed_by=student.user,
             reason=reason,
         )
-        NotificationService.create_on_commit(
+        NotificationService.create(
             recipient_id=application.offer.company.user_id,
             notification_type=NotificationType.APPLICATION,
             message=_("%(student)s a retiré sa candidature à l'offre « %(offer)s ».")

@@ -28,6 +28,8 @@ class ApplicationAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         "id",
+        "student",
+        "offer",
         "status",
         "interview_at",
         "created_at",
@@ -37,6 +39,10 @@ class ApplicationAdmin(admin.ModelAdmin):
     )
 
     ordering = ("-created_at",)
+
+    def has_delete_permission(self, request, obj=None):
+        """Keep candidature rows and their audit history in the database."""
+        return False
 
 
 @admin.register(ApplicationStatusHistory)

@@ -8,19 +8,20 @@ class NotificationService:
     """Services métier liés aux notifications."""
 
     @staticmethod
-    def create_on_commit(*, recipient_id, notification_type, message) -> None:
-        """Crée une notification in-app uniquement après le commit métier."""
+    def create(*, recipient_id, notification_type, message) -> Notification | None:
+        """Create the in-app notification inside the caller's transaction.
+
+        Application services call this before their surrounding atomic block
+        commits, so a failed insert also rolls back the associated operation.
+        """
         if recipient_id is None:
-            return
+            return None
 
-        def create_notification():
-            Notification.objects.create(
-                user_id=recipient_id,
-                notification_type=notification_type,
-                message=message,
-            )
-
-        transaction.on_commit(create_notification, robust=True)
+        return Notification.objects.create(
+            user_id=recipient_id,
+            notification_type=notification_type,
+            message=message,
+        )
 
     @staticmethod
     @transaction.atomic

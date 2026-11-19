@@ -13,6 +13,18 @@ class ApplicationSubmissionForm(forms.Form):
         widget=forms.Textarea(attrs={"rows": 6}),
     )
 
+    def __init__(self, *args, student_profile=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.student_profile = student_profile
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.student_profile is not None and not self.student_profile.cv:
+            raise forms.ValidationError(
+                _("Ajoutez un CV à votre profil avant de postuler."),
+            )
+        return cleaned_data
+
 
 class ApplicationStatusForm(forms.Form):
     status = forms.ChoiceField(label=_("Nouveau statut"))

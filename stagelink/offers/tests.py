@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
 
+from stagelink.application.models import Application
 from stagelink.offers.admin import InternshipOfferAdmin
 from stagelink.offers.admin import InternshipOfferAdminForm
 from stagelink.offers.models import InternshipOffer
@@ -19,6 +20,7 @@ from stagelink.profiles.models import CompanyProfile
 from stagelink.profiles.models import StudentProfile
 from stagelink.users.tests.factories import UserFactory
 from stagelink.utils.enums import ApplicationMode
+from stagelink.utils.enums import ApplicationStatus
 from stagelink.utils.enums import OfferStatus
 from stagelink.utils.enums import Role
 
@@ -353,6 +355,29 @@ class TestServices:
         offer = make_offer(company, status=OfferStatus.CLOSED)
         with pytest.raises(ValidationError):
             update_offer(company.user, offer, {"title": "Nouveau"})
+
+    def test_update_cannot_reduce_positions_below_accepted_applications(
+        self,
+        company,
+    ):
+        original_positions = 2
+        offer = make_offer(company, available_positions=original_positions)
+        student = StudentProfile.objects.create(
+            user=UserFactory(role=Role.STUDENT, email_verified=True),
+            field_of_study="Informatique",
+            level="Licence",
+        )
+        Application.objects.create(
+            student=student,
+            offer=offer,
+            status=ApplicationStatus.ACCEPTED,
+        )
+
+        with pytest.raises(ValidationError, match="acceptées"):
+            update_offer(company.user, offer, {"available_positions": 0})
+
+        offer.refresh_from_db()
+        assert offer.available_positions == original_positions
 
 
 class TestAdmin:
