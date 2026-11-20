@@ -1,3 +1,5 @@
+import hmac
+
 import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -8,6 +10,16 @@ class FlutterwaveService:
 
     @classmethod
     def _headers(cls):
+        if (
+            not settings.FLW_SECRET_KEY.startswith(("FLWSECK_TEST-", "FLWSECK-"))
+            or not settings.FLW_WEBHOOK_SECRET
+            or any(
+                marker in value.lower()
+                for value in (settings.FLW_SECRET_KEY, settings.FLW_WEBHOOK_SECRET)
+                for marker in ("replace", "xxxxx", "placeholder")
+            )
+        ):
+            raise ValidationError("Flutterwave n'est pas configuré.")
         return {
             "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
             "Content-Type": "application/json",
@@ -21,6 +33,10 @@ class FlutterwaveService:
         customer_email,
         redirect_url,
     ):
+        if not settings.FLUTTERWAVE_ENABLED:
+            raise ValidationError("Flutterwave est désactivé.")
+        if not customer_email:
+            raise ValidationError("L’adresse e-mail est requise pour Flutterwave.")
         payload = {
             "tx_ref": str(payment.id),
             "amount": str(payment.amount.amount),
@@ -47,11 +63,24 @@ class FlutterwaveService:
         data = response.json()
 
         if data.get("status") != "success":
-            raise ValidationError(
-                "Flutterwave n'a pas pu initialiser le paiement."
-            )
+            raise ValidationError("Flutterwave n'a pas pu initialiser le paiement.")
 
         return data
+
+    @classmethod
+    def verify_webhook_signature(cls, signature):
+        expected = settings.FLW_WEBHOOK_SECRET
+        return bool(expected and signature and hmac.compare_digest(expected, signature))
+
+    @classmethod
+    def verify_transaction(cls, transaction_id):
+        response = requests.get(
+            f"{cls.BASE_URL}/transactions/{transaction_id}/verify",
+            headers=cls._headers(),
+            timeout=20,
+        )
+        response.raise_for_status()
+        return response.json().get("data", {})
 
     @classmethod
     def create_mobile_money_payment(
@@ -63,6 +92,18 @@ class FlutterwaveService:
         network,
         redirect_url,
     ):
+        if not settings.FLUTTERWAVE_ENABLED:
+            raise ValidationError("Flutterwave est désactivé.")
+        if not customer_email or not phone_number or not network:
+            raise ValidationError(
+                "E-mail, téléphone et réseau Mobile Money sont requis.",
+            )
+        if payment.amount.currency.code != "XAF":
+            raise ValidationError("Mobile Money Flutterwave est configuré en XAF.")
+        if payment.amount.amount != payment.amount.amount.to_integral_value():
+            raise ValidationError(
+                "Le montant Mobile Money doit être un entier en XAF.",
+            )
         payload = {
             "phone_number": phone_number,
             "amount": int(payment.amount.amount),
@@ -91,7 +132,7 @@ class FlutterwaveService:
 
         if data.get("status") not in {"success", "pending"}:
             raise ValidationError(
-                "Flutterwave n'a pas pu initialiser le paiement Mobile Money."
+                "Flutterwave n'a pas pu initialiser le paiement Mobile Money.",
             )
 
         return data

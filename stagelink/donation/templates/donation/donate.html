@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block title %}{% translate "Faire un don" %} | StageLink{% endblock title %}
+
+{% block content %}
+  <div class="mx-auto max-w-3xl space-y-8">
+    <header class="space-y-3 text-center">
+      <p class="text-sm font-semibold uppercase tracking-wide text-primary">StageLink</p>
+      <h1 class="font-heading text-3xl font-bold tracking-tight text-text sm:text-4xl">
+        {% translate "Soutenez les opportunités de stage" %}
+      </h1>
+      <p class="mx-auto max-w-2xl text-base leading-7 text-text-muted">
+        {% translate "Votre don contribue à améliorer la mise en relation entre les étudiants et les entreprises, et à rendre les opportunités de stage plus accessibles." %}
+      </p>
+    </header>
+
+    <section class="rounded-card border border-border bg-surface p-5 shadow-sm sm:p-8">
+      {% if payment_methods %}
+        <form id="donation-form"
+              class="space-y-7"
+              data-create-url="{% url 'payments:create' %}"
+              data-return-url="{% url 'payments:return' %}"
+              data-stripe-key="{{ stripe_publishable_key }}"
+              data-network-required="{% translate 'Choisissez votre réseau Mobile Money.' %}"
+              data-payment-error="{% translate 'Le paiement n’a pas pu être initialisé. Vérifiez les informations puis réessayez.' %}"
+              data-confirming="{% translate 'Confirmation du paiement en cours…' %}"
+              data-amount-error="{% translate 'Saisissez un montant entier valide en XAF.' %}">
+          {% csrf_token %}
+
+          <fieldset class="space-y-3">
+            <legend class="font-heading text-lg font-semibold text-text">
+              {% translate "Choisissez un montant (XAF)" %}
+            </legend>
+            <div class="grid grid-cols-3 gap-3">
+              {% for amount in preset_amounts %}
+                <button type="button"
+                        class="donation-preset rounded-control border border-border px-3 py-3 text-sm font-semibold text-text transition hover:border-primary hover:text-primary"
+                        data-amount="{{ amount }}">
+                  {{ amount }} XAF
+                </button>
+              {% endfor %}
+            </div>
+            <label for="donation-amount" class="block text-sm font-medium text-text">
+              {% translate "Ou saisissez un autre montant" %}
+            </label>
+            <input id="donation-amount"
+                   name="amount"
+                   type="number"
+                   min="1"
+                   max="9999999999"
+                   step="1"
+                   inputmode="numeric"
+                   required
+                   class="w-full rounded-control border border-border bg-surface px-4 py-3 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                   aria-describedby="amount-help">
+            <p id="amount-help" class="text-sm text-text-muted">
+              {% translate "Le montant doit être un nombre entier positif. Maximum accepté : 9 999 999 999 XAF." %}
+            </p>
+          </fieldset>
+
+          <fieldset class="space-y-3">
+            <legend class="font-heading text-lg font-semibold text-text">
+              {% translate "Choisissez un moyen de paiement" %}
+            </legend>
+            <div class="grid gap-3 sm:grid-cols-2">
+              {% for option in payment_methods %}
+                <label class="flex cursor-pointer items-center gap-3 rounded-control border border-border p-4 transition has-[:checked]:border-primary has-[:checked]:bg-background">
+                  <input type="radio"
+                         name="payment_option"
+                         value="{{ option.value }}"
+                         data-provider="{{ option.provider }}"
+                         data-method="{{ option.method }}"
+                         required
+                         class="text-primary focus:ring-primary">
+                  <span class="font-medium text-text">{{ option.label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </fieldset>
+
+          <div id="donor-details" class="hidden space-y-4">
+            <label for="donor-email" class="block text-sm font-medium text-text">
+              {% translate "Adresse e-mail" %}
+            </label>
+            <input id="donor-email"
+                   name="email"
+                   type="email"
+                   value="{{ donor_email }}"
+                   autocomplete="email"
+                   class="w-full rounded-control border border-border bg-surface px-4 py-3 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+            <div id="mobile-money-details" class="hidden space-y-4">
+              <label for="donor-phone" class="block text-sm font-medium text-text">
+                {% translate "Numéro de téléphone Mobile Money" %}
+              </label>
+              <input id="donor-phone"
+                     name="phone_number"
+                     type="tel"
+                     autocomplete="tel"
+                     class="w-full rounded-control border border-border bg-surface px-4 py-3 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+              <label for="donor-network" class="block text-sm font-medium text-text">
+                {% translate "Réseau Mobile Money" %}
+              </label>
+              <select id="donor-network"
+                      name="network"
+                      class="w-full rounded-control border border-border bg-surface px-4 py-3 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+                <option value="">{% translate "Sélectionner un réseau" %}</option>
+                <option value="MTN">MTN</option>
+                <option value="Orange">Orange</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="stripe-card-container" class="hidden space-y-3">
+            <p class="text-sm font-medium text-text">{% translate "Informations de carte sécurisées par Stripe" %}</p>
+            <div id="stripe-card-element" class="rounded-control border border-border bg-surface px-4 py-4"></div>
+            <p class="text-sm text-text-muted">
+              {% translate "Vos informations de carte sont transmises directement à Stripe et ne sont pas enregistrées par StageLink." %}
+            </p>
+          </div>
+
+          <div class="rounded-control bg-background p-4" aria-live="polite">
+            <p class="text-sm text-text-muted">{% translate "Récapitulatif" %}</p>
+            <p id="donation-summary" class="mt-1 font-semibold text-text">
+              {% translate "Choisissez un montant et un moyen de paiement." %}
+            </p>
+          </div>
+
+          <p id="donation-error" class="hidden rounded-control bg-status-rejected-bg px-4 py-3 text-sm text-status-rejected-text" role="alert"></p>
+          <p id="donation-progress" class="hidden text-sm font-medium text-primary" role="status"></p>
+
+          <button id="donation-submit"
+                  type="submit"
+                  class="inline-flex w-full items-center justify-center rounded-control bg-primary px-5 py-3 font-semibold text-white transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-wait disabled:opacity-60">
+            {% translate "Confirmer le don et continuer" %}
+          </button>
+          <p class="text-center text-xs leading-5 text-text-muted">
+            {% translate "Le don ne sera confirmé qu’après validation sécurisée par le prestataire de paiement." %}
+          </p>
+        </form>
+      {% else %}
+        <div class="rounded-control border border-border bg-background p-5 text-center">
+          <h2 class="font-heading text-lg font-semibold text-text">
+            {% translate "Les paiements sont temporairement indisponibles" %}
+          </h2>
+          <p class="mt-2 text-sm leading-6 text-text-muted">
+            {% translate "Aucun prestataire de paiement n’est actuellement configuré. Vous pourrez faire un don dès qu’un moyen de paiement sécurisé sera disponible." %}
+          </p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+{% endblock content %}
+
+{% block inline_javascript %}
+  {% if payment_methods %}
+    {% if stripe_available %}<script src="https://js.stripe.com/v3/" defer></script>{% endif %}
+    <script src="{% static 'js/donation.js' %}" defer></script>
+  {% endif %}
+{% endblock inline_javascript %}

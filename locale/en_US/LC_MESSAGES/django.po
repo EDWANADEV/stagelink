@@ -2,7 +2,6 @@
 # Copyright (C) 2026 Adora
 # Adora <adora@hooyia.net>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
@@ -10,3 +9,132 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+msgid "Faire un don"
+msgstr "Make a donation"
+
+msgid "Soutenez les opportunités de stage"
+msgstr "Support internship opportunities"
+
+msgid "Votre don contribue à améliorer la mise en relation entre les étudiants et les entreprises, et à rendre les opportunités de stage plus accessibles."
+msgstr "Your donation helps connect students with companies and makes internship opportunities more accessible."
+
+msgid "Choisissez un montant (XAF)"
+msgstr "Choose an amount (XAF)"
+
+msgid "Ou saisissez un autre montant"
+msgstr "Or enter another amount"
+
+msgid "Le montant doit être un nombre entier positif. Maximum accepté : 9 999 999 999 XAF."
+msgstr "Enter a positive whole amount. Maximum accepted: XAF 9,999,999,999."
+
+msgid "Choisissez un moyen de paiement"
+msgstr "Choose a payment method"
+
+msgid "Carte bancaire via Stripe"
+msgstr "Credit or debit card via Stripe"
+
+msgid "Carte bancaire via Flutterwave"
+msgstr "Credit or debit card via Flutterwave"
+
+msgid "Mobile Money via Flutterwave"
+msgstr "Mobile Money via Flutterwave"
+
+msgid "Adresse e-mail"
+msgstr "Email address"
+
+msgid "Numéro de téléphone Mobile Money"
+msgstr "Mobile Money phone number"
+
+msgid "Réseau Mobile Money"
+msgstr "Mobile Money network"
+
+msgid "Sélectionner un réseau"
+msgstr "Select a network"
+
+msgid "Informations de carte sécurisées par Stripe"
+msgstr "Card details secured by Stripe"
+
+msgid "Vos informations de carte sont transmises directement à Stripe et ne sont pas enregistrées par StageLink."
+msgstr "Your card details are sent directly to Stripe and are never stored by StageLink."
+
+msgid "Récapitulatif"
+msgstr "Summary"
+
+msgid "Choisissez un montant et un moyen de paiement."
+msgstr "Choose an amount and a payment method."
+
+msgid "Choisissez votre réseau Mobile Money."
+msgstr "Select your Mobile Money network."
+
+msgid "Le paiement n’a pas pu être initialisé. Vérifiez les informations puis réessayez."
+msgstr "We could not start the payment. Check your details and try again."
+
+msgid "Confirmation du paiement en cours…"
+msgstr "Starting your payment…"
+
+msgid "Saisissez un montant entier valide en XAF."
+msgstr "Enter a valid whole amount in XAF."
+
+msgid "Confirmer le don et continuer"
+msgstr "Confirm donation and continue"
+
+msgid "Le don ne sera confirmé qu’après validation sécurisée par le prestataire de paiement."
+msgstr "Your donation is confirmed only after the payment provider verifies it."
+
+msgid "Les paiements sont temporairement indisponibles"
+msgstr "Payments are temporarily unavailable"
+
+msgid "Aucun prestataire de paiement n’est actuellement configuré. Vous pourrez faire un don dès qu’un moyen de paiement sécurisé sera disponible."
+msgstr "No payment provider is configured right now. You can donate as soon as a secure payment method becomes available."
+
+msgid "État du paiement"
+msgstr "Payment status"
+
+msgid "Paiement confirmé"
+msgstr "Payment confirmed"
+
+msgid "Merci pour votre don !"
+msgstr "Thank you for your donation!"
+
+msgid "Le prestataire a confirmé votre paiement. Votre soutien contribue aux opportunités de stage sur StageLink."
+msgstr "The provider confirmed your payment. Your support helps create internship opportunities on StageLink."
+
+msgid "Paiement échoué"
+msgstr "Payment failed"
+
+msgid "Le paiement n’a pas abouti"
+msgstr "Your payment did not go through"
+
+msgid "Le prestataire nous a signalé un échec. Aucun don n’a été confirmé. Vous pouvez réessayer."
+msgstr "The provider reported a failed payment. No donation was confirmed. You can try again."
+
+msgid "Paiement annulé"
+msgstr "Payment cancelled"
+
+msgid "Vous avez annulé le paiement"
+msgstr "You cancelled the payment"
+
+msgid "Le don n’a pas été confirmé. Vous pouvez reprendre le parcours à tout moment."
+msgstr "The donation was not confirmed. You can start again at any time."
+
+msgid "Paiement en attente"
+msgstr "Payment pending"
+
+msgid "Nous vérifions votre paiement"
+msgstr "We are checking your payment"
+
+msgid "Le prestataire traite encore la transaction. Cette page se mettra à jour lorsque StageLink recevra et vérifiera sa confirmation."
+msgstr "The provider is still processing the transaction. This page will update after StageLink receives and verifies its confirmation."
+
+msgid "Montant"
+msgstr "Amount"
+
+msgid "Faire un autre don"
+msgstr "Make another donation"
+
+msgid "Le montant du don doit être un nombre entier en XAF."
+msgstr "The donation amount must be a whole number in XAF."
+
+msgid "Le montant doit être un nombre entier en XAF."
+msgstr "The amount must be a whole number in XAF."
