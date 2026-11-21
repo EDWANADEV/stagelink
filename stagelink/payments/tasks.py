@@ -68,40 +68,71 @@ def _process_provider_event(event):
         payment = Payment.all_objects.select_related("donation").get(pk=payment_id)
         if payment.provider != PaymentProvider.STRIPE:
             raise ValueError("Le paiement ne correspond pas au prestataire.")
+
+        if event.event_type in {
+            "checkout.session.completed",
+            "checkout.session.expired",
+        }:
+            session = StripeService.retrieve_checkout_session(data["id"])
+            verified_session = (
+                session.to_dict() if hasattr(session, "to_dict") else dict(session)
+            )
+            if (
+                verified_session.get("metadata", {}).get("stagelink_payment_id")
+                != str(payment.pk)
+            ):
+                raise ValueError("Métadonnées Checkout Stripe incohérentes.")
+            if verified_session.get("currency", "").upper() != payment.amount.currency.code:
+                raise ValueError("Devise Checkout Stripe incorrecte.")
+            expected_amount = StripeService.amount_in_minor_units(payment)
+            if verified_session.get("amount_total") != expected_amount:
+                raise ValueError("Montant Checkout Stripe incorrect.")
+
+            if (
+                event.event_type == "checkout.session.expired"
+                and verified_session.get("status") == "expired"
+            ):
+                PaymentService.mark_as_cancelled(
+                    payment=payment,
+                    provider_payment_id=verified_session["id"],
+                    provider_response={
+                        "event_id": body["id"],
+                        "checkout_session_id": verified_session["id"],
+                        "status": "expired",
+                    },
+                )
+                return
+
+            if (
+                event.event_type == "checkout.session.completed"
+                and verified_session.get("status") == "complete"
+                and verified_session.get("payment_status") == "paid"
+            ):
+                payment_intent_id = verified_session.get("payment_intent")
+                if not payment_intent_id:
+                    raise ValueError("Checkout Stripe sans PaymentIntent.")
+                intent = StripeService.retrieve_payment_intent(payment_intent_id)
+                verified_intent = (
+                    intent.to_dict() if hasattr(intent, "to_dict") else dict(intent)
+                )
+                _verify_stripe_intent(payment, verified_intent, expected_amount)
+                if verified_intent.get("status") != "succeeded":
+                    raise ValueError("PaymentIntent Stripe non confirmé.")
+                PaymentService.mark_as_success(
+                    payment=payment,
+                    provider_payment_id=payment_intent_id,
+                    provider_response={
+                        "event_id": body["id"],
+                        "checkout_session_id": verified_session["id"],
+                        "status": "succeeded",
+                    },
+                )
+            return
+
         pi = StripeService.retrieve_payment_intent(data["id"])
-        verified = (
-            pi.to_dict_recursive() if hasattr(pi, "to_dict_recursive") else dict(pi)
-        )
-        if verified.get("metadata", {}).get("stagelink_payment_id") != str(payment.pk):
-            raise ValueError("Métadonnées Stripe incohérentes.")
-        if verified.get("currency", "").upper() != payment.amount.currency.code:
-            raise ValueError("Devise Stripe incorrecte.")
-        currency = payment.amount.currency.code.lower()
-        zero_decimal_currencies = {
-            "bif",
-            "clp",
-            "djf",
-            "gnf",
-            "jpy",
-            "kmf",
-            "krw",
-            "mga",
-            "pyg",
-            "rwf",
-            "ugx",
-            "vnd",
-            "vuv",
-            "xaf",
-            "xof",
-            "xpf",
-        }
-        expected = (
-            int(payment.amount.amount)
-            if currency in zero_decimal_currencies
-            else int(payment.amount.amount * 100)
-        )
-        if verified.get("amount") != expected:
-            raise ValueError("Montant Stripe incorrect.")
+        verified = pi.to_dict() if hasattr(pi, "to_dict") else dict(pi)
+        expected = StripeService.amount_in_minor_units(payment)
+        _verify_stripe_intent(payment, verified, expected)
         if (
             event.event_type == "payment_intent.succeeded"
             and verified.get("status") == "succeeded"
@@ -173,6 +204,15 @@ def _process_provider_event(event):
                 "status": verified["status"],
             },
         )
+
+
+def _verify_stripe_intent(payment, verified, expected_amount):
+    if verified.get("metadata", {}).get("stagelink_payment_id") != str(payment.pk):
+        raise ValueError("Métadonnées Stripe incohérentes.")
+    if verified.get("currency", "").upper() != payment.amount.currency.code:
+        raise ValueError("Devise Stripe incorrecte.")
+    if verified.get("amount") != expected_amount:
+        raise ValueError("Montant Stripe incorrect.")
 
 
 @shared_task(ignore_result=True)

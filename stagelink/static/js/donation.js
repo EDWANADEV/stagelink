@@ -12,10 +12,7 @@
   const mobileDetails = document.getElementById("mobile-money-details");
   const phoneInput = document.getElementById("donor-phone");
   const networkInput = document.getElementById("donor-network");
-  const cardContainer = document.getElementById("stripe-card-container");
   const amountFormatter = new Intl.NumberFormat(document.documentElement.lang || "fr-FR");
-  let stripe;
-  let card;
   let idempotencyKey = crypto.randomUUID();
 
   const selectedOption = () => form.querySelector('input[name="payment_option"]:checked');
@@ -37,10 +34,6 @@
     mobileDetails.classList.toggle(
       "hidden",
       !selected || selected.provider !== "flutterwave" || selected.method !== "mobile_money",
-    );
-    cardContainer.classList.toggle(
-      "hidden",
-      !selected || selected.provider !== "stripe",
     );
     emailInput.required = Boolean(selected && selected.provider === "flutterwave");
     phoneInput.required = Boolean(selected && selected.method === "mobile_money");
@@ -72,15 +65,6 @@
     input.addEventListener("change", updateForm);
   });
 
-  form.querySelectorAll('input[data-provider="stripe"]').length &&
-    document.addEventListener("DOMContentLoaded", () => {
-      if (typeof window.Stripe !== "function") return;
-      stripe = window.Stripe(form.dataset.stripeKey);
-      const elements = stripe.elements();
-      card = elements.create("card", { hidePostalCode: true });
-      card.mount("#stripe-card-element");
-    });
-
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     errorBox.classList.add("hidden");
@@ -91,11 +75,6 @@
       showError(form.dataset.amountError);
       return;
     }
-    if (selected.provider === "stripe" && (!stripe || !card)) {
-      showError(form.dataset.paymentError);
-      return;
-    }
-
     submit.disabled = true;
     progress.textContent = form.dataset.confirming;
     progress.classList.remove("hidden");
@@ -124,17 +103,15 @@
         throw new Error(fieldError || result.error || form.dataset.paymentError);
       }
 
-      if (selected.provider === "stripe") {
-        const confirmation = await stripe.confirmCardPayment(result.client_secret, {
-          payment_method: {
-            card,
-            billing_details: { email: emailInput.value || undefined },
-          },
-        });
-        if (confirmation.error) throw new Error(confirmation.error.message);
-      } else if (result.checkout_url) {
+      if (result.checkout_url) {
         const checkout = new URL(result.checkout_url);
         if (checkout.protocol !== "https:") throw new Error(form.dataset.paymentError);
+        if (
+          selected.provider === "stripe" &&
+          checkout.hostname !== "checkout.stripe.com"
+        ) {
+          throw new Error(form.dataset.paymentError);
+        }
         window.location.assign(checkout.href);
         return;
       }

@@ -1,4 +1,5 @@
 import json
+from unittest.mock import Mock
 from unittest.mock import patch
 
 import stripe
@@ -18,6 +19,7 @@ from stagelink.utils.enums import PaymentStatus
 
 from .models import Payment
 from .models import WebhookEvent
+from .providers.stripe import StripeService
 from .services import PaymentService
 from .tasks import _process_provider_event
 from .tasks import process_webhook_event
@@ -58,6 +60,106 @@ class PaymentFlowTests(TestCase):
         )
         self.assertEqual(first.pk, second.pk)
         self.assertEqual(Payment.objects.count(), 1)
+
+    @override_settings(
+        STRIPE_ENABLED=True,
+        STRIPE_SECRET_KEY="sk_test_fake",
+        STRIPE_PUBLISHABLE_KEY="pk_test_fake",
+        STRIPE_WEBHOOK_SECRET="whsec_test_fake",
+    )
+    def test_stripe_adapter_serializes_with_supported_sdk_api(self):
+        intent = Mock()
+        intent.id = "pi_test"
+        intent.client_secret = "test_client_secret"
+        intent.to_dict.return_value = {
+            "id": "pi_test",
+            "client_secret": "test_client_secret",
+            "currency": "xaf",
+            "amount": 5000,
+        }
+        with patch(
+            "stagelink.payments.providers.stripe.stripe.PaymentIntent.create",
+            return_value=intent,
+        ) as create:
+            result = StripeService.create_payment_intent(payment=Payment(
+                donation=self.donation,
+                amount=self.donation.amount,
+                provider=PaymentProvider.STRIPE,
+                method=PaymentMethod.CARD,
+            ))
+
+        self.assertEqual(result["id"], "pi_test")
+        self.assertEqual(result["client_secret"], "test_client_secret")
+        self.assertNotIn("client_secret", result["response"])
+        self.assertEqual(result["response"]["currency"], "xaf")
+        self.assertEqual(create.call_args.kwargs["amount"], 5000)
+
+    @override_settings(
+        STRIPE_ENABLED=True,
+        STRIPE_SECRET_KEY="sk_test_fake",
+        STRIPE_PUBLISHABLE_KEY="pk_test_fake",
+        STRIPE_WEBHOOK_SECRET="whsec_test_fake",
+    )
+    def test_stripe_checkout_session_uses_xaf_and_secure_return_urls(self):
+        session = Mock()
+        session.id = "cs_test"
+        session.url = "https://checkout.stripe.com/c/pay/test"
+        session.to_dict.return_value = {"id": "cs_test", "status": "open"}
+        payment = Payment(
+            donation=self.donation,
+            amount=self.donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+        with patch(
+            "stagelink.payments.providers.stripe.stripe.checkout.Session.create",
+            return_value=session,
+        ) as create:
+            result = StripeService.create_checkout_session(
+                payment=payment,
+                success_url=(
+                    "http://localhost:8000/payments/return/?payment_id=x"
+                    "&checkout_session_id={CHECKOUT_SESSION_ID}"
+                ),
+                cancel_url="http://localhost:8000/payments/return/?payment_id=x&cancelled=1",
+            )
+
+        self.assertEqual(result["url"], session.url)
+        params = create.call_args.kwargs
+        self.assertEqual(params["mode"], "payment")
+        self.assertEqual(params["line_items"][0]["price_data"]["currency"], "xaf")
+        self.assertEqual(params["line_items"][0]["price_data"]["unit_amount"], 5000)
+        self.assertIn("{CHECKOUT_SESSION_ID}", params["success_url"])
+        self.assertTrue(params["cancel_url"].startswith("http://localhost:8000/"))
+        self.assertEqual(params["idempotency_key"], f"payment:{payment.pk}")
+
+    @override_settings(
+        STRIPE_ENABLED=True,
+        STRIPE_SECRET_KEY="sk_test_fake",
+        STRIPE_WEBHOOK_SECRET="whsec_test_fake",
+    )
+    def test_stripe_timeout_returns_generic_gateway_error_and_safe_log(self):
+        payload = {"amount": "5000", "provider": "stripe", "method": "card"}
+        with (
+            patch(
+                "stagelink.payments.views.StripeService.create_checkout_session",
+                side_effect=stripe.APIConnectionError("timeout"),
+            ),
+            self.assertLogs("stagelink.payments.views", level="ERROR") as logs,
+        ):
+            response = self.client.post(
+                reverse("payments:create"),
+                data=json.dumps(payload),
+                content_type="application/json",
+                HTTP_IDEMPOTENCY_KEY="stripe-timeout-request",
+            )
+
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(
+            response.json(),
+            {"error": "Le prestataire de paiement est indisponible."},
+        )
+        self.assertIn("exception_type=APIConnectionError", logs.output[0])
 
     @override_settings(STRIPE_ENABLED=False, STRIPE_SECRET_KEY="sk_test_fake")
     def test_disabled_provider_is_rejected(self):
@@ -105,18 +207,19 @@ class PaymentFlowTests(TestCase):
         payload = {"amount": "5000", "provider": "stripe", "method": "card"}
         with (
             patch(
-                "stagelink.payments.views.StripeService.create_payment_intent",
+                "stagelink.payments.views.StripeService.create_checkout_session",
             ) as create,
             patch(
-                "stagelink.payments.views.StripeService.retrieve_payment_intent",
+                "stagelink.payments.views.StripeService.retrieve_checkout_session",
             ) as retrieve,
         ):
             create.return_value = {
-                "id": "pi_test",
-                "client_secret": "secret",
-                "response": {},
+                "id": "cs_test",
+                "url": "https://checkout.stripe.com/c/pay/test",
+                "response": {"status": "open"},
             }
-            retrieve.return_value.client_secret = "secret"
+            retrieve.return_value.status = "open"
+            retrieve.return_value.url = "https://checkout.stripe.com/c/pay/test"
             first = self.client.post(
                 reverse("payments:create"),
                 data=json.dumps(payload),
@@ -130,7 +233,11 @@ class PaymentFlowTests(TestCase):
                 HTTP_IDEMPOTENCY_KEY="request-api-1",
             )
         self.assertEqual(first.status_code, 201)
+        self.assertTrue(
+            first.json()["checkout_url"].startswith("https://checkout.stripe.com/"),
+        )
         self.assertEqual(second.status_code, 200)
+        self.assertEqual(first.json()["checkout_url"], second.json()["checkout_url"])
         self.assertEqual(Donation.objects.count(), 2)
         self.assertEqual(Payment.objects.count(), 1)
 
@@ -292,6 +399,99 @@ class PaymentFlowTests(TestCase):
         self.donation.refresh_from_db()
         self.assertEqual(payment.status, PaymentStatus.SUCCESS)
         self.assertEqual(self.donation.status, DonationStatus.COMPLETED)
+
+    def test_verified_checkout_completion_marks_payment_and_donation(self):
+        payment = Payment.objects.create(
+            donation=self.donation,
+            amount=self.donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+        event = WebhookEvent(
+            provider="stripe",
+            event_id="evt-checkout-complete",
+            event_type="checkout.session.completed",
+            payload={
+                "id": "evt-checkout-complete",
+                "data": {
+                    "object": {
+                        "id": "cs_test",
+                        "metadata": {"stagelink_payment_id": str(payment.pk)},
+                    },
+                },
+            },
+        )
+        verified_session = {
+            "id": "cs_test",
+            "metadata": {"stagelink_payment_id": str(payment.pk)},
+            "currency": "xaf",
+            "amount_total": 5000,
+            "status": "complete",
+            "payment_status": "paid",
+            "payment_intent": "pi_test",
+        }
+        verified_intent = {
+            "metadata": {"stagelink_payment_id": str(payment.pk)},
+            "currency": "xaf",
+            "amount": 5000,
+            "status": "succeeded",
+        }
+        with (
+            patch(
+                "stagelink.payments.tasks.StripeService.retrieve_checkout_session",
+                return_value=verified_session,
+            ),
+            patch(
+                "stagelink.payments.tasks.StripeService.retrieve_payment_intent",
+                return_value=verified_intent,
+            ),
+        ):
+            _process_provider_event(event)
+
+        payment.refresh_from_db()
+        self.donation.refresh_from_db()
+        self.assertEqual(payment.status, PaymentStatus.SUCCESS)
+        self.assertEqual(payment.provider_payment_id, "pi_test")
+        self.assertEqual(self.donation.status, DonationStatus.COMPLETED)
+
+    def test_expired_checkout_session_cancels_pending_donation(self):
+        payment = Payment.objects.create(
+            donation=self.donation,
+            amount=self.donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+        event = WebhookEvent(
+            provider="stripe",
+            event_id="evt-checkout-expired",
+            event_type="checkout.session.expired",
+            payload={
+                "id": "evt-checkout-expired",
+                "data": {
+                    "object": {
+                        "id": "cs_expired",
+                        "metadata": {"stagelink_payment_id": str(payment.pk)},
+                    },
+                },
+            },
+        )
+        verified_session = {
+            "id": "cs_expired",
+            "metadata": {"stagelink_payment_id": str(payment.pk)},
+            "currency": "xaf",
+            "amount_total": 5000,
+            "status": "expired",
+        }
+        with patch(
+            "stagelink.payments.tasks.StripeService.retrieve_checkout_session",
+            return_value=verified_session,
+        ):
+            _process_provider_event(event)
+
+        payment.refresh_from_db()
+        self.donation.refresh_from_db()
+        self.assertEqual(payment.status, PaymentStatus.CANCELLED)
+        self.assertEqual(self.donation.status, DonationStatus.CANCELLED)
 
     def test_flutterwave_amount_and_currency_are_checked(self):
         payment = Payment.objects.create(

@@ -21,7 +21,6 @@
               class="space-y-7"
               data-create-url="{% url 'payments:create' %}"
               data-return-url="{% url 'payments:return' %}"
-              data-stripe-key="{{ stripe_publishable_key }}"
               data-network-required="{% translate 'Choisissez votre réseau Mobile Money.' %}"
               data-payment-error="{% translate 'Le paiement n’a pas pu être initialisé. Vérifiez les informations puis réessayez.' %}"
               data-confirming="{% translate 'Confirmation du paiement en cours…' %}"
@@ -111,14 +110,6 @@
             </div>
           </div>
 
-          <div id="stripe-card-container" class="hidden space-y-3">
-            <p class="text-sm font-medium text-text">{% translate "Informations de carte sécurisées par Stripe" %}</p>
-            <div id="stripe-card-element" class="rounded-control border border-border bg-surface px-4 py-4"></div>
-            <p class="text-sm text-text-muted">
-              {% translate "Vos informations de carte sont transmises directement à Stripe et ne sont pas enregistrées par StageLink." %}
-            </p>
-          </div>
-
           <div class="rounded-control bg-background p-4" aria-live="polite">
             <p class="text-sm text-text-muted">{% translate "Récapitulatif" %}</p>
             <p id="donation-summary" class="mt-1 font-semibold text-text">
@@ -154,7 +145,6 @@
 
 {% block inline_javascript %}
   {% if payment_methods %}
-    {% if stripe_available %}<script src="https://js.stripe.com/v3/" defer></script>{% endif %}
     <script src="{% static 'js/donation.js' %}" defer></script>
   {% endif %}
 {% endblock inline_javascript %}

@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
@@ -26,10 +25,6 @@ class DonationPageView(TemplateView):
                 },
             )
         context["payment_methods"] = options
-        context["stripe_available"] = any(
-            option["provider"] == "stripe" for option in options
-        )
-        context["stripe_publishable_key"] = settings.STRIPE_PUBLISHABLE_KEY
         context["donor_email"] = (
             self.request.user.email if self.request.user.is_authenticated else ""
         )

@@ -47,11 +47,7 @@ def stripe_webhook(request):
         or not isinstance(event["data"].get("object"), dict)
     ):
         return HttpResponse(status=400)
-    event = (
-        event.to_dict_recursive()
-        if hasattr(event, "to_dict_recursive")
-        else dict(event)
-    )
+    event = event.to_dict() if hasattr(event, "to_dict") else dict(event)
     return _persist_event(
         provider="stripe",
         event_id=event["id"],

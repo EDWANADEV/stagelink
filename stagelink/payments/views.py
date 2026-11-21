@@ -73,7 +73,16 @@ def create_payment(request):
             )
         if existing and (existing.provider_payment_id or existing.provider_response):
             response_data = _payment_response(existing)
-            if provider == PaymentProvider.STRIPE and existing.provider_payment_id:
+            if (
+                provider == PaymentProvider.STRIPE
+                and existing.provider_response.get("checkout_session_id")
+            ):
+                session = StripeService.retrieve_checkout_session(
+                    existing.provider_response["checkout_session_id"],
+                )
+                if session.status == "open":
+                    response_data["checkout_url"] = session.url
+            elif provider == PaymentProvider.STRIPE and existing.provider_payment_id:
                 intent = StripeService.retrieve_payment_intent(
                     existing.provider_payment_id,
                 )
@@ -101,12 +110,32 @@ def create_payment(request):
                 if payment.donation_id != donation.pk:
                     donation.delete()
         if provider == PaymentProvider.STRIPE:
-            result = StripeService.create_payment_intent(payment=payment)
-            payment.provider_payment_id = result["id"]
-            payment.provider_response = result["response"]
+            payment_return_url = request.build_absolute_uri(
+                reverse("payments:return"),
+            )
+            success_url = (
+                f"{payment_return_url}?payment_id={payment.pk}"
+                "&checkout_session_id={CHECKOUT_SESSION_ID}"
+            )
+            cancel_url = f"{payment_return_url}?payment_id={payment.pk}&cancelled=1"
+            email = data.get("email") or (
+                request.user.email if request.user.is_authenticated else ""
+            )
+            result = StripeService.create_checkout_session(
+                payment=payment,
+                success_url=success_url,
+                cancel_url=cancel_url,
+                customer_email=email,
+            )
+            if not result.get("url", "").startswith("https://checkout.stripe.com/"):
+                raise ValueError("Stripe n'a pas retourné une URL Checkout valide.")
+            payment.provider_response = {
+                "checkout_session_id": result["id"],
+                "checkout_url": result["url"],
+                "status": result["response"].get("status"),
+            }
             payment.save(
                 update_fields=[
-                    "provider_payment_id",
                     "provider_response",
                     "updated_at",
                 ],
@@ -114,7 +143,7 @@ def create_payment(request):
             return JsonResponse(
                 {
                     **_payment_response(payment),
-                    "client_secret": result["client_secret"],
+                    "checkout_url": result["url"],
                 },
                 status=201,
             )
@@ -153,8 +182,18 @@ def create_payment(request):
             )
     except (ValidationError, ValueError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
-    except Exception:
-        logger.exception("Échec de création du paiement (%s).", provider)
+    except Exception as exc:
+        cause = exc.__cause__
+        logger.error(
+            "Échec de création du paiement provider=%s exception_type=%s "
+            "provider_error_code=%s http_status=%s cause_type=%s request_id=%s",
+            provider,
+            type(exc).__name__,
+            getattr(exc, "code", None),
+            getattr(exc, "http_status", None),
+            type(cause).__name__ if cause else None,
+            getattr(exc, "request_id", None),
+        )
         return JsonResponse(
             {"error": "Le prestataire de paiement est indisponible."},
             status=502,
