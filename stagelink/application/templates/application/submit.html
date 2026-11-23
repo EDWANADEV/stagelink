@@ -14,13 +14,34 @@
       <form method="post" class="mt-6 space-y-5">
         {% csrf_token %}
         {% if form.non_field_errors %}<div role="alert" class="rounded-control bg-status-rejected-bg p-3 text-sm text-status-rejected-text">{{ form.non_field_errors }}</div>{% endif %}
+        {% if ai_error %}<p role="alert" class="rounded-control bg-status-rejected-bg p-3 text-sm text-status-rejected-text">{{ ai_error }}</p>{% endif %}
         <div>
           <label for="{{ form.cover_letter.id_for_label }}" class="mb-1.5 block text-sm font-semibold text-text">{{ form.cover_letter.label }}</label>
           {{ form.cover_letter }}
           {% if form.cover_letter.errors %}<p class="mt-1 text-sm text-status-rejected-text">{{ form.cover_letter.errors }}</p>{% endif %}
           <p class="mt-1 text-xs text-text-muted">{% translate "La lettre est facultative. Un CV enregistré dans votre profil est obligatoire pour postuler." %} <a href="{% url 'profiles:complete' %}" class="font-semibold text-primary hover:underline">{% translate "Gérer mon profil" %}</a></p>
         </div>
-        <button type="submit" class="inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark">{% translate "Envoyer ma candidature" %}</button>
+        <section class="rounded-control border border-border bg-background p-4 sm:p-5" aria-labelledby="letter-assistant-title">
+          <h2 id="letter-assistant-title" class="font-semibold text-text">{% translate "Améliorer ma lettre (facultatif)" %}</h2>
+          <p class="mt-1 text-xs leading-5 text-text-muted">{% translate "La suggestion ne sera pas enregistrée ni envoyée sans votre action. Vérifiez chaque information." %}</p>
+          {% if ai_configured %}
+            <p class="mt-2 text-xs text-text-muted" role="note">{% translate "Votre brouillon et les informations utiles de cette offre seront transmis au fournisseur IA activé par StageLink. N'incluez pas d'informations dont vous ne souhaitez pas le traitement externe." %}</p>
+            <div class="mt-4 grid gap-4 sm:grid-cols-3">
+              {% include "components/form_field.html" with field=form.assistant_task %}
+              {% include "components/form_field.html" with field=form.assistant_tone %}
+              {% include "components/form_field.html" with field=form.assistant_length %}
+            </div>
+            <button type="submit" name="assistant_action" value="generate" class="mt-4 inline-flex rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Proposer une amélioration" %}</button>
+          {% else %}
+            <p class="mt-3 text-sm text-text-muted">{% translate "L'assistance IA n'est pas activée. Vous pouvez rédiger votre lettre manuellement." %}</p>
+          {% endif %}
+          {% if ai_suggestion %}
+            <label for="ai-suggestion" class="mt-5 block text-sm font-semibold text-text">{% translate "Suggestion modifiable" %}</label>
+            <textarea id="ai-suggestion" name="ai_suggestion" rows="8" class="mt-2 w-full rounded-control border border-border bg-surface p-3 text-sm text-text">{{ ai_suggestion }}</textarea>
+            <button type="submit" name="assistant_action" value="use_suggestion" class="mt-3 inline-flex rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Reprendre cette suggestion dans ma lettre" %}</button>
+          {% endif %}
+        </section>
+        <button type="submit" name="assistant_action" value="submit_application" class="inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark">{% translate "Envoyer ma candidature" %}</button>
       </form>
     </section>
   </main>

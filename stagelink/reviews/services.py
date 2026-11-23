@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
@@ -27,7 +28,7 @@ class ReviewService:
         # Serialize submissions for the same account so parallel requests cannot
         # pass the active-review check at the same time. Soft-deleted reviews
         # remain excluded by the default manager, as before.
-        user = type(user).objects.select_for_update().get(pk=user.pk)
+        user = get_user_model().objects.select_for_update().get(pk=user.pk)
         if Review.objects.filter(user=user).exists():
             raise ValidationError(
                 _("Vous avez déjà laissé un avis."),
@@ -57,6 +58,7 @@ class ReviewService:
     ) -> Review:
         """Modifie son propre avis."""
 
+        review = Review.all_objects.select_for_update().get(pk=review.pk)
         require_review_owner(user, review)
 
         if review.is_deleted:
@@ -67,6 +69,10 @@ class ReviewService:
         review.rating = rating
         review.comment = comment
         review.updated_by = user
+        # Any edited text must pass moderation again before public display.
+        review.is_approved = False
+        review.approved_at = None
+        review.approved_by = None
 
         review.full_clean()
         review.save(
@@ -75,6 +81,9 @@ class ReviewService:
                 "comment",
                 "updated_by",
                 "updated_at",
+                "is_approved",
+                "approved_at",
+                "approved_by",
             ],
         )
 
@@ -89,6 +98,7 @@ class ReviewService:
     ) -> Review:
         """Supprime son propre avis via le soft delete."""
 
+        review = Review.all_objects.select_for_update().get(pk=review.pk)
         require_review_owner(user, review)
 
         if review.is_deleted:

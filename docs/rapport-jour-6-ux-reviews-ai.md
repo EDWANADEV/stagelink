@@ -114,3 +114,48 @@ La reprise améliore en plus l'UX de paiement : états distincts de remboursemen
 - Le commit `dbb3331` reste l'ancêtre ; les modifications de reprise seront un commit additionnel sur la même branche. Aucun push ni merge.
 
 Fichiers de la reprise : `docs/audit-parcours-paiement-jour-6.md`, `docs/audit-reviews-proposition-jour-6.md`, `docs/conception-integration-ia-stagelink.md`, `docs/rapport-jour-6-ux-reviews-ai.md`, catalogue anglais, vue et templates de paiement, formulaire/JS de donation, providers/services de paiement et tests donation/paiement. Aucun fichier Review modèle/migration ou interface publique n'est ajouté.
+
+## Implémentation fonctionnelle — reprise demandée
+
+Les sections d'audit antérieures décrivent l'état avant la reprise de développement. Les résultats actuels sont les suivants.
+
+### A. Paiements
+
+Le parcours SSR de retour et son actualisation bornée décrits plus haut restent en place : la preuve d'état provient du serveur, l'attente et les erreurs réseau sont expliquées, la vérification s'arrête après un délai fini, et les statuts de remboursement sont présentés distinctement selon le code déjà intégré. Aucun appel financier réel n'a été exécuté. La suite ciblée finale a inclus `payments` et `donation`.
+
+### B. Reviews
+
+Le parcours utilisable est ajouté : liste publique paginée des seuls avis approuvés, dépôt authentifié, historique privé, modification et suppression logique par le propriétaire, messages FR/EN et modération depuis l'administration. Une modification remet l'avis en attente, conformément à la décision confirmée par la propriétaire. L'administration trace l'approbateur et l'heure. La migration ajoute `is_approved` (publication après modération), `approved_at` et `approved_by` (traçabilité) ; les avis existants sont conservés et restent en attente par défaut.
+
+Le service conserve le verrouillage de l'utilisateur à la création pour éviter deux avis actifs lors de soumissions concurrentes. `REVIEW_MAX_PER_USER` reste configurable mais n'est pas consulté par le service, qui applique actuellement une limite fixe d'un avis actif. Cette incohérence n'a pas été modifiée.
+
+### C. IA
+
+Une interface SSR commune appelle un adaptateur fournisseur configurable, désactivé par défaut et sans fournisseur réel choisi. La configuration exige aussi `AI_EXTERNAL_PROCESSING_APPROVED=true`; la valeur par défaut `false` empêche l'envoi externe même si une classe d'adaptateur est renseignée. Les demandes sont déclenchées par l'utilisateur, bornées en longueur, limitées en fréquence, protégées par timeout et ne sont pas persistées. Les journaux ne contiennent ni prompt ni réponse. Les tests utilisent exclusivement un adaptateur simulé.
+
+- **UC-A** — Disponible dans le formulaire de candidature : suggestion éditable, reprise explicite dans le brouillon, puis soumission séparée par l'étudiant. La lettre et les champs utiles de l'offre seraient envoyés au fournisseur activé ; ni CV, coordonnées ni profil complet ne sont ajoutés au contexte.
+- **UC-B** — Disponible depuis le détail d'une offre publiée/fermée : résumé et explication des missions, compétences ou exigences basés sur les seuls champs de l'offre.
+- **UC-C** — Entraînement d'entretien en plusieurs tours, questions et retour constructif, sans notation d'employabilité. L'état du tour et de la question est vérifié côté serveur via la session ; six tours au plus.
+- **UC-D** — Assistance dans le formulaire de profil étudiant pour reformuler uniquement le domaine d'études, le niveau et les compétences saisis. La suggestion reste à vérifier et n'est pas sauvegardée automatiquement. Le modèle ne comporte pas de champ de présentation personnelle : aucune donnée ni règle nouvelle n'a été ajoutée.
+- **UC-E** — Assistance dans la création/modification d'offre pour le titre, la description et les compétences déclarées. La sortie JSON est validée, reste éditable et n'est pas enregistrée avant l'action normale de sauvegarde. Salaire, lieu et conditions ne sont pas transmis.
+- **UC-F** — Intégré à la liste d'offres via des correspondances exactes et explicables entre domaine, niveau et compétences. Cette aide n'appelle pas de fournisseur, ne classe pas les étudiants et ne retire aucune offre des résultats.
+- **UC-G** — Non implémenté : les droits d'accès aux candidatures côté entreprise existent, mais aucun cadrage validé ne couvre le transfert des données de candidature à un fournisseur. Aucun tri, rejet ou classement n'est ajouté.
+
+Les appels restent synchrones avec un timeout de 12 secondes ; Celery n'a pas été ajouté sans mesure justifiant ce coût et cette complexité. Avant l'activation d'un fournisseur, il reste à approuver son identité/région, les données envoyées, l'information/consentement, la conservation et le plafond de coûts. L'application reste utilisable lorsque l'IA est désactivée.
+
+### Vérifications de cette reprise
+
+- Sur PostgreSQL jetable isolé, tests de `ai_assistant`, `reviews`, `application`, `offers`, `payments`, `donation` et `profiles` : **149 passés, 8 sous-tests passés**. Les avertissements concernent l'absence du répertoire `staticfiles/` dans le worktree temporaire.
+- Suite globale `stagelink`, en excluant seulement `stagelink/users/tests/test_views.py` qui échoue à la collecte sur un import manquant : **188 passés, 5 échoués, 8 sous-tests passés**. Les cinq échecs restants sont dans les tests Users (route de connexion allauth, formulaire d'administration, URL utilisateur/detail/update) et ne touchent pas les fichiers de cette mission.
+- `manage.py check` : aucun problème ; `makemigrations --check --dry-run` : aucune migration manquante.
+- Ruff sur toutes les sources Python modifiées et les nouveaux tests : **All checks passed**.
+- `msgfmt --check` sur `locale/en_US/LC_MESSAGES/django.po` : compilation réussie ; seuls les champs de métadonnées de l'en-tête historique sont signalés. L'extraction automatique française n'a pas été lancée à terme, car le catalogue FR préexistant contient trois entrées en double.
+- Aucune mesure de charge, activation de fournisseur réel ou validation de production n'a été effectuée.
+
+### Livraison Git
+
+Le travail reste dans `/tmp/stagelink-day6`, branche `feat/day-6-ux-reviews-ai-preparation`, à partir de `aea5e0b`. Le diff inclut le parcours Reviews, les intégrations UC-A à UC-F, la migration de modération et les traductions anglaises, en plus des commits précédents de paiement. `stagelink/static/css/output.css` n'est pas modifié. Aucun push ni merge n'est effectué.
+
+**Titre PR proposé :** `Implement StageLink reviews and optional AI assistance`
+
+**Description proposée :** Ajoute le parcours d'avis StageLink avec modération obligatoire, gestion propriétaire et pagination ; intègre l'UX de paiement déjà validée ; ajoute les assistances optionnelles UC-A à UC-F via un adaptateur IA qui reste désactivé jusqu'à validation du traitement externe. UC-G reste en attente de cadrage des données et permissions. Vérifications ciblées PostgreSQL : 149 tests et 8 sous-tests passés ; Django check et migrations propres ; Ruff propre. La suite globale conserve cinq échecs préexistants dans les tests Users et un module Users ne se collecte pas à cause d'un import manquant. Aucun fournisseur réel, paiement, remboursement, push ou merge n'a été utilisé.

@@ -261,3 +261,231 @@ msgstr "The donation amount must be a whole number in XAF."
 
 msgid "Le montant doit être un nombre entier en XAF."
 msgstr "The amount must be a whole number in XAF."
+
+msgid "Avis sur StageLink"
+msgstr "Reviews of StageLink"
+
+msgid "Les avis publiés concernent uniquement l'expérience de la plateforme StageLink. Ils ne portent pas sur les entreprises, les recruteurs, les offres ou les stages."
+msgstr "Published reviews are only about the StageLink platform experience. They are not about companies, recruiters, internship listings, or internships."
+
+msgid "Gérer mes avis"
+msgstr "Manage my reviews"
+
+msgid "Se connecter pour déposer un avis"
+msgstr "Sign in to leave a review"
+
+msgid "Avis publiés"
+msgstr "Published reviews"
+
+msgid "Aucun commentaire."
+msgstr "No comment."
+
+msgid "Publié le %(date)s"
+msgstr "Published on %(date)s"
+
+msgid "Aucun avis n'a encore été approuvé pour publication."
+msgstr "No review has been approved for publication yet."
+
+msgid "Mes avis sur StageLink"
+msgstr "My StageLink reviews"
+
+msgid "Tous les avis publiés"
+msgstr "All published reviews"
+
+msgid "Votre avis porte uniquement sur la plateforme StageLink. Il devient visible publiquement après modération. La note et le commentaire peuvent être modifiés à tout moment ; une modification repasse en attente de modération."
+msgstr "Your review is only about the StageLink platform. It becomes public after moderation. You can change your rating and comment at any time; an edited review returns to moderation."
+
+msgid "Votre avis est publié."
+msgstr "Your review is published."
+
+msgid "Votre avis est en attente de modération."
+msgstr "Your review is awaiting moderation."
+
+msgid "Déposer mon avis"
+msgstr "Leave my review"
+
+msgid "Mon historique"
+msgstr "My history"
+
+msgid "Avis supprimé"
+msgstr "Review deleted"
+
+msgid "Publié"
+msgstr "Published"
+
+msgid "En attente de modération"
+msgstr "Awaiting moderation"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Supprimer"
+msgstr "Delete"
+
+msgid "Note : %(rating)s sur %(max_rating)s"
+msgstr "Rating: %(rating)s out of %(max_rating)s"
+
+msgid "Déposer un avis"
+msgstr "Leave a review"
+
+msgid "Modifier mon avis"
+msgstr "Edit my review"
+
+msgid "Retour à mes avis"
+msgstr "Back to my reviews"
+
+msgid "Modifier mon avis sur StageLink"
+msgstr "Edit my StageLink review"
+
+msgid "Déposer un avis sur StageLink"
+msgstr "Review StageLink"
+
+msgid "Cet avis concerne uniquement votre expérience de la plateforme StageLink, jamais une entreprise, un recruteur, une offre ou un stage. Votre avis sera visible après modération."
+msgstr "This review is only about your experience with the StageLink platform, never a company, recruiter, listing, or internship. Your review will be visible after moderation."
+
+msgid "Enregistrer les modifications"
+msgstr "Save changes"
+
+msgid "Envoyer pour modération"
+msgstr "Submit for moderation"
+
+msgid "Note sur StageLink"
+msgstr "Rating for StageLink"
+
+msgid "Votre avis a été reçu et attend la modération avant publication."
+msgstr "Your review was received and is awaiting moderation before publication."
+
+msgid "Votre avis a été modifié et repasse en attente de modération."
+msgstr "Your review was edited and is awaiting moderation again."
+
+msgid "Votre avis sur StageLink a été supprimé."
+msgstr "Your StageLink review was deleted."
+
+msgid "Vérifiez les informations de votre avis."
+msgstr "Check the information in your review."
+
+msgid "Approuver les avis sélectionnés pour publication"
+msgstr "Approve selected reviews for publication"
+
+msgid "%(count)s avis approuvé(s) pour publication."
+msgstr "%(count)s review(s) approved for publication."
+
+msgid "Aide recherchée"
+msgstr "Help needed"
+
+msgid "Résumer l'offre"
+msgstr "Summarize the listing"
+
+msgid "Comprendre les missions"
+msgstr "Understand the responsibilities"
+
+msgid "Expliquer les compétences demandées"
+msgstr "Explain the requested skills"
+
+msgid "Clarifier les exigences"
+msgstr "Clarify the requirements"
+
+msgid "Préparer un entretien"
+msgstr "Prepare for an interview"
+
+msgid "Votre réponse d'entraînement"
+msgstr "Your practice answer"
+
+msgid "Saisissez une réponse avant de continuer."
+msgstr "Enter an answer before continuing."
+
+msgid "La question précédente est manquante."
+msgstr "The previous question is missing."
+
+msgid "Cette séance d'entretien a expiré. Recommencez-la."
+msgstr "This interview session has expired. Start it again."
+
+msgid "La réponse de préparation n'a pas pu être structurée."
+msgstr "The interview response could not be structured."
+
+msgid "Assistance sur une offre"
+msgstr "Listing assistance"
+
+msgid "Les suggestions automatisées peuvent contenir des erreurs. Vérifiez-les avec le texte de l'offre ; elles ne déterminent pas votre éligibilité."
+msgstr "Automated suggestions may contain errors. Check them against the listing; they do not determine your eligibility."
+
+msgid "L'assistance est désactivée : aucun fournisseur IA n'est configuré. Vous pouvez toujours consulter l'offre et utiliser les filtres StageLink."
+msgstr "Assistance is disabled because no AI provider is configured. You can still review listings and use StageLink filters."
+
+msgid "La réponse n'a pas pu être structurée."
+msgstr "The response could not be structured."
+
+msgid "Retour sur votre réponse"
+msgstr "Feedback on your answer"
+
+msgid "Question d'entretien"
+msgstr "Interview question"
+
+msgid "Commencer ou continuer l'entraînement"
+msgstr "Start or continue practice"
+
+msgid "Obtenir une suggestion"
+msgstr "Get a suggestion"
+
+msgid "Fin de cette courte séance. Vous pouvez vérifier les conseils et préparer vos réponses à votre rythme."
+msgstr "This short session has ended. Review the tips and prepare your answers at your own pace."
+
+msgid "Suggestion à vérifier"
+msgstr "Suggestion to review"
+
+msgid "L'assistance IA n'est pas encore configurée."
+msgstr "AI assistance is not configured yet."
+
+msgid "L'assistance IA est momentanément indisponible."
+msgstr "AI assistance is temporarily unavailable."
+
+msgid "Le service IA a renvoyé un résultat illisible."
+msgstr "The AI service returned an unreadable result."
+
+msgid "Le service IA a renvoyé un résultat inutilisable."
+msgstr "The AI service returned an unusable result."
+
+msgid "Connectez-vous pour utiliser cette assistance."
+msgstr "Sign in to use this assistance."
+
+msgid "Le texte dépasse la limite autorisée pour l'assistance."
+msgstr "The text exceeds the assistance limit."
+
+msgid "Veuillez patienter avant une nouvelle demande IA."
+msgstr "Please wait before making another AI request."
+
+msgid "Choisissez une aide proposée pour cette offre."
+msgstr "Choose an available type of help for this listing."
+
+msgid "La suggestion de l'offre n'a pas pu être structurée."
+msgstr "The listing suggestion could not be structured."
+
+msgid "La suggestion de l'offre est incomplète."
+msgstr "The listing suggestion is incomplete."
+
+msgid "Compétence déclarée correspondante : %(skills)s"
+msgstr "Matching declared skill: %(skills)s"
+
+msgid "Domaine correspondant à votre profil"
+msgstr "Field matches your profile"
+
+msgid "Niveau d'études correspondant à votre profil"
+msgstr "Education level matches your profile"
+
+msgid "Correspondances avec votre profil"
+msgstr "Matches with your profile"
+
+msgid "L'assistance IA est désactivée. Vous pouvez toujours consulter l'offre et utiliser les filtres StageLink."
+msgstr "AI assistance is disabled. You can still review the listing and use StageLink filters."
+
+msgid "Les informations de l'offre et, pendant l'entraînement, vos réponses saisies seront transmises au fournisseur IA activé par StageLink. Vérifiez les réponses générées."
+msgstr "The listing information and, during interview practice, your answers will be sent to the AI provider enabled by StageLink. Review generated responses."
+
+msgid "Votre brouillon et les informations utiles de cette offre seront transmis au fournisseur IA activé par StageLink. N'incluez pas d'informations dont vous ne souhaitez pas le traitement externe."
+msgstr "Your draft and relevant information from this listing will be sent to the AI provider enabled by StageLink. Do not include information you do not want processed externally."
+
+msgid "Votre domaine d'études, votre niveau et vos compétences déclarées seront transmis au fournisseur IA activé par StageLink."
+msgstr "Your field of study, education level, and declared skills will be sent to the AI provider enabled by StageLink."
+
+msgid "Le titre, la description et les compétences saisies seront transmis au fournisseur IA activé par StageLink."
+msgstr "The entered title, description, and skills will be sent to the AI provider enabled by StageLink."
