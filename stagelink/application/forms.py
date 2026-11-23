@@ -43,6 +43,13 @@ class ApplicationSubmissionForm(forms.Form):
         ),
         initial="similar",
     )
+    external_processing_consent = forms.BooleanField(
+        label=_(
+            "J'accepte l'envoi de mon brouillon et des informations utiles de "
+            "l'offre au fournisseur IA pour cette demande.",
+        ),
+        required=False,
+    )
 
     def __init__(self, *args, student_profile=None, **kwargs):
         super().__init__(*args, **kwargs)

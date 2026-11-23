@@ -159,3 +159,28 @@ Le travail reste dans `/tmp/stagelink-day6`, branche `feat/day-6-ux-reviews-ai-p
 **Titre PR proposé :** `Implement StageLink reviews and optional AI assistance`
 
 **Description proposée :** Ajoute le parcours d'avis StageLink avec modération obligatoire, gestion propriétaire et pagination ; intègre l'UX de paiement déjà validée ; ajoute les assistances optionnelles UC-A à UC-F via un adaptateur IA qui reste désactivé jusqu'à validation du traitement externe. UC-G reste en attente de cadrage des données et permissions. Vérifications ciblées PostgreSQL : 149 tests et 8 sous-tests passés ; Django check et migrations propres ; Ruff propre. La suite globale conserve cinq échecs préexistants dans les tests Users et un module Users ne se collecte pas à cause d'un import manquant. Aucun fournisseur réel, paiement, remboursement, push ou merge n'a été utilisé.
+
+## Suivi — intégration concrète OpenAI
+
+La propriétaire a explicitement approuvé OpenAI et le modèle par défaut `gpt-6.2-sol`, configurable avec `AI_OPENAI_MODEL`. Ce suivi remplace les mentions précédentes indiquant qu'aucun fournisseur ou modèle n'était sélectionné. L'adaptateur réel OpenAI Responses utilise la dépendance `requests` existante, `store: false`, un timeout borné et aucun outil externe. Le traitement distant reste désactivé par défaut jusqu'à `AI_EXTERNAL_PROCESSING_APPROVED=True` et exige aussi le consentement explicite dans chaque formulaire concerné.
+
+- UC-A : amélioration éditable de la lettre dans le formulaire de candidature, reprise explicite puis envoi distinct par l'étudiant.
+- UC-B/UC-C : résumé, explications, question/réponse sur une offre, conseils et simulation d'entretien à tours bornés depuis la page d'assistance de l'offre.
+- UC-D : reformulation de la présentation personnelle et des compétences saisies ; migration `profiles.0002_studentprofile_description` ; aucun CV n'est transmis et rien n'est sauvegardé par l'action IA.
+- UC-E : amélioration structurée du brouillon d'offre dans les parcours entreprise ; sauvegarde et publication restent des actions distinctes.
+- UC-F : correspondances locales explicables pour domaine, niveau et compétences ; aucun appel externe, aucune offre cachée ni classement de candidats.
+- UC-G : reste non implémenté ; aucun CV, dossier ou candidature n'est envoyé à un modèle.
+
+La couche commune limite les entrées/sorties, applique le délai par utilisateur, les plafonds journaliers par utilisateur et globaux, ainsi qu'un verrou global empêchant plusieurs appels fournisseur simultanés. Le cache partagé est nécessaire en production ; en cas d'indisponibilité du cache, l'IA échoue de façon fermée. Les logs tracent le cas d'usage, la durée et les compteurs de tokens disponibles, sans contenu de prompt/réponse ni clé. Les tests utilisent un adaptateur et une réponse HTTP simulés ; aucune requête facturable réelle n'a été envoyée.
+
+### Vérifications de suivi
+
+- IA, candidatures, offres et profils : **96 tests passés, 2 ignorés**, exécutés avec SQLite et `--no-migrations` car aucune instance PostgreSQL locale n'était disponible. Les deux tests ignorés portent sur les verrous de ligne/concurrence PostgreSQL ; cette exécution ne valide donc pas PostgreSQL ni le comportement de la migration de données. Les avertissements restants signalent le dossier `staticfiles/` absent du worktree temporaire.
+- `manage.py check` : aucun problème ; `makemigrations --check --dry-run` : aucune migration manquante.
+- Ruff sur les modules Python concernés : **All checks passed** ; `compileall` et `git diff --check` passent.
+- `msgfmt --check` compile le catalogue anglais ; seuls trois champs d'en-tête historiques sont signalés.
+- Aucun secret réel, appel OpenAI réel, test de production, push ou merge n'a été effectué.
+
+Les instructions de configuration locale et de production, les noms de variables et la procédure de vérification sans afficher la clé sont dans `docs/configuration-ia.md`. Le modèle et les prix sont documentés à titre indicatif, les tarifs pouvant évoluer.
+
+**PR vers `main` à préparer après revue du diff :** `Implement StageLink reviews and optional AI assistance`. Aucun commit ou push n'a été effectué pour ce suivi. `stagelink/static/css/output.css` reste intact dans ce worktree.

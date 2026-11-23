@@ -74,15 +74,27 @@ FLW_PUBLIC_KEY = env("FLW_PUBLIC_KEY", default="")
 FLW_SECRET_KEY = env("FLW_SECRET_KEY", default="")
 FLW_WEBHOOK_SECRET = env("FLW_WEBHOOK_SECRET", default="")
 
-# Optional AI integration; an empty adapter path keeps the assistant inactive.
-AI_PROVIDER_ADAPTER = env("AI_PROVIDER_ADAPTER", default="")
+# Optional OpenAI integration. A separate approval switch and per-request
+# consent keep external processing disabled until explicitly enabled.
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
+AI_OPENAI_MODEL = env("AI_OPENAI_MODEL", default="gpt-6.2-sol")
+AI_PROVIDER_ADAPTER = env(
+    "AI_PROVIDER_ADAPTER",
+    default="stagelink.ai_assistant.openai_adapter.OpenAIAdapter",
+)
 AI_EXTERNAL_PROCESSING_APPROVED = env.bool(
     "AI_EXTERNAL_PROCESSING_APPROVED",
     default=False,
 )
 AI_REQUEST_TIMEOUT_SECONDS = env.int("AI_REQUEST_TIMEOUT_SECONDS", default=12)
 AI_MAX_INPUT_CHARACTERS = env.int("AI_MAX_INPUT_CHARACTERS", default=8000)
-AI_USER_COOLDOWN_SECONDS = env.int("AI_USER_COOLDOWN_SECONDS", default=5)
+AI_USER_COOLDOWN_SECONDS = env.int("AI_USER_COOLDOWN_SECONDS", default=15)
+AI_MAX_DAILY_REQUESTS = env.int("AI_MAX_DAILY_REQUESTS", default=100)
+AI_MAX_DAILY_REQUESTS_PER_USER = env.int(
+    "AI_MAX_DAILY_REQUESTS_PER_USER",
+    default=20,
+)
+AI_MAX_OUTPUT_TOKENS = env.int("AI_MAX_OUTPUT_TOKENS", default=1800)
 
 # GENERAL
 # ------------------------------------------------------------------------------

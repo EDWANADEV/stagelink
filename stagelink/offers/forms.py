@@ -25,6 +25,13 @@ class OfferForm(DesignSystemFormMixin, forms.ModelForm):
             attrs={"placeholder": _("Python, Communication, Excel")},
         ),
     )
+    external_processing_consent = forms.BooleanField(
+        label=_(
+            "J'accepte l'envoi du titre, de la description et des compétences "
+            "saisies au fournisseur IA pour cette demande.",
+        ),
+        required=False,
+    )
 
     salary = MoneyField(
         label=_("Rémunération"),

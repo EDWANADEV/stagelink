@@ -44,11 +44,20 @@ class StudentProfileForm(DesignSystemFormMixin, forms.ModelForm):
         ),
     )
 
+    external_processing_consent = forms.BooleanField(
+        label=_(
+            "J'accepte l'envoi des champs de profil sélectionnés au fournisseur "
+            "IA pour cette demande.",
+        ),
+        required=False,
+    )
+
     class Meta:
         model = StudentProfile
         fields = (
             "field_of_study",
             "level",
+            "description",
             "skills",
             "language",
             "cv",
@@ -75,9 +84,11 @@ class StudentProfileForm(DesignSystemFormMixin, forms.ModelForm):
         "name",
         "field_of_study",
         "level",
+        "description",
         "skills",
         "language",
         "cv",
+        "external_processing_consent",
     )
 
     def __init__(self, *args, user=None, **kwargs):

@@ -15,6 +15,7 @@ from .forms import MAX_INTERVIEW_TURNS
 from .forms import OfferAssistantForm
 from .providers import AIAssistantError
 from .providers import is_ai_configured
+from .services import ask_offer_question
 from .services import explain_offer
 from .services import interview_turn
 
@@ -59,7 +60,12 @@ class OfferAssistantView(LoginRequiredMixin, FormView):
         context["ai_error"] = getattr(self, "ai_error", "")
         return context
 
-    def form_valid(self, form):
+    def form_valid(self, form):  # noqa: PLR0912 -- bounded mode dispatch.
+        if not form.cleaned_data.get("external_processing_consent"):
+            self.ai_error = _(
+                "Confirmez l'envoi au fournisseur avant de demander une suggestion.",
+            )
+            return self.render_to_response(self.get_context_data(form=form))
         mode = form.cleaned_data["mode"]
         try:
             if mode == "interview":
@@ -109,6 +115,12 @@ class OfferAssistantView(LoginRequiredMixin, FormView):
                         "turn": self.interview_turn_number,
                         "previous_question": self.interview_question,
                     },
+                )
+            elif mode == "question":
+                self.ai_response = ask_offer_question(
+                    user=self.request.user,
+                    offer=self.offer,
+                    question=form.cleaned_data["question"],
                 )
             else:
                 self.ai_response = explain_offer(
