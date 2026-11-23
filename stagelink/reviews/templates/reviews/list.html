@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Avis sur StageLink" %} | StageLink{% endblock title %}
+
+{% block content %}
+  <div class="mx-auto max-w-4xl space-y-6">
+    <header class="rounded-card border border-border bg-surface p-6 sm:p-8">
+      <p class="text-sm font-semibold uppercase tracking-wide text-primary">StageLink</p>
+      <h1 class="mt-2 font-heading text-3xl font-bold text-text">{% translate "Avis sur StageLink" %}</h1>
+      <p class="mt-3 max-w-2xl text-sm leading-6 text-text-muted">
+        {% translate "Les avis publiés concernent uniquement l'expérience de la plateforme StageLink. Ils ne portent pas sur les entreprises, les recruteurs, les offres ou les stages." %}
+      </p>
+      {% if request.user.is_authenticated %}
+        <a href="{% url 'reviews:mine' %}"
+           class="mt-5 inline-flex rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark">
+          {% translate "Gérer mes avis" %}
+        </a>
+      {% else %}
+        <a href="{% url 'users:signin' %}?next={% url 'reviews:mine' %}"
+           class="mt-5 inline-flex rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark">
+          {% translate "Se connecter pour déposer un avis" %}
+        </a>
+      {% endif %}
+    </header>
+
+    <section aria-labelledby="published-reviews-title" class="space-y-4">
+      <h2 id="published-reviews-title" class="font-heading text-xl font-semibold text-text">
+        {% translate "Avis publiés" %}
+      </h2>
+      {% for review in reviews %}
+        <article class="rounded-card border border-border bg-surface p-5 sm:p-6">
+          <p class="font-semibold text-text">
+            {% blocktranslate with rating=review.rating max_rating=review_max_rating %}Note : {{ rating }} sur {{ max_rating }}{% endblocktranslate %}
+          </p>
+          <p class="mt-3 whitespace-pre-line text-sm leading-6 text-text">{{ review.comment|default:_('Aucun commentaire.') }}</p>
+          <p class="mt-4 text-xs text-text-muted">
+            {% blocktranslate with date=review.approved_at|date:"DATE_FORMAT" %}Publié le {{ date }}{% endblocktranslate %}
+          </p>
+        </article>
+      {% empty %}
+        <div class="rounded-card border border-border bg-surface p-8 text-center text-sm text-text-muted">
+          {% translate "Aucun avis n'a encore été approuvé pour publication." %}
+        </div>
+      {% endfor %}
+    </section>
+
+    {% if is_paginated %}
+      <nav aria-label="{% translate 'Pagination des avis' %}" class="flex items-center justify-between gap-4">
+        {% if page_obj.has_previous %}
+          <a class="rounded-control border border-border px-4 py-2 text-sm font-semibold text-primary"
+             href="?page={{ page_obj.previous_page_number }}">{% translate "Précédent" %}</a>
+        {% else %}<span></span>{% endif %}
+        <p class="text-sm text-text-muted">
+          {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} sur {{ total }}{% endblocktranslate %}
+        </p>
+        {% if page_obj.has_next %}
+          <a class="rounded-control border border-border px-4 py-2 text-sm font-semibold text-primary"
+             href="?page={{ page_obj.next_page_number }}">{% translate "Suivant" %}</a>
+        {% else %}<span></span>{% endif %}
+      </nav>
+    {% endif %}
+  </div>
+{% endblock content %}

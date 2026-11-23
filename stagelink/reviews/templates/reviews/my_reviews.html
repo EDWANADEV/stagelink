@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Mes avis sur StageLink" %} | StageLink{% endblock title %}
+
+{% block content %}
+  <div class="mx-auto max-w-4xl space-y-6">
+    <header class="rounded-card border border-border bg-surface p-6 sm:p-8">
+      <a href="{% url 'reviews:list' %}" class="text-sm font-semibold text-primary hover:underline">← {% translate "Tous les avis publiés" %}</a>
+      <h1 class="mt-3 font-heading text-3xl font-bold text-text">{% translate "Mes avis sur StageLink" %}</h1>
+      <p class="mt-3 text-sm leading-6 text-text-muted">
+        {% translate "Votre avis porte uniquement sur la plateforme StageLink. Il devient visible publiquement après modération. La note et le commentaire peuvent être modifiés à tout moment ; une modification repasse en attente de modération." %}
+      </p>
+      {% if active_review %}
+        <p class="mt-4 rounded-control bg-background px-4 py-3 text-sm text-text-muted" role="status">
+          {% if active_review.is_approved %}
+            {% translate "Votre avis est publié." %}
+          {% else %}
+            {% translate "Votre avis est en attente de modération." %}
+          {% endif %}
+        </p>
+      {% else %}
+        <a href="{% url 'reviews:create' %}"
+           class="mt-5 inline-flex rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark">
+          {% translate "Déposer mon avis" %}
+        </a>
+      {% endif %}
+    </header>
+
+    <section aria-labelledby="my-review-history" class="space-y-4">
+      <h2 id="my-review-history" class="font-heading text-xl font-semibold text-text">{% translate "Mon historique" %}</h2>
+      {% for review in reviews %}
+        <article class="rounded-card border border-border bg-surface p-5 sm:p-6">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p class="font-semibold text-text">
+                {% blocktranslate with rating=review.rating max_rating=review_max_rating %}Note : {{ rating }} sur {{ max_rating }}{% endblocktranslate %}
+              </p>
+              <p class="mt-1 text-xs text-text-muted">
+                {% if review.is_deleted %}
+                  {% translate "Avis supprimé" %}
+                {% elif review.is_approved %}
+                  {% translate "Publié" %}
+                {% else %}
+                  {% translate "En attente de modération" %}
+                {% endif %}
+              </p>
+            </div>
+            {% if not review.is_deleted %}
+              <div class="flex gap-2">
+                <a href="{% url 'reviews:update' pk=review.pk %}"
+                   class="rounded-control border border-border px-3 py-2 text-sm font-semibold text-primary">{% translate "Modifier" %}</a>
+                <a href="{% url 'reviews:delete' pk=review.pk %}"
+                   class="rounded-control border border-border px-3 py-2 text-sm font-semibold text-status-rejected-text">{% translate "Supprimer" %}</a>
+              </div>
+            {% endif %}
+          </div>
+          <p class="mt-3 whitespace-pre-line text-sm leading-6 text-text">{{ review.comment|default:_('Aucun commentaire.') }}</p>
+          <p class="mt-3 text-xs text-text-muted">
+            {% blocktranslate with date=review.created_at|date:"DATE_FORMAT" %}Déposé le {{ date }}{% endblocktranslate %}
+          </p>
+        </article>
+      {% empty %}
+        <div class="rounded-card border border-border bg-surface p-8 text-center text-sm text-text-muted">
+          {% translate "Vous n'avez pas encore déposé d'avis." %}
+        </div>
+      {% endfor %}
+    </section>
+
+    {% if is_paginated %}
+      <nav aria-label="{% translate 'Pagination de mon historique' %}" class="flex items-center justify-between gap-4">
+        {% if page_obj.has_previous %}
+          <a class="rounded-control border border-border px-4 py-2 text-sm font-semibold text-primary"
+             href="?page={{ page_obj.previous_page_number }}">{% translate "Précédent" %}</a>
+        {% else %}<span></span>{% endif %}
+        <p class="text-sm text-text-muted">
+          {% blocktranslate with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} sur {{ total }}{% endblocktranslate %}
+        </p>
+        {% if page_obj.has_next %}
+          <a class="rounded-control border border-border px-4 py-2 text-sm font-semibold text-primary"
+             href="?page={{ page_obj.next_page_number }}">{% translate "Suivant" %}</a>
+        {% else %}<span></span>{% endif %}
+      </nav>
+    {% endif %}
+  </div>
+{% endblock content %}

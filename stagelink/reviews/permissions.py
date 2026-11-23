@@ -1,4 +1,5 @@
 from django.core.exceptions import PermissionDenied
+from django.utils.translation import gettext_lazy as _
 
 
 def require_review_owner(user, review) -> None:
@@ -10,9 +11,7 @@ def require_review_owner(user, review) -> None:
         raise PermissionDenied
 
     if review.user_id != user.id:
-        raise PermissionDenied(
-            "Vous ne pouvez pas modifier cet avis."
-        )
+        raise PermissionDenied(_("Vous ne pouvez pas modifier cet avis."))
 
 
 def require_review_admin(user) -> None:

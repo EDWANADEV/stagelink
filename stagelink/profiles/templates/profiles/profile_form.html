@@ -47,6 +47,25 @@
         {% for field in form %}
           {% include "components/form_field.html" with field=field %}
         {% endfor %}
+        {% if user.role == "STUDENT" %}
+          <section class="rounded-control border border-border bg-background p-4 sm:p-5" aria-labelledby="profile-assistant-title">
+            <h2 id="profile-assistant-title" class="font-semibold text-text">{% translate "Améliorer la présentation de mes compétences (facultatif)" %}</h2>
+            <p class="mt-1 text-xs leading-5 text-text-muted">{% translate "Seules les informations déjà saisies dans le profil sont envoyées. L'assistant ne doit pas ajouter de compétences ; vérifiez chaque proposition." %}</p>
+          {% if ai_configured %}<p class="mt-2 text-xs text-text-muted" role="note">{% translate "Votre domaine d'études, votre niveau et vos compétences déclarées seront transmis au fournisseur IA activé par StageLink." %}</p>{% endif %}
+            {% if ai_error %}<p class="mt-3 text-sm text-status-rejected-text" role="alert">{{ ai_error }}</p>{% endif %}
+            {% if ai_configured %}
+              <button type="submit" name="profile_assistant_action" value="generate" class="mt-3 inline-flex rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Proposer une formulation" %}</button>
+            {% else %}
+              <p class="mt-3 text-sm text-text-muted">{% translate "L'assistance IA n'est pas activée. Vous pouvez modifier vos compétences manuellement." %}</p>
+            {% endif %}
+            {% if ai_suggestion %}
+              <label for="ai-profile-suggestion" class="mt-4 block text-sm font-semibold text-text">{% translate "Suggestion modifiable, séparée par des virgules" %}</label>
+              <textarea id="ai-profile-suggestion" name="ai_profile_suggestion" rows="4" class="mt-2 w-full rounded-control border border-border bg-surface p-3 text-sm text-text">{{ ai_suggestion }}</textarea>
+              <button type="submit" name="profile_assistant_action" value="use_suggestion" class="mt-3 inline-flex rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Reprendre dans le champ compétences" %}</button>
+              <p class="mt-2 text-xs text-text-muted">{% translate "La suggestion n'est pas enregistrée avant le bouton de validation du profil." %}</p>
+            {% endif %}
+          </section>
+        {% endif %}
         {% if user.role == "STUDENT" and profile.cv %}
           <p class="text-sm text-text-muted">
             <a href="{% url 'profiles:student-cv' profile_pk=profile.pk %}"

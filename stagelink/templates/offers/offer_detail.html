@@ -167,6 +167,16 @@
         </ul>
       {% endif %}
     </section>
+    {% if request.user.is_authenticated and request.user.role == "STUDENT" %}
+      <section class="rounded-card border border-border bg-surface p-5 sm:p-6" aria-labelledby="offer-assistance-title">
+        <h2 id="offer-assistance-title" class="font-heading text-lg font-semibold text-text">{% translate "Comprendre l'offre et se préparer" %}</h2>
+        <p class="mt-2 text-sm text-text-muted">{% translate "Les aides sont facultatives et ne remplacent pas la lecture de l'offre." %}</p>
+        <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+          <a href="{% url 'ai_assistant:offer' offer_pk=offer.pk %}?mode=summary" class="inline-flex justify-center rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Comprendre cette offre" %}</a>
+          <a href="{% url 'ai_assistant:offer' offer_pk=offer.pk %}?mode=interview" class="inline-flex justify-center rounded-control bg-primary px-4 py-2.5 text-sm font-semibold text-white">{% translate "Préparer un entretien" %}</a>
+        </div>
+      </section>
+    {% endif %}
     <!-- Entreprise -->
     {% if offer.company and offer.company.description %}
       <section class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">

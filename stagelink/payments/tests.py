@@ -1,6 +1,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
+from http import HTTPStatus
 from threading import Event
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -9,6 +10,7 @@ import pytest
 import stripe
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import DatabaseError
 from django.db import connection
 from django.db import close_old_connections
 from django.test import TestCase
@@ -815,6 +817,58 @@ class PaymentFlowTests(TestCase):
         self.assertEqual(
             WebhookEvent.objects.get(event_id="evt-redis-down").status,
             WebhookEvent.Status.RECEIVED,
+        )
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(
+    STRIPE_ENABLED=True,
+    STRIPE_PUBLISHABLE_KEY="pk_test_fake",
+    STRIPE_SECRET_KEY="sk_test_fake",  # noqa: S106
+    STRIPE_WEBHOOK_SECRET="whsec_test_fake",  # noqa: S106
+)
+def test_stripe_request_runs_after_database_transaction(client):
+    def create_checkout_session(**kwargs):
+        assert not connection.in_atomic_block
+        return {
+            "id": "cs_test",
+            "url": "https://checkout.stripe.com/c/pay/test",
+            "response": {"status": "open"},
+        }
+
+    with patch(
+        "stagelink.payments.views.StripeService.create_checkout_session",
+        side_effect=create_checkout_session,
+    ):
+        response = client.post(
+            reverse("payments:create"),
+            data=json.dumps({"amount": "5000", "provider": "stripe", "method": "card"}),
+            content_type="application/json",
+            HTTP_IDEMPOTENCY_KEY="stripe-transaction-test",
+        )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(
+    STRIPE_ENABLED=True,
+    STRIPE_SECRET_KEY="sk_test_fake",  # noqa: S106
+    STRIPE_WEBHOOK_SECRET="whsec_test_fake",  # noqa: S106
+)
+def test_database_error_is_not_misreported_as_provider_502(client):
+    with (
+        patch(
+            "stagelink.payments.views.DonationService.create_donation",
+            side_effect=DatabaseError("database unavailable"),
+        ),
+        pytest.raises(DatabaseError),
+    ):
+        client.post(
+            reverse("payments:create"),
+            data=json.dumps({"amount": "5000", "provider": "stripe", "method": "card"}),
+            content_type="application/json",
+            HTTP_IDEMPOTENCY_KEY="stripe-database-error",
         )
 
 

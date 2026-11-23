@@ -5,15 +5,21 @@ from pathlib import Path
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import FileResponse
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import FormView
 from django.views.generic import TemplateView
 
+from stagelink.ai_assistant.providers import AIAssistantError
+from stagelink.ai_assistant.providers import is_ai_configured
+from stagelink.ai_assistant.services import improve_profile_presentation
 from stagelink.application.models import Application
 from stagelink.profiles.forms import PROFILE_FORM_BY_ROLE
 from stagelink.profiles.models import StudentProfile
@@ -24,6 +30,7 @@ from stagelink.profiles.services import save_profile
 from stagelink.utils.enums import Role
 
 
+@method_decorator(transaction.non_atomic_requests, name="dispatch")
 class ProfileCompletionView(LoginRequiredMixin, FormView):
     """
     Complétion (puis modification) du profil de l'utilisateur connecté.
@@ -58,7 +65,51 @@ class ProfileCompletionView(LoginRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context["is_completion"] = self.profile is None
         context["profile"] = self.profile
+        context["ai_configured"] = is_ai_configured()
+        context["ai_suggestion"] = getattr(self, "ai_suggestion", "")
+        context["ai_error"] = getattr(self, "ai_error", "")
         return context
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("profile_assistant_action")
+        if action not in {"generate", "use_suggestion"}:
+            return super().post(request, *args, **kwargs)
+        if request.user.role != Role.STUDENT:
+            raise PermissionDenied
+
+        data = request.POST.copy()
+        if action == "use_suggestion":
+            data["skills"] = data.get("ai_profile_suggestion", "")
+            self.ai_suggestion = data["skills"]
+        form = self.get_form_class()(
+            data=data,
+            files=request.FILES,
+            instance=self.profile,
+            user=request.user,
+        )
+        form.is_valid()
+        if action == "generate":
+            skills = form.cleaned_data.get("skills", [])
+            if not skills:
+                self.ai_error = _(
+                    "Ajoutez d'abord des compétences à votre profil.",
+                )
+            else:
+                try:
+                    self.ai_suggestion = improve_profile_presentation(
+                        user=request.user,
+                        field_of_study=form.cleaned_data.get(
+                            "field_of_study",
+                            "",
+                        ),
+                        level=form.cleaned_data.get("level", ""),
+                        skills=skills,
+                    )
+                except (AIAssistantError, ValidationError) as error:
+                    self.ai_error = " ".join(
+                        getattr(error, "messages", [str(error)]),
+                    )
+        return self.render_to_response(self.get_context_data(form=form))
 
     def form_valid(self, form):
         is_completion = self.profile is None

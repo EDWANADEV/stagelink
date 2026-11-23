@@ -12,6 +12,37 @@ class ApplicationSubmissionForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={"rows": 6}),
     )
+    assistant_task = forms.ChoiceField(
+        label=_("Type d'amélioration"),
+        required=False,
+        choices=(
+            ("proofread", _("Corriger la langue")),
+            ("clarity", _("Améliorer la clarté")),
+            ("structure", _("Améliorer la structure")),
+            ("adapt", _("Mettre en évidence les points liés à l'offre")),
+        ),
+        initial="proofread",
+    )
+    assistant_tone = forms.ChoiceField(
+        label=_("Ton souhaité"),
+        required=False,
+        choices=(
+            ("professional", _("Professionnel")),
+            ("direct", _("Direct")),
+            ("warm", _("Chaleureux")),
+        ),
+        initial="professional",
+    )
+    assistant_length = forms.ChoiceField(
+        label=_("Longueur souhaitée"),
+        required=False,
+        choices=(
+            ("similar", _("Conserver une longueur proche")),
+            ("shorter", _("Plus concise")),
+            ("longer", _("Plus développée")),
+        ),
+        initial="similar",
+    )
 
     def __init__(self, *args, student_profile=None, **kwargs):
         super().__init__(*args, **kwargs)

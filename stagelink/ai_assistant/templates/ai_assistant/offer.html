@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Assistance sur une offre" %} | StageLink{% endblock title %}
+
+{% block content %}
+  <div class="mx-auto max-w-3xl space-y-5">
+    <a href="{% url 'offers:detail' pk=offer.pk %}" class="text-sm font-semibold text-primary hover:underline">← {% translate "Retour à l'offre" %}</a>
+    <section class="rounded-card border border-border bg-surface p-6 sm:p-8">
+      <p class="text-xs font-semibold uppercase tracking-wide text-primary">{{ offer.domain }}</p>
+      <h1 class="mt-2 font-heading text-2xl font-bold text-text">{{ offer.title }}</h1>
+      <p class="mt-3 text-sm leading-6 text-text-muted">{% translate "Les suggestions automatisées peuvent contenir des erreurs. Vérifiez-les avec le texte de l'offre ; elles ne déterminent pas votre éligibilité." %}</p>
+      {% if not ai_configured %}
+        <p class="mt-4 rounded-control bg-background p-4 text-sm text-text-muted" role="status">
+          {% translate "L'assistance IA est désactivée. Vous pouvez toujours consulter l'offre et utiliser les filtres StageLink." %}
+        </p>
+      {% else %}
+        <p class="mt-4 rounded-control bg-background p-4 text-sm text-text-muted" role="note">
+          {% translate "Les informations de l'offre et, pendant l'entraînement, vos réponses saisies seront transmises au fournisseur IA activé par StageLink. Vérifiez les réponses générées." %}
+        </p>
+      {% endif %}
+      {% if ai_error %}<p class="mt-4 rounded-control bg-status-rejected-bg p-4 text-sm text-status-rejected-text" role="alert">{{ ai_error }}</p>{% endif %}
+
+      <form method="post" class="mt-6 space-y-5" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div role="alert" class="rounded-control bg-status-rejected-bg p-3 text-sm text-status-rejected-text">{{ form.non_field_errors }}</div>{% endif %}
+        {% include "components/form_field.html" with field=form.mode %}
+        {% if interview_question %}
+          <div class="rounded-control border border-border bg-background p-4" aria-live="polite">
+            {% if ai_response %}
+              <h2 class="font-semibold text-text">{% translate "Retour sur votre réponse" %}</h2>
+              <p class="mt-2 whitespace-pre-line text-sm leading-6 text-text">{{ ai_response }}</p>
+            {% endif %}
+            <h2 class="mt-3 font-semibold text-text">{% translate "Question d'entretien" %}</h2>
+            <p class="mt-2 whitespace-pre-line text-sm leading-6 text-text">{{ interview_question }}</p>
+          </div>
+          {% if not interview_done %}
+            {% include "components/form_field.html" with field=form.answer %}
+            {% include "components/form_field.html" with field=form.turn %}
+            {% include "components/form_field.html" with field=form.previous_question %}
+          {% else %}
+            <p class="text-sm text-text-muted" role="status">{% translate "Fin de cette courte séance. Vous pouvez vérifier les conseils et préparer vos réponses à votre rythme." %}</p>
+          {% endif %}
+        {% else %}
+          {% include "components/form_field.html" with field=form.turn %}
+          {% include "components/form_field.html" with field=form.previous_question %}
+        {% endif %}
+        <button type="submit" class="inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark">
+          {% if form.mode.value == "interview" %}{% translate "Commencer ou continuer l'entraînement" %}{% else %}{% translate "Obtenir une suggestion" %}{% endif %}
+        </button>
+      </form>
+
+      {% if ai_response and not interview_question %}
+        <section class="mt-6 rounded-control border border-border bg-background p-5" aria-labelledby="ai-suggestion-title">
+          <h2 id="ai-suggestion-title" class="font-semibold text-text">{% translate "Suggestion à vérifier" %}</h2>
+          <div class="mt-3 whitespace-pre-line text-sm leading-6 text-text">{{ ai_response }}</div>
+        </section>
+      {% endif %}
+    </section>
+  </div>
+{% endblock content %}

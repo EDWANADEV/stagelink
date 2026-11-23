@@ -37,6 +37,11 @@ urlpatterns = [
         "notifications/",
         include("stagelink.notifications.urls", namespace="notifications"),
     ),
+    path("reviews/", include("stagelink.reviews.urls", namespace="reviews")),
+    path(
+        "assistant/",
+        include("stagelink.ai_assistant.urls", namespace="ai_assistant"),
+    ),
     # Your stuff: custom urls includes go here
     path("offers/", include("stagelink.offers.urls", namespace="offers")),
     path("donations/", include("stagelink.donation.urls", namespace="donation")),
