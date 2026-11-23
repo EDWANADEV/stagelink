@@ -183,4 +183,4 @@ La couche commune limite les entrées/sorties, applique le délai par utilisateu
 
 Les instructions de configuration locale et de production, les noms de variables et la procédure de vérification sans afficher la clé sont dans `docs/configuration-ia.md`. Le modèle et les prix sont documentés à titre indicatif, les tarifs pouvant évoluer.
 
-**PR vers `main` à préparer après revue du diff :** `Implement StageLink reviews and optional AI assistance`. Aucun commit ou push n'a été effectué pour ce suivi. `stagelink/static/css/output.css` reste intact dans ce worktree.
+**PR vers `main` à préparer après revue du diff :** `Implement StageLink reviews and optional AI assistance`. Le suivi IA est commité dans `c3d4fef` ; aucun push ou merge n'a été effectué. `stagelink/static/css/output.css` reste intact dans ce worktree.
