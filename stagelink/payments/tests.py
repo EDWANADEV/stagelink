@@ -1,13 +1,20 @@
 import json
+from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
+from threading import Event
 from unittest.mock import Mock
 from unittest.mock import patch
 
+import pytest
 import stripe
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import connection
+from django.db import close_old_connections
 from django.test import TestCase
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from djmoney.money import Money
 
 from stagelink.donation.models import Donation
@@ -21,8 +28,10 @@ from .models import Payment
 from .models import WebhookEvent
 from .providers.stripe import StripeService
 from .services import PaymentService
+from .tasks import PROCESSING_LEASE
 from .tasks import _process_provider_event
 from .tasks import process_webhook_event
+from .tasks import reprocess_failed_webhook_events
 
 
 @override_settings(
@@ -274,7 +283,7 @@ class PaymentFlowTests(TestCase):
                 "stagelink.payments.webhooks.stripe.Webhook.construct_event",
                 return_value=event,
             ),
-            patch("stagelink.payments.webhooks.process_webhook_event.delay") as enqueue,
+            patch("stagelink.payments.tasks.process_webhook_event.delay") as enqueue,
             self.captureOnCommitCallbacks(execute=True),
         ):
             response = self.client.post(
@@ -294,6 +303,43 @@ class PaymentFlowTests(TestCase):
             1,
         )
         enqueue.assert_called_once()
+
+    @override_settings(
+        STRIPE_ENABLED=True,
+        STRIPE_SECRET_KEY="sk_test_fake",
+        STRIPE_WEBHOOK_SECRET="whsec_fake",
+    )
+    def test_duplicate_delivery_retries_after_publication_failure(self):
+        event = {
+            "id": "evt-publish-retry",
+            "type": "payment_intent.succeeded",
+            "data": {"object": {"id": "pi_test", "metadata": {}}},
+        }
+        with (
+            patch(
+                "stagelink.payments.webhooks.stripe.Webhook.construct_event",
+                return_value=event,
+            ),
+            patch(
+                "stagelink.payments.tasks.process_webhook_event.delay",
+                side_effect=[RuntimeError("redis unavailable"), Mock()],
+            ) as enqueue,
+            self.captureOnCommitCallbacks(execute=True),
+        ):
+            self.client.post(
+                reverse("payments:stripe-webhook"),
+                data=b"{}",
+                content_type="application/json",
+            )
+            self.client.post(
+                reverse("payments:stripe-webhook"),
+                data=b"{}",
+                content_type="application/json",
+            )
+        self.assertEqual(enqueue.call_count, 2)
+        stored = WebhookEvent.objects.get(event_id="evt-publish-retry")
+        self.assertEqual(stored.status, WebhookEvent.Status.RECEIVED)
+        self.assertIsNotNone(stored.last_dispatched_at)
 
     @override_settings(STRIPE_WEBHOOK_SECRET="whsec_fake")
     def test_invalid_signature_is_rejected(self):
@@ -328,7 +374,7 @@ class PaymentFlowTests(TestCase):
             "data": {"id": 123, "tx_ref": "payment-ref"},
         }
         with (
-            patch("stagelink.payments.webhooks.process_webhook_event.delay") as enqueue,
+            patch("stagelink.payments.tasks.process_webhook_event.delay") as enqueue,
             self.captureOnCommitCallbacks(execute=True),
         ):
             response = self.client.post(
@@ -388,6 +434,7 @@ class PaymentFlowTests(TestCase):
         with patch(
             "stagelink.payments.tasks.StripeService.retrieve_payment_intent",
             return_value={
+                "id": "pi_success",
                 "metadata": {"stagelink_payment_id": str(payment.pk)},
                 "currency": "xaf",
                 "amount": 5000,
@@ -431,6 +478,7 @@ class PaymentFlowTests(TestCase):
             "payment_intent": "pi_test",
         }
         verified_intent = {
+            "id": "pi_test",
             "metadata": {"stagelink_payment_id": str(payment.pk)},
             "currency": "xaf",
             "amount": 5000,
@@ -568,7 +616,7 @@ class PaymentFlowTests(TestCase):
         event = WebhookEvent.objects.create(
             provider="stripe",
             event_id="evt-done",
-            event_type="ignored",
+            event_type="unknown.event",
             payload={},
             status=WebhookEvent.Status.PROCESSED,
         )
@@ -585,15 +633,282 @@ class PaymentFlowTests(TestCase):
         event = WebhookEvent.objects.create(
             provider="stripe",
             event_id="evt-retry",
-            event_type="ignored",
+            event_type="unknown.event",
             payload={},
         )
         with patch(
             "stagelink.payments.tasks._process_provider_event",
             side_effect=RuntimeError("temporary"),
         ):
-            with self.assertRaises(Exception):
-                process_webhook_event.run(str(event.pk))
+            process_webhook_event.run(str(event.pk))
         event.refresh_from_db()
         self.assertEqual(event.status, WebhookEvent.Status.RECEIVED)
-        self.assertIn("temporary", event.last_error)
+        self.assertEqual(event.last_error, "RuntimeError")
+
+    def test_unsupported_stripe_event_is_ignored(self):
+        event = WebhookEvent.objects.create(
+            provider="stripe",
+            event_id="evt-ignored",
+            event_type="charge.succeeded",
+            payload={},
+        )
+        process_webhook_event.run(str(event.pk))
+        event.refresh_from_db()
+        self.assertEqual(event.status, WebhookEvent.Status.IGNORED)
+
+    def test_missing_payment_reference_is_terminal_invalid(self):
+        event = WebhookEvent.objects.create(
+            provider="stripe",
+            event_id="evt-no-ref",
+            event_type="payment_intent.succeeded",
+            payload={"id": "evt-no-ref", "data": {"object": {"id": "pi_no_ref"}}},
+        )
+        process_webhook_event.run(str(event.pk))
+        event.refresh_from_db()
+        self.assertEqual(event.status, WebhookEvent.Status.INVALID)
+        self.assertEqual(event.last_error, "ValueError")
+
+    def test_stripe_amount_currency_and_provider_references_are_validated(self):
+        payment = Payment.objects.create(
+            donation=self.donation,
+            amount=self.donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+        cases = [
+            ({"id": "pi-check", "currency": "xaf", "amount": 1}, "amount"),
+            ({"id": "pi-check", "currency": "usd", "amount": 5000}, "currency"),
+            ({"id": "pi-other", "currency": "xaf", "amount": 5000}, "id"),
+        ]
+        for verified, _ in cases:
+            verified["metadata"] = {"stagelink_payment_id": str(payment.pk)}
+        for index, (verified, _) in enumerate(cases):
+            event = WebhookEvent.objects.create(
+                provider="stripe",
+                event_id=f"evt-invalid-{index}",
+                event_type="payment_intent.succeeded",
+                payload={
+                    "id": f"evt-invalid-{index}",
+                    "data": {
+                        "object": {
+                            "id": "pi-check",
+                            "metadata": {"stagelink_payment_id": str(payment.pk)},
+                        }
+                    },
+                },
+            )
+            with patch(
+                "stagelink.payments.tasks.StripeService.retrieve_payment_intent",
+                return_value=verified,
+            ):
+                process_webhook_event.run(str(event.pk))
+            event.refresh_from_db()
+            self.assertEqual(event.status, WebhookEvent.Status.INVALID)
+
+    def test_late_failure_event_cannot_downgrade_successful_payment(self):
+        payment = Payment.objects.create(
+            donation=self.donation,
+            amount=self.donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+        PaymentService.mark_as_success(payment=payment, provider_payment_id="pi-late")
+        event = WebhookEvent(
+            provider="stripe",
+            event_id="evt-late-failure",
+            event_type="payment_intent.payment_failed",
+            payload={
+                "id": "evt-late-failure",
+                "data": {
+                    "object": {
+                        "id": "pi-late",
+                        "metadata": {"stagelink_payment_id": str(payment.pk)},
+                    }
+                },
+            },
+        )
+        with patch(
+            "stagelink.payments.tasks.StripeService.retrieve_payment_intent",
+            return_value={
+                "id": "pi-late",
+                "metadata": {"stagelink_payment_id": str(payment.pk)},
+                "currency": "xaf",
+                "amount": 5000,
+                "status": "succeeded",
+            },
+        ):
+            self.assertEqual(_process_provider_event(event), "ignored")
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, PaymentStatus.SUCCESS)
+
+    def test_duplicate_success_confirmation_is_idempotent(self):
+        payment = Payment.objects.create(
+            donation=self.donation,
+            amount=self.donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+        for _ in range(2):
+            PaymentService.mark_as_success(
+                payment=payment,
+                provider_payment_id="pi-idempotent",
+                provider_response={"status": "succeeded"},
+            )
+        payment.refresh_from_db()
+        self.donation.refresh_from_db()
+        self.assertEqual(payment.status, PaymentStatus.SUCCESS)
+        self.assertEqual(self.donation.status, DonationStatus.COMPLETED)
+
+    def test_recovery_republishes_received_and_expired_processing_only(self):
+        pending = WebhookEvent.objects.create(
+            provider="stripe",
+            event_id="evt-pending",
+            event_type="x",
+            payload={},
+        )
+        stale = WebhookEvent.objects.create(
+            provider="stripe",
+            event_id="evt-stale",
+            event_type="x",
+            payload={},
+            status=WebhookEvent.Status.PROCESSING,
+            processing_started_at=timezone.now()
+            - PROCESSING_LEASE
+            - timedelta(seconds=1),
+        )
+        fresh = WebhookEvent.objects.create(
+            provider="stripe",
+            event_id="evt-fresh",
+            event_type="x",
+            payload={},
+            status=WebhookEvent.Status.PROCESSING,
+            processing_started_at=timezone.now(),
+        )
+        terminal = WebhookEvent.objects.create(
+            provider="stripe",
+            event_id="evt-invalid",
+            event_type="x",
+            payload={},
+            status=WebhookEvent.Status.INVALID,
+        )
+        with patch("stagelink.payments.tasks.process_webhook_event.delay") as publish:
+            reprocess_failed_webhook_events.run()
+        self.assertCountEqual(
+            [call.args[0] for call in publish.call_args_list],
+            [pending.pk, stale.pk],
+        )
+        self.assertNotIn(fresh.pk, [call.args[0] for call in publish.call_args_list])
+        self.assertNotIn(terminal.pk, [call.args[0] for call in publish.call_args_list])
+
+    def test_recovery_survives_redis_publication_failure(self):
+        WebhookEvent.objects.create(
+            provider="stripe",
+            event_id="evt-redis-down",
+            event_type="x",
+            payload={},
+        )
+        with patch(
+            "stagelink.payments.tasks.process_webhook_event.delay",
+            side_effect=RuntimeError("redis unavailable"),
+        ):
+            reprocess_failed_webhook_events.run()
+        self.assertEqual(
+            WebhookEvent.objects.get(event_id="evt-redis-down").status,
+            WebhookEvent.Status.RECEIVED,
+        )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_workers_cannot_claim_the_same_webhook():
+    event = WebhookEvent.objects.create(
+        provider="stripe",
+        event_id="evt-concurrent",
+        event_type="other",
+        payload={},
+    )
+    entered = Event()
+    release = Event()
+
+    def hold_processing(_event):
+        entered.set()
+        assert release.wait(timeout=5)
+        return "ignored"
+
+    def first_worker():
+        close_old_connections()
+        try:
+            process_webhook_event.run(str(event.pk))
+        finally:
+            close_old_connections()
+
+    with patch(
+        "stagelink.payments.tasks._process_provider_event",
+        side_effect=hold_processing,
+    ) as process:
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(first_worker)
+            assert entered.wait(timeout=5)
+            process_webhook_event.run(str(event.pk))
+            release.set()
+            future.result(timeout=5)
+
+    event.refresh_from_db()
+    assert process.call_count == 1
+    assert event.status == WebhookEvent.Status.IGNORED
+    assert event.attempts == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(
+    STRIPE_ENABLED=True,
+    STRIPE_PUBLISHABLE_KEY="pk_test_fake",
+    STRIPE_SECRET_KEY="sk_test_fake",  # noqa: S106
+    STRIPE_WEBHOOK_SECRET="whsec_test_fake",  # noqa: S106
+)
+def test_stripe_network_verification_runs_outside_database_transaction():
+    user = get_user_model().objects.create_user(
+        email="outside-transaction@example.com",
+        password="test-password",
+    )
+    donation = DonationService.create_donation(donor=user, amount=Money(5000, "XAF"))
+    payment = Payment.objects.create(
+        donation=donation,
+        amount=donation.amount,
+        provider=PaymentProvider.STRIPE,
+        method=PaymentMethod.CARD,
+    )
+    event = WebhookEvent.objects.create(
+        provider="stripe",
+        event_id="evt-network-boundary",
+        event_type="payment_intent.succeeded",
+        payload={
+            "id": "evt-network-boundary",
+            "data": {
+                "object": {
+                    "id": "pi-boundary",
+                    "metadata": {"stagelink_payment_id": str(payment.pk)},
+                }
+            },
+        },
+    )
+
+    def retrieve(_intent_id):
+        assert not connection.in_atomic_block
+        return {
+            "id": "pi-boundary",
+            "metadata": {"stagelink_payment_id": str(payment.pk)},
+            "currency": "xaf",
+            "amount": 5000,
+            "status": "succeeded",
+        }
+
+    with patch(
+        "stagelink.payments.tasks.StripeService.retrieve_payment_intent",
+        side_effect=retrieve,
+    ):
+        process_webhook_event.run(str(event.pk))
+
+    event.refresh_from_db()
+    payment.refresh_from_db()
+    assert event.status == WebhookEvent.Status.PROCESSED
+    assert payment.status == PaymentStatus.SUCCESS

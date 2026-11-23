@@ -125,6 +125,8 @@ class WebhookEvent(models.Model):
         RECEIVED = "received", _("Reçu")
         PROCESSING = "processing", _("En cours")
         PROCESSED = "processed", _("Traité")
+        IGNORED = "ignored", _("Ignoré")
+        INVALID = "invalid", _("Invalide")
         FAILED = "failed", _("Échoué")
 
     provider = models.CharField(_("Prestataire"), max_length=20)
@@ -139,6 +141,8 @@ class WebhookEvent(models.Model):
         db_index=True,
     )
     attempts = models.PositiveIntegerField(default=0)
+    processing_started_at = models.DateTimeField(null=True, blank=True)
+    last_dispatched_at = models.DateTimeField(null=True, blank=True)
     processed_at = models.DateTimeField(null=True, blank=True)
     last_error = models.TextField(blank=True)
 

@@ -1,4 +1,5 @@
 import json
+import logging
 
 import stripe
 from django.conf import settings
@@ -10,7 +11,14 @@ from django.views.decorators.http import require_POST
 
 from .models import WebhookEvent
 from .providers.flutterwave import FlutterwaveService
-from .tasks import process_webhook_event
+from .tasks import publish_webhook_event
+
+logger = logging.getLogger(__name__)
+
+
+def _publish_event(event):
+    # PostgreSQL remains the durable queue; Beat and duplicate deliveries retry.
+    publish_webhook_event(event)
 
 
 def _persist_event(*, provider, event_id, event_type, payload):
@@ -21,8 +29,19 @@ def _persist_event(*, provider, event_id, event_type, payload):
                 event_id=event_id,
                 defaults={"event_type": event_type, "payload": payload},
             )
-            if created:
-                transaction.on_commit(lambda: process_webhook_event.delay(event.pk))
+            logger.info(
+                "Webhook persisted provider=%s event_id=%s type=%s "
+                "created=%s status=%s",
+                provider,
+                event_id,
+                event_type,
+                created,
+                event.status,
+            )
+            # Only pending rows are nudged. Processing/terminal duplicates do not
+            # create needless broker traffic.
+            if event.status == WebhookEvent.Status.RECEIVED:
+                transaction.on_commit(lambda event=event: _publish_event(event))
     except IntegrityError:
         # A concurrent delivery won the unique constraint race.
         return HttpResponse(status=200)
