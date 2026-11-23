@@ -3,6 +3,8 @@ import logging
 from decimal import InvalidOperation
 from uuid import UUID
 
+import requests
+import stripe
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
@@ -45,6 +47,7 @@ def payment_options(request):
 
 
 @require_POST
+@transaction.non_atomic_requests
 def create_payment(request):
     """Create a donation and initialize its PSP checkout; never marks it paid."""
     try:
@@ -196,7 +199,7 @@ def create_payment(request):
             )
     except (ValidationError, ValueError) as exc:
         return JsonResponse({"error": str(exc)}, status=400)
-    except Exception as exc:
+    except (stripe.StripeError, requests.RequestException) as exc:
         cause = exc.__cause__
         logger.error(
             "Échec de création du paiement provider=%s exception_type=%s "

@@ -240,12 +240,6 @@ class OfferFormMixin:
 
     def handle_assistant_action(self, form, action):
         if action == "generate":
-            if not form.cleaned_data.get("external_processing_consent"):
-                self.ai_error = _(
-                    "Confirmez l'envoi au fournisseur avant de demander "
-                    "une suggestion.",
-                )
-                return self.render_to_response(self.get_context_data(form=form))
             try:
                 self.ai_suggestion = improve_offer_draft(
                     user=self.request.user,

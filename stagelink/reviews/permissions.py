@@ -11,9 +11,7 @@ def require_review_owner(user, review) -> None:
         raise PermissionDenied
 
     if review.user_id != user.id:
-        raise PermissionDenied(
-            _("Vous ne pouvez pas modifier cet avis."),
-        )
+        raise PermissionDenied(_("Vous ne pouvez pas modifier cet avis."))
 
 
 def require_review_admin(user) -> None:

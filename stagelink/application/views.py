@@ -153,12 +153,6 @@ class ApplicationSubmitView(ApplicationRoleMixin, FormView):
             return self.form_invalid(form)
 
         if action == "generate":
-            if not form.cleaned_data.get("external_processing_consent"):
-                self.ai_error = _(
-                    "Confirmez l'envoi au fournisseur avant de demander "
-                    "une suggestion.",
-                )
-                return self.render_to_response(self.get_context_data(form=form))
             try:
                 self.ai_suggestion = improve_letter(
                     user=request.user,

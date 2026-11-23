@@ -25,23 +25,19 @@
           <h2 id="letter-assistant-title" class="font-semibold text-text">{% translate "Améliorer ma lettre (facultatif)" %}</h2>
           <p class="mt-1 text-xs leading-5 text-text-muted">{% translate "La suggestion ne sera pas enregistrée ni envoyée sans votre action. Vérifiez chaque information." %}</p>
           {% if ai_configured %}
-            <p class="mt-2 text-xs text-text-muted" role="note">{% translate "Votre brouillon et les informations utiles de cette offre seront transmis à OpenAI pour cette demande. L'API n'utilise pas les données pour entraîner ses modèles par défaut ; ses journaux de surveillance peuvent les conserver jusqu'à 30 jours." %}</p>
-            {% include "components/form_field.html" with field=form.external_processing_consent %}
+            <p class="mt-2 text-xs text-text-muted" role="note">{% translate "Votre brouillon et les informations utiles de cette offre seront transmis au fournisseur IA activé par StageLink. N'incluez pas d'informations dont vous ne souhaitez pas le traitement externe." %}</p>
             <div class="mt-4 grid gap-4 sm:grid-cols-3">
               {% include "components/form_field.html" with field=form.assistant_task %}
               {% include "components/form_field.html" with field=form.assistant_tone %}
               {% include "components/form_field.html" with field=form.assistant_length %}
             </div>
             <button type="submit" name="assistant_action" value="generate" class="mt-4 inline-flex rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Proposer une amélioration" %}</button>
-            <p class="mt-3 text-sm text-text-muted" role="status" aria-live="polite" data-ai-loading hidden>{% translate "Envoi de votre demande IA…" %}</p>
           {% else %}
             <p class="mt-3 text-sm text-text-muted">{% translate "L'assistance IA n'est pas activée. Vous pouvez rédiger votre lettre manuellement." %}</p>
           {% endif %}
           {% if ai_suggestion %}
             <label for="ai-suggestion" class="mt-5 block text-sm font-semibold text-text">{% translate "Suggestion modifiable" %}</label>
             <textarea id="ai-suggestion" name="ai_suggestion" rows="8" class="mt-2 w-full rounded-control border border-border bg-surface p-3 text-sm text-text">{{ ai_suggestion }}</textarea>
-            <button type="button" data-copy-target="ai-suggestion" data-copy-success="{% translate 'Suggestion copiée.' %}" data-copy-failure="{% translate 'La copie automatique a échoué. Sélectionnez et copiez le texte.' %}" class="mt-3 inline-flex rounded-control border border-border px-4 py-2 text-sm font-semibold text-primary">{% translate "Copier la suggestion" %}</button>
-            <p class="mt-2 text-sm text-text-muted" role="status" aria-live="polite" data-copy-status></p>
             <button type="submit" name="assistant_action" value="use_suggestion" class="mt-3 inline-flex rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Reprendre cette suggestion dans ma lettre" %}</button>
           {% endif %}
         </section>

@@ -16,18 +16,15 @@
         </p>
       {% else %}
         <p class="mt-4 rounded-control bg-background p-4 text-sm text-text-muted" role="note">
-          {% translate "Les informations utiles de l'offre et, pendant l'entraînement, vos réponses saisies seront transmises à OpenAI. L'API n'utilise pas les données pour entraîner ses modèles par défaut ; ses journaux de surveillance peuvent les conserver jusqu'à 30 jours." %}
+          {% translate "Les informations de l'offre et, pendant l'entraînement, vos réponses saisies seront transmises au fournisseur IA activé par StageLink. Vérifiez les réponses générées." %}
         </p>
       {% endif %}
       {% if ai_error %}<p class="mt-4 rounded-control bg-status-rejected-bg p-4 text-sm text-status-rejected-text" role="alert">{{ ai_error }}</p>{% endif %}
 
-      <form method="post" class="mt-6 space-y-5" novalidate data-ai-form="always">
+      <form method="post" class="mt-6 space-y-5" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}<div role="alert" class="rounded-control bg-status-rejected-bg p-3 text-sm text-status-rejected-text">{{ form.non_field_errors }}</div>{% endif %}
         {% include "components/form_field.html" with field=form.mode %}
-        <div id="offer-question-field" {% if form.mode.value != "question" %}hidden{% endif %}>
-          {% include "components/form_field.html" with field=form.question %}
-        </div>
         {% if interview_question %}
           <div class="rounded-control border border-border bg-background p-4" aria-live="polite">
             {% if ai_response %}
@@ -48,11 +45,9 @@
           {% include "components/form_field.html" with field=form.turn %}
           {% include "components/form_field.html" with field=form.previous_question %}
         {% endif %}
-        {% if ai_configured %}{% include "components/form_field.html" with field=form.external_processing_consent %}{% endif %}
         <button type="submit" class="inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark">
           {% if form.mode.value == "interview" %}{% translate "Commencer ou continuer l'entraînement" %}{% else %}{% translate "Obtenir une suggestion" %}{% endif %}
         </button>
-        <p class="text-sm text-text-muted" role="status" aria-live="polite" data-ai-loading hidden>{% translate "Envoi de votre demande IA…" %}</p>
       </form>
 
       {% if ai_response and not interview_question %}
@@ -64,16 +59,3 @@
     </section>
   </div>
 {% endblock content %}
-
-{% block inline_javascript %}
-  {{ block.super }}
-  <script>
-    const modeField = document.getElementById("id_mode");
-    const questionField = document.getElementById("offer-question-field");
-    if (modeField && questionField) {
-      modeField.addEventListener("change", () => {
-        questionField.hidden = modeField.value !== "question";
-      });
-    }
-  </script>
-{% endblock inline_javascript %}

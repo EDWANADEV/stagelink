@@ -79,33 +79,20 @@ class ProfileCompletionView(LoginRequiredMixin, FormView):
 
         data = request.POST.copy()
         if action == "use_suggestion":
-            data["description"] = data.get("ai_profile_suggestion_description", "")
-            data["skills"] = data.get("ai_profile_suggestion_skills", "")
-            self.ai_suggestion = {
-                "description": data["description"],
-                "skills": data["skills"],
-            }
+            data["skills"] = data.get("ai_profile_suggestion", "")
+            self.ai_suggestion = data["skills"]
         form = self.get_form_class()(
             data=data,
             files=request.FILES,
             instance=self.profile,
             user=request.user,
         )
-        if not form.is_valid():
-            return self.render_to_response(self.get_context_data(form=form))
+        form.is_valid()
         if action == "generate":
-            if not form.cleaned_data.get("external_processing_consent"):
+            skills = form.cleaned_data.get("skills", [])
+            if not skills:
                 self.ai_error = _(
-                    "Confirmez l'envoi au fournisseur avant de demander "
-                    "une suggestion.",
-                )
-            elif (
-                not form.cleaned_data.get("description", "").strip()
-                and not form.cleaned_data.get("skills")
-            ):
-                self.ai_error = _(
-                    "Ajoutez une présentation ou des compétences avant de "
-                    "demander une suggestion.",
+                    "Ajoutez d'abord des compétences à votre profil.",
                 )
             else:
                 try:
@@ -116,8 +103,7 @@ class ProfileCompletionView(LoginRequiredMixin, FormView):
                             "",
                         ),
                         level=form.cleaned_data.get("level", ""),
-                        description=form.cleaned_data.get("description", ""),
-                        skills=form.cleaned_data.get("skills", []),
+                        skills=skills,
                     )
                 except (AIAssistantError, ValidationError) as error:
                     self.ai_error = " ".join(
