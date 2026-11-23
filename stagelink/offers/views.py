@@ -4,12 +4,14 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import CreateView
@@ -17,6 +19,9 @@ from django.views.generic import DetailView
 from django.views.generic import ListView
 from django.views.generic import UpdateView
 
+from stagelink.ai_assistant.providers import AIAssistantError
+from stagelink.ai_assistant.providers import is_ai_configured
+from stagelink.ai_assistant.services import improve_offer_draft
 from stagelink.application.models import Application
 from stagelink.profiles.services import get_profile
 from stagelink.profiles.services import is_profile_complete
@@ -26,6 +31,7 @@ from stagelink.utils.enums import Role
 
 from .forms import OfferForm
 from .forms import OfferSearchForm
+from .matching import offer_match_reasons
 from .models import InternshipOffer
 from .services import close_offer
 from .services import create_offer
@@ -90,6 +96,16 @@ class OfferListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["search_form"] = self.search_form
+        is_student = (
+            self.request.user.is_authenticated
+            and self.request.user.role == Role.STUDENT
+        )
+        if is_student:
+            profile = getattr(self.request, "stagelink_profile", None)
+            if profile is None:
+                profile = get_profile(self.request.user)
+            for offer in context["offers"]:
+                offer.match_reasons = offer_match_reasons(profile, offer)
         context["is_filtered"] = any(
             self.request.GET.get(name)
             for name in ("q", "domain", "location", "application_mode")
@@ -209,6 +225,10 @@ class OfferFormMixin:
         raise NotImplementedError
 
     def form_valid(self, form):
+        action = self.request.POST.get("assistant_action")
+        if action in {"generate", "use_suggestion"}:
+            return self.handle_assistant_action(form, action)
+
         try:
             self.object = self.save_offer(form)
         except ValidationError as exc:
@@ -218,10 +238,53 @@ class OfferFormMixin:
         messages.success(self.request, self.success_message)
         return redirect(self.get_success_url())
 
+    def handle_assistant_action(self, form, action):
+        if action == "generate":
+            if not form.cleaned_data.get("external_processing_consent"):
+                self.ai_error = _(
+                    "Confirmez l'envoi au fournisseur avant de demander "
+                    "une suggestion.",
+                )
+                return self.render_to_response(self.get_context_data(form=form))
+            try:
+                self.ai_suggestion = improve_offer_draft(
+                    user=self.request.user,
+                    title=form.cleaned_data["title"],
+                    description=form.cleaned_data["description"],
+                    required_skills=form.cleaned_data["required_skills"],
+                )
+            except (AIAssistantError, ValidationError) as error:
+                self.ai_error = " ".join(getattr(error, "messages", [str(error)]))
+        else:
+            data = self.request.POST.copy()
+            data["title"] = data.get("ai_suggestion_title", "")
+            data["description"] = data.get("ai_suggestion_description", "")
+            data["required_skills"] = data.get("ai_suggestion_skills", "")
+            form = self.get_form_class()(data=data, instance=self.object)
+            form.is_valid()
+            self.ai_suggestion = {
+                "title": data["title"],
+                "description": data["description"],
+                "required_skills": [
+                    item.strip()
+                    for item in data["required_skills"].split(",")
+                    if item.strip()
+                ],
+            }
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ai_configured"] = is_ai_configured()
+        context["ai_suggestion"] = getattr(self, "ai_suggestion", None)
+        context["ai_error"] = getattr(self, "ai_error", "")
+        return context
+
     def get_success_url(self):
         return reverse("offers:detail", kwargs={"pk": self.object.pk})
 
 
+@method_decorator(transaction.non_atomic_requests, name="dispatch")
 class OfferCreateView(CompanyOfferMixin, OfferFormMixin, CreateView):
     success_message = _(
         "Votre offre a été enregistrée en brouillon. "
@@ -232,6 +295,7 @@ class OfferCreateView(CompanyOfferMixin, OfferFormMixin, CreateView):
         return create_offer(self.request.user, form.cleaned_data)
 
 
+@method_decorator(transaction.non_atomic_requests, name="dispatch")
 class OfferUpdateView(CompanyOfferMixin, OfferFormMixin, UpdateView):
     success_message = _("Votre offre a été mise à jour.")
 

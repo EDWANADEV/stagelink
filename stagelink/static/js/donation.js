@@ -52,6 +52,10 @@
     errorBox.classList.remove("hidden");
     progress.classList.add("hidden");
     submit.disabled = false;
+    form.removeAttribute("aria-busy");
+    form.querySelectorAll("input, select, .donation-preset").forEach((control) => {
+      control.disabled = false;
+    });
   };
 
   document.querySelectorAll(".donation-preset").forEach((button) => {
@@ -76,6 +80,10 @@
       return;
     }
     submit.disabled = true;
+    form.setAttribute("aria-busy", "true");
+    form.querySelectorAll("input, select, .donation-preset").forEach((control) => {
+      control.disabled = true;
+    });
     progress.textContent = form.dataset.confirming;
     progress.classList.remove("hidden");
     const payload = {
@@ -97,7 +105,12 @@
         },
         body: JSON.stringify(payload),
       });
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (_error) {
+        throw new SyntaxError(form.dataset.paymentError);
+      }
       if (!response.ok) {
         const fieldError = result.errors?.amount?.[0]?.message;
         throw new Error(fieldError || result.error || form.dataset.paymentError);
@@ -120,7 +133,13 @@
       returnUrl.searchParams.set("payment_id", result.payment_id);
       window.location.assign(returnUrl.href);
     } catch (error) {
-      showError(error.message || form.dataset.paymentError);
+      const isNetworkOrResponseError =
+        error instanceof TypeError || error instanceof SyntaxError;
+      showError(
+        isNetworkOrResponseError
+          ? form.dataset.paymentError
+          : error.message || form.dataset.paymentError,
+      );
     }
   });
 

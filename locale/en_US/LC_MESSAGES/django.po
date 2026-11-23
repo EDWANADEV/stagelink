@@ -70,8 +70,8 @@ msgstr "Select your Mobile Money network."
 msgid "Le paiement n’a pas pu être initialisé. Vérifiez les informations puis réessayez."
 msgstr "We could not start the payment. Check your details and try again."
 
-msgid "Confirmation du paiement en cours…"
-msgstr "Starting your payment…"
+msgid "Connexion sécurisée au prestataire de paiement…"
+msgstr "Connecting securely to the payment provider…"
 
 msgid "Saisissez un montant entier valide en XAF."
 msgstr "Enter a valid whole amount in XAF."
@@ -124,8 +124,131 @@ msgstr "Payment pending"
 msgid "Nous vérifions votre paiement"
 msgstr "We are checking your payment"
 
-msgid "Le prestataire traite encore la transaction. Cette page se mettra à jour lorsque StageLink recevra et vérifiera sa confirmation."
-msgstr "The provider is still processing the transaction. This page will update after StageLink receives and verifies its confirmation."
+msgid "Le prestataire traite encore la transaction. Le statut affiché dépend de la confirmation vérifiée par StageLink."
+msgstr "The provider may still be processing the transaction. The status shown depends on confirmation verified by StageLink."
+
+msgid "Le retour indique une interruption du parcours. Cela ne confirme ni n’annule le paiement ; le statut ci-dessous vient de StageLink."
+msgstr "The return indicates that the checkout flow was interrupted. This does not confirm or cancel the payment; the status below comes from StageLink."
+
+msgid "Le statut ne peut pas être actualisé pour le moment. La page conserve le dernier état confirmé."
+msgstr "The status cannot be refreshed right now. This page keeps the last confirmed state."
+
+msgid "La confirmation prend plus de temps que prévu. Vous pouvez relancer une vérification."
+msgstr "Confirmation is taking longer than expected. You can check again."
+
+msgid "Vérifier à nouveau"
+msgstr "Check again"
+
+msgid "Paiement remboursé"
+msgstr "Payment refunded"
+
+msgid "Le paiement a été remboursé"
+msgstr "The payment was refunded"
+
+msgid "Le statut enregistré par StageLink indique que ce paiement a été remboursé."
+msgstr "StageLink's recorded status indicates that this payment was refunded."
+
+msgid "Paiement partiellement remboursé"
+msgstr "Payment partially refunded"
+
+msgid "Une partie du paiement a été remboursée"
+msgstr "Part of the payment was refunded"
+
+msgid "Le statut enregistré par StageLink indique un remboursement partiel."
+msgstr "StageLink's recorded status indicates a partial refund."
+
+msgid "Requête invalide."
+msgstr "Invalid request."
+
+msgid "La clé de requête est obligatoire."
+msgstr "The request key is required."
+
+msgid "Cette demande de paiement a déjà été envoyée avec des informations différentes."
+msgstr "This payment request was already submitted with different details."
+
+msgid "Le lien de paiement retourné est invalide."
+msgstr "The returned payment link is invalid."
+
+msgid "Le prestataire de paiement est indisponible."
+msgstr "The payment provider is unavailable."
+
+msgid "Stripe est désactivé."
+msgstr "Stripe is disabled."
+
+msgid "Stripe n'est pas configuré."
+msgstr "Stripe is not configured."
+
+msgid "Flutterwave est désactivé."
+msgstr "Flutterwave is disabled."
+
+msgid "Flutterwave n'est pas configuré."
+msgstr "Flutterwave is not configured."
+
+msgid "Prestataire de paiement invalide."
+msgstr "Invalid payment provider."
+
+msgid "Stripe prend uniquement en charge la carte bancaire."
+msgstr "Stripe only supports card payments."
+
+msgid "Le montant doit être entier pour cette devise."
+msgstr "The amount must be a whole number for this currency."
+
+msgid "Méthode Flutterwave invalide."
+msgstr "Invalid Flutterwave payment method."
+
+msgid "Le montant du don doit être supérieur à zéro."
+msgstr "The donation amount must be greater than zero."
+
+msgid "Cette clé d'idempotence est déjà utilisée."
+msgstr "This idempotency key is already in use."
+
+msgid "Le montant du paiement ne correspond pas au don."
+msgstr "The payment amount does not match the donation."
+
+msgid "L'adresse e-mail est requise pour Flutterwave."
+msgstr "An email address is required for Flutterwave."
+
+msgid "Flutterwave n'a pas pu initialiser le paiement."
+msgstr "Flutterwave could not start the payment."
+
+msgid "E-mail, téléphone et réseau Mobile Money sont requis."
+msgstr "Email, phone number, and Mobile Money network are required."
+
+msgid "Mobile Money Flutterwave est configuré en XAF."
+msgstr "Flutterwave Mobile Money is configured for XAF."
+
+msgid "Le montant Mobile Money doit être un entier en XAF."
+msgstr "The Mobile Money amount must be a whole number in XAF."
+
+msgid "Flutterwave n'a pas pu initialiser le paiement Mobile Money."
+msgstr "Flutterwave could not start the Mobile Money payment."
+
+msgid "Utilisateur"
+msgstr "User"
+
+msgid "Note"
+msgstr "Rating"
+
+msgid "Commentaire"
+msgstr "Comment"
+
+msgid "Avis"
+msgstr "Review"
+
+msgid "Vous devez être connecté pour laisser un avis."
+msgstr "You must be signed in to leave a review."
+
+msgid "Vous avez déjà laissé un avis."
+msgstr "You have already left a review."
+
+msgid "Cet avis a été supprimé."
+msgstr "This review has been deleted."
+
+msgid "Cet avis est déjà supprimé."
+msgstr "This review has already been deleted."
+
+msgid "Vous ne pouvez pas modifier cet avis."
+msgstr "You cannot edit this review."
 
 msgid "Montant"
 msgstr "Amount"
@@ -138,3 +261,315 @@ msgstr "The donation amount must be a whole number in XAF."
 
 msgid "Le montant doit être un nombre entier en XAF."
 msgstr "The amount must be a whole number in XAF."
+
+msgid "Avis sur StageLink"
+msgstr "Reviews of StageLink"
+
+msgid "Les avis publiés concernent uniquement l'expérience de la plateforme StageLink. Ils ne portent pas sur les entreprises, les recruteurs, les offres ou les stages."
+msgstr "Published reviews are only about the StageLink platform experience. They are not about companies, recruiters, internship listings, or internships."
+
+msgid "Gérer mes avis"
+msgstr "Manage my reviews"
+
+msgid "Se connecter pour déposer un avis"
+msgstr "Sign in to leave a review"
+
+msgid "Avis publiés"
+msgstr "Published reviews"
+
+msgid "Aucun commentaire."
+msgstr "No comment."
+
+msgid "Publié le %(date)s"
+msgstr "Published on %(date)s"
+
+msgid "Aucun avis n'a encore été approuvé pour publication."
+msgstr "No review has been approved for publication yet."
+
+msgid "Mes avis sur StageLink"
+msgstr "My StageLink reviews"
+
+msgid "Tous les avis publiés"
+msgstr "All published reviews"
+
+msgid "Votre avis porte uniquement sur la plateforme StageLink. Il devient visible publiquement après modération. La note et le commentaire peuvent être modifiés à tout moment ; une modification repasse en attente de modération."
+msgstr "Your review is only about the StageLink platform. It becomes public after moderation. You can change your rating and comment at any time; an edited review returns to moderation."
+
+msgid "Votre avis est publié."
+msgstr "Your review is published."
+
+msgid "Votre avis est en attente de modération."
+msgstr "Your review is awaiting moderation."
+
+msgid "Déposer mon avis"
+msgstr "Leave my review"
+
+msgid "Mon historique"
+msgstr "My history"
+
+msgid "Avis supprimé"
+msgstr "Review deleted"
+
+msgid "Publié"
+msgstr "Published"
+
+msgid "En attente de modération"
+msgstr "Awaiting moderation"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Supprimer"
+msgstr "Delete"
+
+msgid "Note : %(rating)s sur %(max_rating)s"
+msgstr "Rating: %(rating)s out of %(max_rating)s"
+
+msgid "Déposer un avis"
+msgstr "Leave a review"
+
+msgid "Modifier mon avis"
+msgstr "Edit my review"
+
+msgid "Retour à mes avis"
+msgstr "Back to my reviews"
+
+msgid "Modifier mon avis sur StageLink"
+msgstr "Edit my StageLink review"
+
+msgid "Déposer un avis sur StageLink"
+msgstr "Review StageLink"
+
+msgid "Cet avis concerne uniquement votre expérience de la plateforme StageLink, jamais une entreprise, un recruteur, une offre ou un stage. Votre avis sera visible après modération."
+msgstr "This review is only about your experience with the StageLink platform, never a company, recruiter, listing, or internship. Your review will be visible after moderation."
+
+msgid "Enregistrer les modifications"
+msgstr "Save changes"
+
+msgid "Envoyer pour modération"
+msgstr "Submit for moderation"
+
+msgid "Note sur StageLink"
+msgstr "Rating for StageLink"
+
+msgid "Votre avis a été reçu et attend la modération avant publication."
+msgstr "Your review was received and is awaiting moderation before publication."
+
+msgid "Votre avis a été modifié et repasse en attente de modération."
+msgstr "Your review was edited and is awaiting moderation again."
+
+msgid "Votre avis sur StageLink a été supprimé."
+msgstr "Your StageLink review was deleted."
+
+msgid "Vérifiez les informations de votre avis."
+msgstr "Check the information in your review."
+
+msgid "Approuver les avis sélectionnés pour publication"
+msgstr "Approve selected reviews for publication"
+
+msgid "%(count)s avis approuvé(s) pour publication."
+msgstr "%(count)s review(s) approved for publication."
+
+msgid "Aide recherchée"
+msgstr "Help needed"
+
+msgid "Résumer l'offre"
+msgstr "Summarize the listing"
+
+msgid "Comprendre les missions"
+msgstr "Understand the responsibilities"
+
+msgid "Expliquer les compétences demandées"
+msgstr "Explain the requested skills"
+
+msgid "Clarifier les exigences"
+msgstr "Clarify the requirements"
+
+msgid "Préparer un entretien"
+msgstr "Prepare for an interview"
+
+msgid "Votre réponse d'entraînement"
+msgstr "Your practice answer"
+
+msgid "Saisissez une réponse avant de continuer."
+msgstr "Enter an answer before continuing."
+
+msgid "La question précédente est manquante."
+msgstr "The previous question is missing."
+
+msgid "Cette séance d'entretien a expiré. Recommencez-la."
+msgstr "This interview session has expired. Start it again."
+
+msgid "La réponse de préparation n'a pas pu être structurée."
+msgstr "The interview response could not be structured."
+
+msgid "Assistance sur une offre"
+msgstr "Listing assistance"
+
+msgid "Les suggestions automatisées peuvent contenir des erreurs. Vérifiez-les avec le texte de l'offre ; elles ne déterminent pas votre éligibilité."
+msgstr "Automated suggestions may contain errors. Check them against the listing; they do not determine your eligibility."
+
+msgid "L'assistance est désactivée : aucun fournisseur IA n'est configuré. Vous pouvez toujours consulter l'offre et utiliser les filtres StageLink."
+msgstr "Assistance is disabled because no AI provider is configured. You can still review listings and use StageLink filters."
+
+msgid "La réponse n'a pas pu être structurée."
+msgstr "The response could not be structured."
+
+msgid "Retour sur votre réponse"
+msgstr "Feedback on your answer"
+
+msgid "Question d'entretien"
+msgstr "Interview question"
+
+msgid "Commencer ou continuer l'entraînement"
+msgstr "Start or continue practice"
+
+msgid "Obtenir une suggestion"
+msgstr "Get a suggestion"
+
+msgid "Fin de cette courte séance. Vous pouvez vérifier les conseils et préparer vos réponses à votre rythme."
+msgstr "This short session has ended. Review the tips and prepare your answers at your own pace."
+
+msgid "Suggestion à vérifier"
+msgstr "Suggestion to review"
+
+msgid "L'assistance IA n'est pas encore configurée."
+msgstr "AI assistance is not configured yet."
+
+msgid "L'assistance IA est momentanément indisponible."
+msgstr "AI assistance is temporarily unavailable."
+
+msgid "Le service IA a renvoyé un résultat illisible."
+msgstr "The AI service returned an unreadable result."
+
+msgid "Le service IA a renvoyé un résultat inutilisable."
+msgstr "The AI service returned an unusable result."
+
+msgid "Connectez-vous pour utiliser cette assistance."
+msgstr "Sign in to use this assistance."
+
+msgid "Le texte dépasse la limite autorisée pour l'assistance."
+msgstr "The text exceeds the assistance limit."
+
+msgid "Veuillez patienter avant une nouvelle demande IA."
+msgstr "Please wait before making another AI request."
+
+msgid "Choisissez une aide proposée pour cette offre."
+msgstr "Choose an available type of help for this listing."
+
+msgid "La suggestion de l'offre n'a pas pu être structurée."
+msgstr "The listing suggestion could not be structured."
+
+msgid "La suggestion de l'offre est incomplète."
+msgstr "The listing suggestion is incomplete."
+
+msgid "Compétence déclarée correspondante : %(skills)s"
+msgstr "Matching declared skill: %(skills)s"
+
+msgid "Domaine correspondant à votre profil"
+msgstr "Field matches your profile"
+
+msgid "Niveau d'études correspondant à votre profil"
+msgstr "Education level matches your profile"
+
+msgid "Correspondances avec votre profil"
+msgstr "Matches with your profile"
+
+msgid "L'assistance IA est désactivée. Vous pouvez toujours consulter l'offre et utiliser les filtres StageLink."
+msgstr "AI assistance is disabled. You can still review the listing and use StageLink filters."
+
+msgid "Les informations de l'offre et, pendant l'entraînement, vos réponses saisies seront transmises au fournisseur IA activé par StageLink. Vérifiez les réponses générées."
+msgstr "The listing information and, during interview practice, your answers will be sent to the AI provider enabled by StageLink. Review generated responses."
+
+msgid "Votre brouillon et les informations utiles de cette offre seront transmis au fournisseur IA activé par StageLink. N'incluez pas d'informations dont vous ne souhaitez pas le traitement externe."
+msgstr "Your draft and relevant information from this listing will be sent to the AI provider enabled by StageLink. Do not include information you do not want processed externally."
+
+msgid "Votre domaine d'études, votre niveau et vos compétences déclarées seront transmis au fournisseur IA activé par StageLink."
+msgstr "Your field of study, education level, and declared skills will be sent to the AI provider enabled by StageLink."
+
+msgid "Le titre, la description et les compétences saisies seront transmis au fournisseur IA activé par StageLink."
+msgstr "The entered title, description, and skills will be sent to the AI provider enabled by StageLink."
+
+msgid "J'accepte l'envoi de mon brouillon et des informations utiles de l'offre au fournisseur IA pour cette demande."
+msgstr "I agree to send my draft and relevant listing information to the AI provider for this request."
+
+msgid "J'accepte l'envoi des champs de profil sélectionnés au fournisseur IA pour cette demande."
+msgstr "I agree to send the selected profile fields to the AI provider for this request."
+
+msgid "J'accepte l'envoi du titre, de la description et des compétences saisies au fournisseur IA pour cette demande."
+msgstr "I agree to send the entered title, description, and skills to the AI provider for this request."
+
+msgid "J'accepte l'envoi des informations de l'offre et, si je m'entraîne, de ma réponse au fournisseur IA pour cette demande."
+msgstr "I agree to send the listing information and, during interview practice, my answer to the AI provider for this request."
+
+msgid "Confirmez l'envoi au fournisseur avant de demander une suggestion."
+msgstr "Confirm sending the information to the provider before requesting a suggestion."
+
+msgid "La limite quotidienne d'utilisation de l'assistance est atteinte."
+msgstr "The daily AI assistance limit has been reached."
+
+msgid "Une autre demande IA est en cours. Réessayez dans quelques instants."
+msgstr "Another AI request is in progress. Please try again shortly."
+
+msgid "Le service IA a renvoyé des données de consommation invalides."
+msgstr "The AI service returned invalid usage data."
+
+msgid "La suggestion du profil n'a pas pu être structurée."
+msgstr "The profile suggestion could not be structured."
+
+msgid "La suggestion du profil est incomplète."
+msgstr "The profile suggestion is incomplete."
+
+msgid "Ajoutez une présentation ou des compétences avant de demander une suggestion."
+msgstr "Add a personal description or skills before requesting a suggestion."
+
+msgid "Présentation personnelle"
+msgstr "Personal description"
+
+msgid "Poser une question sur l'offre"
+msgstr "Ask a question about the listing"
+
+msgid "Recevoir des conseils de préparation"
+msgstr "Get interview preparation tips"
+
+msgid "Votre question sur le contenu de l'offre"
+msgstr "Your question about the listing"
+
+msgid "Saisissez votre question sur l'offre."
+msgstr "Enter your question about the listing."
+
+msgid "Améliorer ma présentation et mes compétences (facultatif)"
+msgstr "Improve my personal description and skills (optional)"
+
+msgid "Seuls votre présentation, domaine d'études, niveau et compétences déjà saisis sont utilisés. Aucun CV ni coordonnée n'est envoyé. Vérifiez chaque proposition."
+msgstr "Only your entered personal description, field of study, education level, and skills are used. No CV or contact details are sent. Review every suggestion."
+
+msgid "Les champs de profil utiles seront transmis à OpenAI pour traiter cette demande. OpenAI indique que l'API n'utilise pas ces données pour entraîner ses modèles par défaut et que les journaux de surveillance peuvent les conserver jusqu'à 30 jours."
+msgstr "Relevant profile fields will be sent to OpenAI for this request. OpenAI states that API data is not used to train its models by default and that abuse monitoring logs may retain it for up to 30 days."
+
+msgid "Votre brouillon et les informations utiles de cette offre seront transmis à OpenAI pour cette demande. L'API n'utilise pas les données pour entraîner ses modèles par défaut ; ses journaux de surveillance peuvent les conserver jusqu'à 30 jours."
+msgstr "Your draft and relevant information from this listing will be sent to OpenAI for this request. API data is not used to train models by default; abuse monitoring logs may retain it for up to 30 days."
+
+msgid "Les informations utiles de l'offre et, pendant l'entraînement, vos réponses saisies seront transmises à OpenAI. L'API n'utilise pas les données pour entraîner ses modèles par défaut ; ses journaux de surveillance peuvent les conserver jusqu'à 30 jours."
+msgstr "Relevant listing information and, during interview practice, your answers will be sent to OpenAI. API data is not used to train models by default; abuse monitoring logs may retain it for up to 30 days."
+
+msgid "Le titre, la description et les compétences saisies seront transmis à OpenAI pour cette demande. N'incluez pas de données confidentielles que vous ne souhaitez pas traiter à l'externe."
+msgstr "The entered title, description, and skills will be sent to OpenAI for this request. Do not include confidential information you do not want processed externally."
+
+msgid "Envoi de votre demande IA…"
+msgstr "Sending your AI request…"
+
+msgid "Copier la suggestion"
+msgstr "Copy suggestion"
+
+msgid "Suggestion copiée."
+msgstr "Suggestion copied."
+
+msgid "La copie automatique a échoué. Sélectionnez et copiez le texte."
+msgstr "Automatic copying failed. Select and copy the text."
+
+msgid "Présentation personnelle proposée"
+msgstr "Suggested personal description"
+
+msgid "Compétences proposées, séparées par des virgules"
+msgstr "Suggested skills, separated by commas"

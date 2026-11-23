@@ -27,15 +27,47 @@
       {% endif %}
     </div>
     <div class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">
-      <form method="post" class="space-y-6" novalidate>
+      <form method="post" class="space-y-6" novalidate data-ai-form>
         {% csrf_token %}
         {% if form.non_field_errors %}
           <div class="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
                role="alert">{{ form.non_field_errors }}</div>
         {% endif %}
         {% for field in form %}
-          {% include "components/form_field.html" with field=field %}
+          {% if field.name != "external_processing_consent" %}
+            {% include "components/form_field.html" with field=field %}
+          {% endif %}
         {% endfor %}
+        <section class="rounded-control border border-border bg-background p-4 sm:p-5" aria-labelledby="offer-assistant-title">
+          <h2 id="offer-assistant-title" class="font-semibold text-text">{% translate "Améliorer le texte de l'offre (facultatif)" %}</h2>
+          <p class="mt-1 text-xs leading-5 text-text-muted">{% translate "Seuls le titre, la description et les compétences déjà saisies sont utilisés. Aucun salaire, lieu, condition ou exigence nouvelle ne doit être inventé. Vérifiez les suggestions avant de les reprendre." %}</p>
+          {% if ai_error %}<p class="mt-3 text-sm text-status-rejected-text" role="alert">{{ ai_error }}</p>{% endif %}
+          {% if ai_configured %}
+            <p class="mt-2 text-xs text-text-muted" role="note">{% translate "Le titre, la description et les compétences saisies seront transmis à OpenAI pour cette demande. N'incluez pas de données confidentielles que vous ne souhaitez pas traiter à l'externe." %}</p>
+            {% include "components/form_field.html" with field=form.external_processing_consent %}
+            <button type="submit" name="assistant_action" value="generate" class="mt-3 inline-flex rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Proposer une amélioration" %}</button>
+            <p class="mt-3 text-sm text-text-muted" role="status" aria-live="polite" data-ai-loading hidden>{% translate "Envoi de votre demande IA…" %}</p>
+          {% else %}
+            <p class="mt-3 text-sm text-text-muted">{% translate "L'assistance IA n'est pas activée. Vous pouvez rédiger votre offre manuellement." %}</p>
+          {% endif %}
+          {% if ai_suggestion %}
+            <div class="mt-5 space-y-4" aria-label="{% translate 'Suggestions modifiables' %}">
+              <div>
+                <label for="ai-suggestion-title" class="block text-sm font-semibold text-text">{% translate "Titre proposé" %}</label>
+                <input id="ai-suggestion-title" name="ai_suggestion_title" maxlength="255" value="{{ ai_suggestion.title }}" class="mt-1 w-full rounded-control border border-border bg-surface p-3 text-sm text-text">
+              </div>
+              <div>
+                <label for="ai-suggestion-description" class="block text-sm font-semibold text-text">{% translate "Description proposée" %}</label>
+                <textarea id="ai-suggestion-description" name="ai_suggestion_description" rows="8" class="mt-1 w-full rounded-control border border-border bg-surface p-3 text-sm text-text">{{ ai_suggestion.description }}</textarea>
+              </div>
+              <div>
+                <label for="ai-suggestion-skills" class="block text-sm font-semibold text-text">{% translate "Compétences proposées, séparées par des virgules" %}</label>
+                <input id="ai-suggestion-skills" name="ai_suggestion_skills" value="{{ ai_suggestion.required_skills|join:', ' }}" class="mt-1 w-full rounded-control border border-border bg-surface p-3 text-sm text-text">
+              </div>
+              <button type="submit" name="assistant_action" value="use_suggestion" class="inline-flex rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary">{% translate "Reprendre les suggestions dans le formulaire" %}</button>
+            </div>
+          {% endif %}
+        </section>
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <a href="{% if object %}{% url 'offers:detail' pk=object.pk %}{% else %}{% url 'offers:company-list' %}{% endif %}"
              class="inline-flex justify-center rounded-control px-5 py-3 text-sm font-semibold text-primary transition hover:bg-background">

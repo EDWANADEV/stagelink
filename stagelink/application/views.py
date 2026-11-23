@@ -2,13 +2,18 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import FormView
 from django.views.generic import ListView
 
+from stagelink.ai_assistant.providers import AIAssistantError
+from stagelink.ai_assistant.providers import is_ai_configured
+from stagelink.ai_assistant.services import improve_letter
 from stagelink.application.forms import ApplicationStatusForm
 from stagelink.application.forms import ApplicationSubmissionForm
 from stagelink.application.forms import ApplicationWithdrawalForm
@@ -103,6 +108,7 @@ class CompanyApplicationsView(ApplicationRoleMixin, ListView):
         return context
 
 
+@method_decorator(transaction.non_atomic_requests, name="dispatch")
 class ApplicationSubmitView(ApplicationRoleMixin, FormView):
     role = Role.STUDENT
     template_name = "application/submit.html"
@@ -126,7 +132,46 @@ class ApplicationSubmitView(ApplicationRoleMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["offer"] = self.get_offer()
+        context["ai_configured"] = is_ai_configured()
+        context["ai_suggestion"] = getattr(self, "ai_suggestion", "")
+        context["ai_error"] = getattr(self, "ai_error", "")
         return context
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("assistant_action")
+        if action not in {"generate", "use_suggestion"}:
+            return super().post(request, *args, **kwargs)
+
+        self.offer = self.get_offer()
+        data = request.POST.copy()
+        student_profile = None
+        if action == "use_suggestion":
+            data["cover_letter"] = data.get("ai_suggestion", "")
+            self.ai_suggestion = data["cover_letter"]
+        form = self.get_form_class()(data=data, student_profile=student_profile)
+        if not form.is_valid():
+            return self.form_invalid(form)
+
+        if action == "generate":
+            if not form.cleaned_data.get("external_processing_consent"):
+                self.ai_error = _(
+                    "Confirmez l'envoi au fournisseur avant de demander "
+                    "une suggestion.",
+                )
+                return self.render_to_response(self.get_context_data(form=form))
+            try:
+                self.ai_suggestion = improve_letter(
+                    user=request.user,
+                    offer=self.offer,
+                    draft=form.cleaned_data["cover_letter"],
+                    task=form.cleaned_data["assistant_task"],
+                    tone=form.cleaned_data["assistant_tone"],
+                    length=form.cleaned_data["assistant_length"],
+                )
+            except (AIAssistantError, ValidationError) as error:
+                self.ai_error = " ".join(getattr(error, "messages", [str(error)]))
+
+        return self.render_to_response(self.get_context_data(form=form))
 
     def form_valid(self, form):
         try:

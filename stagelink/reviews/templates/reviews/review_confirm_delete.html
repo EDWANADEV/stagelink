@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Supprimer mon avis" %} | StageLink{% endblock title %}
+
+{% block content %}
+  <section class="mx-auto max-w-xl rounded-card border border-border bg-surface p-6 sm:p-8">
+    <h1 class="font-heading text-2xl font-bold text-text">{% translate "Supprimer mon avis ?" %}</h1>
+    <p class="mt-3 text-sm leading-6 text-text-muted">
+      {% translate "Votre avis StageLink sera retiré de la publication et conservé dans votre historique comme supprimé." %}
+    </p>
+    <p class="mt-4 rounded-control bg-background p-4 text-sm text-text">{{ review.comment|default:_('Aucun commentaire.') }}</p>
+    <form method="post" class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      {% csrf_token %}
+      <a href="{% url 'reviews:mine' %}" class="inline-flex justify-center rounded-control border border-border px-4 py-3 text-sm font-semibold text-primary">{% translate "Annuler" %}</a>
+      <button type="submit" class="inline-flex justify-center rounded-control bg-status-rejected-text px-5 py-3 text-sm font-semibold text-white">{% translate "Confirmer la suppression" %}</button>
+    </form>
+  </section>
+{% endblock content %}
