@@ -92,6 +92,8 @@ class DonationPageTests(TestCase):
             PaymentStatus.SUCCESS: "Paiement confirmé",
             PaymentStatus.FAILED: "Paiement échoué",
             PaymentStatus.CANCELLED: "Paiement annulé",
+            PaymentStatus.REFUNDED: "Paiement remboursé",
+            PaymentStatus.PARTIALLY_REFUNDED: "Paiement partiellement remboursé",
         }
         for status, label in expected.items():
             payment.status = status
@@ -118,4 +120,23 @@ class DonationPageTests(TestCase):
 
         payment.refresh_from_db()
         self.assertContains(response, "Paiement en attente")
+        self.assertEqual(payment.status, PaymentStatus.PENDING)
+
+    def test_cancel_return_notice_does_not_change_or_assert_payment_state(self):
+        donation = DonationService.create_donation(amount=Money(5000, "XAF"))
+        payment = Payment.objects.create(
+            donation=donation,
+            amount=donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+
+        response = self.client.get(
+            reverse("payments:return"),
+            {"payment_id": payment.pk, "cancelled": "1"},
+        )
+
+        self.assertContains(response, "Cela ne confirme ni n’annule le paiement")
+        self.assertContains(response, "Paiement en attente")
+        payment.refresh_from_db()
         self.assertEqual(payment.status, PaymentStatus.PENDING)

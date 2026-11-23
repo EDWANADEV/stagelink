@@ -3,6 +3,7 @@ import hmac
 import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class FlutterwaveService:
@@ -19,7 +20,7 @@ class FlutterwaveService:
                 for marker in ("replace", "xxxxx", "placeholder")
             )
         ):
-            raise ValidationError("Flutterwave n'est pas configuré.")
+            raise ValidationError(_("Flutterwave n'est pas configuré."))
         return {
             "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
             "Content-Type": "application/json",
@@ -34,9 +35,9 @@ class FlutterwaveService:
         redirect_url,
     ):
         if not settings.FLUTTERWAVE_ENABLED:
-            raise ValidationError("Flutterwave est désactivé.")
+            raise ValidationError(_("Flutterwave est désactivé."))
         if not customer_email:
-            raise ValidationError("L’adresse e-mail est requise pour Flutterwave.")
+            raise ValidationError(_("L'adresse e-mail est requise pour Flutterwave."))
         payload = {
             "tx_ref": str(payment.id),
             "amount": str(payment.amount.amount),
@@ -63,7 +64,9 @@ class FlutterwaveService:
         data = response.json()
 
         if data.get("status") != "success":
-            raise ValidationError("Flutterwave n'a pas pu initialiser le paiement.")
+            raise ValidationError(
+                _("Flutterwave n'a pas pu initialiser le paiement."),
+            )
 
         return data
 
@@ -93,16 +96,18 @@ class FlutterwaveService:
         redirect_url,
     ):
         if not settings.FLUTTERWAVE_ENABLED:
-            raise ValidationError("Flutterwave est désactivé.")
+            raise ValidationError(_("Flutterwave est désactivé."))
         if not customer_email or not phone_number or not network:
             raise ValidationError(
-                "E-mail, téléphone et réseau Mobile Money sont requis.",
+                _("E-mail, téléphone et réseau Mobile Money sont requis."),
             )
         if payment.amount.currency.code != "XAF":
-            raise ValidationError("Mobile Money Flutterwave est configuré en XAF.")
+            raise ValidationError(
+                _("Mobile Money Flutterwave est configuré en XAF."),
+            )
         if payment.amount.amount != payment.amount.amount.to_integral_value():
             raise ValidationError(
-                "Le montant Mobile Money doit être un entier en XAF.",
+                _("Le montant Mobile Money doit être un entier en XAF."),
             )
         payload = {
             "phone_number": phone_number,
@@ -132,7 +137,7 @@ class FlutterwaveService:
 
         if data.get("status") not in {"success", "pending"}:
             raise ValidationError(
-                "Flutterwave n'a pas pu initialiser le paiement Mobile Money.",
+                _("Flutterwave n'a pas pu initialiser le paiement Mobile Money."),
             )
 
         return data

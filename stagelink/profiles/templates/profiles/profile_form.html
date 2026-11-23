@@ -34,6 +34,7 @@
             action="{% url 'profiles:complete' %}"
             enctype="multipart/form-data"
             class="space-y-6"
+            data-ai-form
             novalidate>
         {% csrf_token %}
         {# Erreurs générales #}
@@ -45,7 +46,9 @@
         {% endif %}
         {# Champs générés selon le formulaire du rôle #}
         {% for field in form %}
-          {% include "components/form_field.html" with field=field %}
+          {% if field.name != "external_processing_consent" %}
+            {% include "components/form_field.html" with field=field %}
+          {% endif %}
         {% endfor %}
         {% if user.role == "STUDENT" %}
           <section class="rounded-control border border-border bg-background p-4 sm:p-5" aria-labelledby="profile-assistant-title">

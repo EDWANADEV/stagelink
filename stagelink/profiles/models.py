@@ -3,10 +3,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from stagelink.core.models import BaseModel
-from stagelink.utils.validators import validate_cv
-from stagelink.utils.validators import validate_company_logo
-from stagelink.utils.validators import validate_phone_number
 from stagelink.utils.enums import Language
+from stagelink.utils.validators import validate_company_logo
+from stagelink.utils.validators import validate_cv
+from stagelink.utils.validators import validate_phone_number
 
 
 class StudentProfile(BaseModel):
@@ -31,6 +31,12 @@ class StudentProfile(BaseModel):
         max_length=100,
     )
 
+    description = models.TextField(
+        _("Présentation personnelle"),
+        max_length=1000,
+        blank=True,
+    )
+
     skills = models.JSONField(
         _("Compétences"),
         default=list,
@@ -49,7 +55,7 @@ class StudentProfile(BaseModel):
         upload_to="cv/",
         validators=[validate_cv],
         help_text=_(
-            "Format PDF uniquement, taille maximale de 20 Mo."
+            "Format PDF uniquement, taille maximale de 20 Mo.",
             ),
         blank=True,
     )
@@ -110,7 +116,7 @@ class CompanyProfile(BaseModel):
         blank=True,
         validators=[validate_company_logo],
         help_text=_(
-            "Formats JPEG ou PNG, taille maximale de 10 Mo."
+            "Formats JPEG ou PNG, taille maximale de 10 Mo.",
         ),
     )
 

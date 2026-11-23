@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from djmoney.money import Money
 
 from stagelink.donation.models import DonationStatus
@@ -74,20 +75,20 @@ class PaymentService:
     def create_payment(*, donation, method, provider, idempotency_key=None):
         if provider == PaymentProvider.STRIPE:
             if not settings.STRIPE_ENABLED:
-                raise ValidationError("Stripe est désactivé.")
+                raise ValidationError(_("Stripe est désactivé."))
             if not provider_is_available(provider):
-                raise ValidationError("Stripe n'est pas configuré.")
+                raise ValidationError(_("Stripe n'est pas configuré."))
         elif provider == PaymentProvider.FLUTTERWAVE:
             if not settings.FLUTTERWAVE_ENABLED:
-                raise ValidationError("Flutterwave est désactivé.")
+                raise ValidationError(_("Flutterwave est désactivé."))
             if not provider_is_available(provider):
-                raise ValidationError("Flutterwave n'est pas configuré.")
+                raise ValidationError(_("Flutterwave n'est pas configuré."))
         else:
-            raise ValidationError("Prestataire de paiement invalide.")
+            raise ValidationError(_("Prestataire de paiement invalide."))
 
         if provider == PaymentProvider.STRIPE and method != PaymentMethod.CARD:
             raise ValidationError(
-                "Stripe prend uniquement en charge la carte bancaire.",
+                _("Stripe prend uniquement en charge la carte bancaire."),
             )
         if (
             provider == PaymentProvider.STRIPE
@@ -112,15 +113,15 @@ class PaymentService:
             }
             and donation.amount.amount != donation.amount.amount.to_integral_value()
         ):
-            raise ValidationError("Le montant doit être entier pour cette devise.")
+            raise ValidationError(_("Le montant doit être entier pour cette devise."))
         if provider == PaymentProvider.FLUTTERWAVE and method not in {
             PaymentMethod.CARD,
             PaymentMethod.MOBILE_MONEY,
         }:
-            raise ValidationError("Méthode Flutterwave invalide.")
+            raise ValidationError(_("Méthode Flutterwave invalide."))
 
         if donation.amount.amount <= 0:
-            raise ValidationError("Le montant du don doit être supérieur à zéro.")
+            raise ValidationError(_("Le montant du don doit être supérieur à zéro."))
 
         if idempotency_key:
             existing = Payment.all_objects.filter(
@@ -129,7 +130,9 @@ class PaymentService:
             ).first()
             if existing:
                 if existing.donation_id != donation.pk or existing.method != method:
-                    raise ValidationError("Cette clé d'idempotence est déjà utilisée.")
+                    raise ValidationError(
+                        _("Cette clé d'idempotence est déjà utilisée."),
+                    )
                 return existing
 
         lookup = (
@@ -161,7 +164,7 @@ class PaymentService:
                 or payment.method != method
             ):
                 raise ValidationError(
-                    "Le montant du paiement ne correspond pas au don.",
+                    _("Le montant du paiement ne correspond pas au don."),
                 )
 
         return payment

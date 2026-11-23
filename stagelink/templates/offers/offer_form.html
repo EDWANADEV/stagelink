@@ -27,14 +27,16 @@
       {% endif %}
     </div>
     <div class="rounded-card border border-border bg-surface p-6 shadow-sm sm:p-8">
-      <form method="post" class="space-y-6" novalidate>
+      <form method="post" class="space-y-6" novalidate data-ai-form>
         {% csrf_token %}
         {% if form.non_field_errors %}
           <div class="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
                role="alert">{{ form.non_field_errors }}</div>
         {% endif %}
         {% for field in form %}
-          {% include "components/form_field.html" with field=field %}
+          {% if field.name != "external_processing_consent" %}
+            {% include "components/form_field.html" with field=field %}
+          {% endif %}
         {% endfor %}
         <section class="rounded-control border border-border bg-background p-4 sm:p-5" aria-labelledby="offer-assistant-title">
           <h2 id="offer-assistant-title" class="font-semibold text-text">{% translate "Améliorer le texte de l'offre (facultatif)" %}</h2>

@@ -299,6 +299,33 @@
 
 
     {% block inline_javascript %}
+      <script>
+        document.querySelectorAll("[data-ai-form]").forEach((form) => {
+          form.addEventListener("submit", (event) => {
+            const submitter = event.submitter;
+            const isAssistantRequest = form.dataset.aiForm === "always"
+              || (submitter && ["assistant_action", "profile_assistant_action"].includes(submitter.name)
+                && submitter.value === "generate");
+            if (!isAssistantRequest) return;
+            const status = form.querySelector("[data-ai-loading]");
+            if (status) status.hidden = false;
+            form.setAttribute("aria-busy", "true");
+          });
+        });
+        document.querySelectorAll("[data-copy-target]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const source = document.getElementById(button.dataset.copyTarget);
+            const status = button.parentElement.querySelector("[data-copy-status]");
+            if (!source || !status) return;
+            try {
+              await navigator.clipboard.writeText(source.value);
+              status.textContent = button.dataset.copySuccess;
+            } catch {
+              status.textContent = button.dataset.copyFailure;
+            }
+          });
+        });
+      </script>
     {% endblock inline_javascript %}
 
   </body>
