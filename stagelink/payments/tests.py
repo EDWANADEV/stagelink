@@ -841,8 +841,8 @@ class PaymentFlowTests(TestCase):
             PaymentStatus.SUCCESS: "success",
             PaymentStatus.FAILED: "failed",
             PaymentStatus.CANCELLED: "cancelled",
-            PaymentStatus.REFUNDED: "success",
-            PaymentStatus.PARTIALLY_REFUNDED: "success",
+            PaymentStatus.REFUNDED: "refunded",
+            PaymentStatus.PARTIALLY_REFUNDED: "partially_refunded",
         }
         for status, display_status in expected.items():
             payment = Payment.objects.create(
@@ -851,6 +851,7 @@ class PaymentFlowTests(TestCase):
                 provider=PaymentProvider.STRIPE,
                 method=PaymentMethod.CARD,
                 status=status,
+                provider_payment_id=f"private-provider-reference-{status}",
             )
             with self.subTest(status=status):
                 response = self.client.get(
@@ -863,6 +864,9 @@ class PaymentFlowTests(TestCase):
                 )
                 self.assertNotContains(response, str(self.donation.pk))
                 self.assertNotContains(response, "5000")
+                self.assertNotContains(response, self.user.email)
+                self.assertNotContains(response, "private-provider-reference")
+                self.assertIn("no-store", response.headers["Cache-Control"])
 
     def test_status_fragment_rejects_unknown_or_malformed_payment_ids(self):
         unknown_id = "00000000-0000-0000-0000-000000000001"
@@ -891,6 +895,7 @@ class PaymentFlowTests(TestCase):
         self.assertContains(response, 'aria-live="polite"')
         self.assertContains(response, "maxAttempts = 10")
         self.assertContains(response, "AbortController")
+        self.assertContains(response, 'id="payment-retry"')
         self.assertNotIn("window.location.reload", content)
 
 

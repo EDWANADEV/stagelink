@@ -1,5 +1,6 @@
 import stripe
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 
 class StripeService:
@@ -19,7 +20,7 @@ class StripeService:
                 for marker in ("replace", "xxxxx", "placeholder")
             )
         ):
-            raise ValueError("Stripe n'est pas configuré.")
+            raise ValueError(_("Stripe n'est pas configuré."))
         stripe.api_key = settings.STRIPE_SECRET_KEY
 
     @staticmethod
@@ -52,7 +53,7 @@ class StripeService:
     @classmethod
     def create_payment_intent(cls, *, payment):
         if not settings.STRIPE_ENABLED:
-            raise ValueError("Stripe est désactivé.")
+            raise ValueError(_("Stripe est désactivé."))
         cls._configure()
 
         currency = payment.amount.currency.code.lower()
@@ -92,7 +93,7 @@ class StripeService:
         customer_email="",
     ):
         if not settings.STRIPE_ENABLED:
-            raise ValueError("Stripe est désactivé.")
+            raise ValueError(_("Stripe est désactivé."))
         cls._configure()
 
         metadata = {

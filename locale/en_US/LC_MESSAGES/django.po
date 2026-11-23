@@ -70,8 +70,8 @@ msgstr "Select your Mobile Money network."
 msgid "Le paiement n’a pas pu être initialisé. Vérifiez les informations puis réessayez."
 msgstr "We could not start the payment. Check your details and try again."
 
-msgid "Confirmation du paiement en cours…"
-msgstr "Starting your payment…"
+msgid "Connexion sécurisée au prestataire de paiement…"
+msgstr "Connecting securely to the payment provider…"
 
 msgid "Saisissez un montant entier valide en XAF."
 msgstr "Enter a valid whole amount in XAF."
@@ -124,8 +124,131 @@ msgstr "Payment pending"
 msgid "Nous vérifions votre paiement"
 msgstr "We are checking your payment"
 
-msgid "Le prestataire traite encore la transaction. Cette page se mettra à jour lorsque StageLink recevra et vérifiera sa confirmation."
-msgstr "The provider is still processing the transaction. This page will update after StageLink receives and verifies its confirmation."
+msgid "Le prestataire traite encore la transaction. Le statut affiché dépend de la confirmation vérifiée par StageLink."
+msgstr "The provider may still be processing the transaction. The status shown depends on confirmation verified by StageLink."
+
+msgid "Le retour indique une interruption du parcours. Cela ne confirme ni n’annule le paiement ; le statut ci-dessous vient de StageLink."
+msgstr "The return indicates that the checkout flow was interrupted. This does not confirm or cancel the payment; the status below comes from StageLink."
+
+msgid "Le statut ne peut pas être actualisé pour le moment. La page conserve le dernier état confirmé."
+msgstr "The status cannot be refreshed right now. This page keeps the last confirmed state."
+
+msgid "La confirmation prend plus de temps que prévu. Vous pouvez relancer une vérification."
+msgstr "Confirmation is taking longer than expected. You can check again."
+
+msgid "Vérifier à nouveau"
+msgstr "Check again"
+
+msgid "Paiement remboursé"
+msgstr "Payment refunded"
+
+msgid "Le paiement a été remboursé"
+msgstr "The payment was refunded"
+
+msgid "Le statut enregistré par StageLink indique que ce paiement a été remboursé."
+msgstr "StageLink's recorded status indicates that this payment was refunded."
+
+msgid "Paiement partiellement remboursé"
+msgstr "Payment partially refunded"
+
+msgid "Une partie du paiement a été remboursée"
+msgstr "Part of the payment was refunded"
+
+msgid "Le statut enregistré par StageLink indique un remboursement partiel."
+msgstr "StageLink's recorded status indicates a partial refund."
+
+msgid "Requête invalide."
+msgstr "Invalid request."
+
+msgid "La clé de requête est obligatoire."
+msgstr "The request key is required."
+
+msgid "Cette demande de paiement a déjà été envoyée avec des informations différentes."
+msgstr "This payment request was already submitted with different details."
+
+msgid "Le lien de paiement retourné est invalide."
+msgstr "The returned payment link is invalid."
+
+msgid "Le prestataire de paiement est indisponible."
+msgstr "The payment provider is unavailable."
+
+msgid "Stripe est désactivé."
+msgstr "Stripe is disabled."
+
+msgid "Stripe n'est pas configuré."
+msgstr "Stripe is not configured."
+
+msgid "Flutterwave est désactivé."
+msgstr "Flutterwave is disabled."
+
+msgid "Flutterwave n'est pas configuré."
+msgstr "Flutterwave is not configured."
+
+msgid "Prestataire de paiement invalide."
+msgstr "Invalid payment provider."
+
+msgid "Stripe prend uniquement en charge la carte bancaire."
+msgstr "Stripe only supports card payments."
+
+msgid "Le montant doit être entier pour cette devise."
+msgstr "The amount must be a whole number for this currency."
+
+msgid "Méthode Flutterwave invalide."
+msgstr "Invalid Flutterwave payment method."
+
+msgid "Le montant du don doit être supérieur à zéro."
+msgstr "The donation amount must be greater than zero."
+
+msgid "Cette clé d'idempotence est déjà utilisée."
+msgstr "This idempotency key is already in use."
+
+msgid "Le montant du paiement ne correspond pas au don."
+msgstr "The payment amount does not match the donation."
+
+msgid "L'adresse e-mail est requise pour Flutterwave."
+msgstr "An email address is required for Flutterwave."
+
+msgid "Flutterwave n'a pas pu initialiser le paiement."
+msgstr "Flutterwave could not start the payment."
+
+msgid "E-mail, téléphone et réseau Mobile Money sont requis."
+msgstr "Email, phone number, and Mobile Money network are required."
+
+msgid "Mobile Money Flutterwave est configuré en XAF."
+msgstr "Flutterwave Mobile Money is configured for XAF."
+
+msgid "Le montant Mobile Money doit être un entier en XAF."
+msgstr "The Mobile Money amount must be a whole number in XAF."
+
+msgid "Flutterwave n'a pas pu initialiser le paiement Mobile Money."
+msgstr "Flutterwave could not start the Mobile Money payment."
+
+msgid "Utilisateur"
+msgstr "User"
+
+msgid "Note"
+msgstr "Rating"
+
+msgid "Commentaire"
+msgstr "Comment"
+
+msgid "Avis"
+msgstr "Review"
+
+msgid "Vous devez être connecté pour laisser un avis."
+msgstr "You must be signed in to leave a review."
+
+msgid "Vous avez déjà laissé un avis."
+msgstr "You have already left a review."
+
+msgid "Cet avis a été supprimé."
+msgstr "This review has been deleted."
+
+msgid "Cet avis est déjà supprimé."
+msgstr "This review has already been deleted."
+
+msgid "Vous ne pouvez pas modifier cet avis."
+msgstr "You cannot edit this review."
 
 msgid "Montant"
 msgstr "Amount"

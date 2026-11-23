@@ -86,6 +86,31 @@ Décisions attendues avant développement : cas d'usage, données exactes, fourn
 
 ## Proposition de Pull Request
 
-**Titre :** `Améliorer le retour de paiement et sécuriser la création concurrente des avis`
+**Titre :** `Finaliser l’UX des paiements et documenter Reviews et l’intégration IA`
 
-**Description :** Ajoute un fragment SSR de statut de paiement avec actualisation bornée, sans considérer la redirection navigateur comme confirmation. Sérialise les créations d'avis par compte pour empêcher les doublons concurrents. Ajoute les tests associés et la proposition fonctionnelle d'architecture IA dans le rapport. Aucun changement de règle métier, migration, fournisseur IA, push ou paiement réel.
+**Description :** Améliore le parcours de paiement, son statut SSR et ses traductions FR/EN ; garde le statut basé sur les données serveur, distingue les remboursements et offre une relance bornée. Audite le système Reviews et documente les décisions métier préalables à une interface. Fournit l'étude de cas d'usage et d'architecture IA avec UML PlantUML, sans implémentation IA. Aucun changement de règle métier, migration, push ou paiement réel.
+
+---
+
+## Reprise et finalisation demandées
+
+La branche a été reprise à partir du commit local `dbb3331` sans réinitialisation. Les objectifs incomplets du premier passage sont complétés dans les trois dossiers suivants :
+
+- [Audit complet du parcours de donation/paiement](audit-parcours-paiement-jour-6.md) : étapes vues par l'utilisateur, états, sécurité, erreurs, choix/configuration, problèmes restants et décisions produit.
+- [Audit fonctionnel et technique Reviews](audit-reviews-proposition-jour-6.md) : inventaire du code réellement présent, parcours proposé non activé, analyse de `REVIEW_MAX_PER_USER`, décisions métier et tests nécessaires.
+- [Dossier de conception IA](conception-integration-ia-stagelink.md) : sept cas candidats détaillés, architectures synchrone/asynchrone, confidentialité, coûts en volumes, erreurs, UML PlantUML et feuille de route. Aucun code IA n'est créé.
+
+La reprise améliore en plus l'UX de paiement : états distincts de remboursement, contexte d'interruption de Checkout sans changer l'état DB, action de relance manuelle du polling, verrouillage des champs durant la création, gestion des erreurs de transport et traduction de nouveaux messages en anglais. Aucun formulaire ou affichage public Reviews n'a été ajouté en raison des règles non approuvées d'éligibilité, publication et modération.
+
+### Vérification de reprise
+
+- Tests `donation`, `payments`, `reviews` sur PostgreSQL éphémère isolé : **51 passés, 8 sous-tests passés**, 21 avertissements sur le dossier `staticfiles/` absent du worktree temporaire.
+- `manage.py check` : aucun problème.
+- `makemigrations --check --dry-run` : aucune migration nouvelle ; Django a toutefois averti qu'il ne pouvait pas vérifier l'historique cohérent via la base auxiliaire `postgres` dans cet environnement.
+- `compileall` : passe.
+- `msgfmt --check` sur le catalogue anglais : passe et compile 84 messages ; avertissements uniquement sur les métadonnées de traduction du header historique.
+- Ruff sur les sources de production concernées : 14 alertes restantes, principalement la complexité préexistante de `create_payment` dans vues/services, les règles TRY des validations de remboursement et le catch général historique ; les nouveaux changements de paiement ne créent plus d'alerte dédiée. Ruff sur les trois suites de tests ciblées rapporte 128 alertes (conventions unittest/pytest et valeurs de configuration fake notamment), dont plusieurs préexistantes dans les suites paiements/donations.
+- `git diff --check` : passe au dernier contrôle avant commit.
+- Le commit `dbb3331` reste l'ancêtre ; les modifications de reprise seront un commit additionnel sur la même branche. Aucun push ni merge.
+
+Fichiers de la reprise : `docs/audit-parcours-paiement-jour-6.md`, `docs/audit-reviews-proposition-jour-6.md`, `docs/conception-integration-ia-stagelink.md`, `docs/rapport-jour-6-ux-reviews-ai.md`, catalogue anglais, vue et templates de paiement, formulaire/JS de donation, providers/services de paiement et tests donation/paiement. Aucun fichier Review modèle/migration ou interface publique n'est ajouté.

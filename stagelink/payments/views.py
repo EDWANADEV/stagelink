@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_POST
@@ -55,11 +56,14 @@ def create_payment(request):
         provider = data["provider"]
         method = data["method"]
     except ValueError, KeyError, TypeError, InvalidOperation:
-        return JsonResponse({"error": "Requête invalide."}, status=400)
+        return JsonResponse({"error": _("Requête invalide.")}, status=400)
 
     key = request.headers.get("Idempotency-Key")
     if not key or len(key) > MAX_IDEMPOTENCY_KEY_LENGTH:
-        return JsonResponse({"error": "Idempotency-Key est obligatoire."}, status=400)
+        return JsonResponse(
+            {"error": _("La clé de requête est obligatoire.")},
+            status=400,
+        )
     try:
         existing = (
             Payment.all_objects.select_related("donation")
@@ -71,13 +75,18 @@ def create_payment(request):
         )
         if existing and (existing.amount.amount != amount or existing.method != method):
             return JsonResponse(
-                {"error": "Clé d'idempotence réutilisée avec des données différentes."},
+                {
+                    "error": _(
+                        "Cette demande de paiement a déjà été envoyée avec "
+                        "des informations différentes.",
+                    ),
+                },
                 status=409,
             )
         if existing and (existing.provider_payment_id or existing.provider_response):
             response_data = _payment_response(existing)
             if provider == PaymentProvider.STRIPE and existing.provider_response.get(
-                "checkout_session_id"
+                "checkout_session_id",
             ):
                 session = StripeService.retrieve_checkout_session(
                     existing.provider_response["checkout_session_id"],
@@ -130,7 +139,10 @@ def create_payment(request):
                 customer_email=email,
             )
             if not result.get("url", "").startswith("https://checkout.stripe.com/"):
-                raise ValueError("Stripe n'a pas retourné une URL Checkout valide.")
+                return JsonResponse(
+                    {"error": _("Le lien de paiement retourné est invalide.")},
+                    status=502,
+                )
             payment.provider_response = {
                 "checkout_session_id": result["id"],
                 "checkout_url": result["url"],
@@ -197,7 +209,7 @@ def create_payment(request):
             getattr(exc, "request_id", None),
         )
         return JsonResponse(
-            {"error": "Le prestataire de paiement est indisponible."},
+            {"error": _("Le prestataire de paiement est indisponible.")},
             status=502,
         )
 
@@ -209,12 +221,6 @@ def _payment_response(payment):
         "status": payment.status,
         "provider": payment.provider,
     }
-
-
-def _payment_display_status(payment):
-    if payment.status in {"refunded", "partially_refunded"}:
-        return "success"
-    return payment.status
 
 
 @never_cache
@@ -232,7 +238,11 @@ def payment_return(request):
     return render(
         request,
         "payments/return.html",
-        {"payment": payment, "payment_status": _payment_display_status(payment)},
+        {
+            "payment": payment,
+            "payment_status": payment.status,
+            "return_notice": request.GET.get("cancelled") == "1",
+        },
     )
 
 
@@ -246,7 +256,7 @@ def payment_return_status(request, payment_id):
     )
     html = render_to_string(
         "payments/return_status.html",
-        {"payment_status": _payment_display_status(payment)},
+        {"payment_status": payment.status},
         request=request,
     )
     return HttpResponse(html)
