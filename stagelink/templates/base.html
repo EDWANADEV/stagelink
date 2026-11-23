@@ -96,6 +96,13 @@
 
           <!-- Navigation -->
 
+          <a
+            href="{% url 'donation:donate' %}"
+            class="inline-flex items-center rounded-control bg-primary px-3 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark md:hidden"
+          >
+            {% translate "Faire un don" %}
+          </a>
+
           <div class="hidden items-center gap-3 md:flex">
 
             <!-- Accueil -->
@@ -125,6 +132,13 @@
               class="rounded-control px-4 py-2 text-sm font-medium text-text transition hover:bg-background hover:text-primary"
             >
               {% translate "Offres de stage" %}
+            </a>
+
+            <a
+              href="{% url 'donation:donate' %}"
+              class="rounded-control px-4 py-2 text-sm font-semibold text-primary transition hover:bg-background"
+            >
+              {% translate "Faire un don" %}
             </a>
 
 

@@ -39,6 +39,8 @@ urlpatterns = [
     ),
     # Your stuff: custom urls includes go here
     path("offers/", include("stagelink.offers.urls", namespace="offers")),
+    path("donations/", include("stagelink.donation.urls", namespace="donation")),
+    path("payments/", include("stagelink.payments.urls", namespace="payments")),
     # Les CV sont servis par la vue protégée de profiles, jamais par MEDIA_URL.
     path(
         "media/cv/<path:file_path>",

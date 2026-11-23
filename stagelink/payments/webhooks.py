@@ -1,106 +1,110 @@
 import json
 import logging
 
-import stagelink.payments.providers.stripe as stripe
+import stripe
 from django.conf import settings
+from django.db import IntegrityError
+from django.db import transaction
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import Payment
-from .services import PaymentService
+from .models import WebhookEvent
+from .providers.flutterwave import FlutterwaveService
+from .tasks import publish_webhook_event
 
 logger = logging.getLogger(__name__)
+
+
+def _publish_event(event):
+    # PostgreSQL remains the durable queue; Beat and duplicate deliveries retry.
+    publish_webhook_event(event)
+
+
+def _persist_event(*, provider, event_id, event_type, payload):
+    try:
+        with transaction.atomic():
+            event, created = WebhookEvent.objects.get_or_create(
+                provider=provider,
+                event_id=event_id,
+                defaults={"event_type": event_type, "payload": payload},
+            )
+            logger.info(
+                "Webhook persisted provider=%s event_id=%s type=%s "
+                "created=%s status=%s",
+                provider,
+                event_id,
+                event_type,
+                created,
+                event.status,
+            )
+            # Only pending rows are nudged. Processing/terminal duplicates do not
+            # create needless broker traffic.
+            if event.status == WebhookEvent.Status.RECEIVED:
+                transaction.on_commit(lambda event=event: _publish_event(event))
+    except IntegrityError:
+        # A concurrent delivery won the unique constraint race.
+        return HttpResponse(status=200)
+    return HttpResponse(status=200)
 
 
 @csrf_exempt
 @require_POST
 def stripe_webhook(request):
-    payload = request.body
-    signature = request.headers.get("Stripe-Signature")
-
     try:
         event = stripe.Webhook.construct_event(
-            payload,
-            signature,
+            request.body,
+            request.headers.get("Stripe-Signature"),
             settings.STRIPE_WEBHOOK_SECRET,
         )
-    except (ValueError, stripe.error.SignatureVerificationError):
+    except ValueError, stripe.error.SignatureVerificationError:
         return HttpResponse(status=400)
-
-    event_type = event["type"]
-    data = event["data"]["object"]
-
-    metadata = data.get("metadata", {})
-    payment_id = metadata.get("stagelink_payment_id")
-
-    if not payment_id:
-        return HttpResponse(status=200)
-
-    try:
-        payment = Payment.all_objects.get(pk=payment_id)
-    except Payment.DoesNotExist:
-        logger.warning(
-            "Paiement StageLink introuvable: %s",
-            payment_id,
-        )
-        return HttpResponse(status=200)
-
-    provider_response = {
-        "event_id": event["id"],
-        "event_type": event_type,
-        "data": data,
-    }
-
-    if event_type == "payment_intent.succeeded":
-        PaymentService.mark_as_success(
-            payment=payment,
-            provider_payment_id=data["id"],
-            provider_response=provider_response,
-        )
-
-    elif event_type == "payment_intent.payment_failed":
-        error = data.get("last_payment_error") or {}
-
-        PaymentService.mark_as_failed(
-            payment=payment,
-            provider_payment_id=data["id"],
-            failure_reason=error.get(
-                "message",
-                "Le paiement a échoué.",
-            ),
-            provider_response=provider_response,
-        )
-
-    elif event_type == "payment_intent.canceled":
-        PaymentService.mark_as_failed(
-            payment=payment,
-            provider_payment_id=data["id"],
-            failure_reason="Paiement annulé.",
-            provider_response=provider_response,
-        )
-
-    return HttpResponse(status=200)
+    if (
+        not isinstance(event.get("id"), str)
+        or not isinstance(event.get("type"), str)
+        or not isinstance(event.get("data"), dict)
+        or not isinstance(event["data"].get("object"), dict)
+    ):
+        return HttpResponse(status=400)
+    event = event.to_dict() if hasattr(event, "to_dict") else dict(event)
+    return _persist_event(
+        provider="stripe",
+        event_id=event["id"],
+        event_type=event.get("type", ""),
+        payload=event,
+    )
 
 
 @csrf_exempt
 @require_POST
 def flutterwave_webhook(request):
-    # La vérification exacte de la signature/token Flutterwave
-    # sera effectuée ici avant tout traitement.
-    payload = json.loads(request.body)
-
-    # TODO:
-    # 1. Vérifier l'authenticité du webhook.
-    # 2. Récupérer tx_ref.
-    # 3. Vérifier la transaction directement auprès de Flutterwave.
-    # 4. Vérifier montant + devise.
-    # 5. Mettre Payment à jour.
-    # 6. Retourner HTTP 200.
-
-    logger.info(
-        "Webhook Flutterwave reçu: %s",
-        payload,
+    if not FlutterwaveService.verify_webhook_signature(
+        request.headers.get("verif-hash"),
+    ):
+        return HttpResponse(status=400)
+    try:
+        payload = json.loads(request.body)
+        data = payload.get("data")
+        event_type = payload.get("event")
+        if not isinstance(data, dict):
+            return HttpResponse(status=400)
+        transaction_id = data.get("id")
+        event_id = payload.get("id")
+        if event_id is None and transaction_id is not None and event_type:
+            event_id = f"{event_type}:{transaction_id}"
+        if (
+            not isinstance(event_id, (str, int))
+            or not isinstance(event_type, str)
+            or not event_type
+            or not isinstance(transaction_id, (str, int))
+            or not isinstance(data.get("tx_ref"), str)
+        ):
+            return HttpResponse(status=400)
+    except ValueError, AttributeError:
+        return HttpResponse(status=400)
+    return _persist_event(
+        provider="flutterwave",
+        event_id=str(event_id),
+        event_type=event_type,
+        payload=payload,
     )
-
-    return HttpResponse(status=200)

@@ -43,15 +43,6 @@ OTP_REQUEST_COOLDOWN_SECONDS = env.int(
     default=60,
 )
 
-# Configuration Flutterwave (Sécurisée avec valeurs par défaut)
-FLW_PUBLIC_KEY = env("FLW_PUBLIC_KEY", default="")
-FLW_SECRET_KEY = env("FLW_SECRET_KEY", default="")
-FLW_WEBHOOK_SECRET = env("FLW_WEBHOOK_SECRET", default="")
-
-# Configuration Stripe (Sécurisée avec valeurs par défaut)
-STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
-STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
-
 # Reviews
 REVIEW_MIN_RATING = env.int("REVIEW_MIN_RATING", default=1)
 REVIEW_MAX_RATING = env.int("REVIEW_MAX_RATING", default=5)
@@ -72,6 +63,16 @@ READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=True)
 if READ_DOT_ENV_FILE:
     # OS environment variables take precedence over variables from .env
     env.read_env(str(BASE_DIR / ".env"))
+
+# Empty values and documented placeholders never enable a payment provider.
+STRIPE_ENABLED = env.bool("STRIPE_ENABLED", default=False)
+STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+FLUTTERWAVE_ENABLED = env.bool("FLUTTERWAVE_ENABLED", default=False)
+FLW_PUBLIC_KEY = env("FLW_PUBLIC_KEY", default="")
+FLW_SECRET_KEY = env("FLW_SECRET_KEY", default="")
+FLW_WEBHOOK_SECRET = env("FLW_WEBHOOK_SECRET", default="")
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -165,7 +166,7 @@ LOCAL_APPS = [
     "stagelink.notifications",
     "stagelink.donation",
     "stagelink.payments",
-    "stagelink.reviews"
+    "stagelink.reviews",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -384,6 +385,12 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_WORKER_SEND_TASK_EVENTS = True
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#std-setting-task_send_sent_event
 CELERY_TASK_SEND_SENT_EVENT = True
+CELERY_BEAT_SCHEDULE = {
+    "recover-payment-webhook-events": {
+        "task": "stagelink.payments.tasks.reprocess_failed_webhook_events",
+        "schedule": 60.0,
+    },
+}
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-hijack-root-logger
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False
 # django-allauth

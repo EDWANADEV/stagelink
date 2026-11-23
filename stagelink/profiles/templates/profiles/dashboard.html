@@ -21,6 +21,10 @@
         </h1>
       </div>
       <div class="flex flex-col gap-3 sm:flex-row">
+        <a href="{% url 'donation:donate' %}"
+           class="inline-flex items-center justify-center rounded-control border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-background">
+          {% translate "Faire un don" %}
+        </a>
         <a href="{% url 'profiles:complete' %}"
            class="inline-flex items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white">
           {% icon "edit" size="size-4" %}
