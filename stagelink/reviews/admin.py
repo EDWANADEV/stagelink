@@ -1,6 +1,9 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from .models import Review
+
+SHORT_COMMENT_LENGTH = 50
 
 
 @admin.register(Review)
@@ -42,16 +45,15 @@ class ReviewAdmin(admin.ModelAdmin):
             return "—"
 
         return (
-            obj.comment[:50] + "..."
-            if len(obj.comment) > 50
+            obj.comment[:SHORT_COMMENT_LENGTH] + "..."
+            if len(obj.comment) > SHORT_COMMENT_LENGTH
             else obj.comment
         )
 
-    short_comment.short_description = "Commentaire"
+    short_comment.short_description = _("Commentaire")
 
     def has_add_permission(self, request):
         return False
 
     def has_delete_permission(self, request, obj=None):
         return False
-    

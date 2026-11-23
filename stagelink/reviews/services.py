@@ -21,12 +21,16 @@ class ReviewService:
 
         if not user.is_authenticated:
             raise ValidationError(
-                _("Vous devez être connecté pour laisser un avis.")
+                _("Vous devez être connecté pour laisser un avis."),
             )
 
+        # Serialize submissions for the same account so parallel requests cannot
+        # pass the active-review check at the same time. Soft-deleted reviews
+        # remain excluded by the default manager, as before.
+        user = type(user).objects.select_for_update().get(pk=user.pk)
         if Review.objects.filter(user=user).exists():
             raise ValidationError(
-                _("Vous avez déjà laissé un avis.")
+                _("Vous avez déjà laissé un avis."),
             )
 
         review = Review(
@@ -57,7 +61,7 @@ class ReviewService:
 
         if review.is_deleted:
             raise ValidationError(
-                _("Cet avis a été supprimé.")
+                _("Cet avis a été supprimé."),
             )
 
         review.rating = rating
@@ -71,7 +75,7 @@ class ReviewService:
                 "comment",
                 "updated_by",
                 "updated_at",
-            ]
+            ],
         )
 
         return review
@@ -89,7 +93,7 @@ class ReviewService:
 
         if review.is_deleted:
             raise ValidationError(
-                _("Cet avis est déjà supprimé.")
+                _("Cet avis est déjà supprimé."),
             )
 
         review.soft_delete(user)

@@ -817,6 +817,82 @@ class PaymentFlowTests(TestCase):
             WebhookEvent.Status.RECEIVED,
         )
 
+    def test_payment_return_uses_database_status_not_browser_flags(self):
+        payment = Payment.objects.create(
+            donation=self.donation,
+            amount=self.donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+
+        response = self.client.get(
+            reverse("payments:return"),
+            {"payment_id": payment.pk, "cancelled": "1", "success": "1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Paiement en attente")
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, PaymentStatus.PENDING)
+
+    def test_status_fragment_reports_all_existing_payment_outcomes(self):
+        expected = {
+            PaymentStatus.PENDING: "pending",
+            PaymentStatus.SUCCESS: "success",
+            PaymentStatus.FAILED: "failed",
+            PaymentStatus.CANCELLED: "cancelled",
+            PaymentStatus.REFUNDED: "success",
+            PaymentStatus.PARTIALLY_REFUNDED: "success",
+        }
+        for status, display_status in expected.items():
+            payment = Payment.objects.create(
+                donation=self.donation,
+                amount=self.donation.amount,
+                provider=PaymentProvider.STRIPE,
+                method=PaymentMethod.CARD,
+                status=status,
+            )
+            with self.subTest(status=status):
+                response = self.client.get(
+                    reverse("payments:return-status", args=[payment.pk]),
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(
+                    response,
+                    f'data-payment-state="{display_status}"',
+                )
+                self.assertNotContains(response, str(self.donation.pk))
+                self.assertNotContains(response, "5000")
+
+    def test_status_fragment_rejects_unknown_or_malformed_payment_ids(self):
+        unknown_id = "00000000-0000-0000-0000-000000000001"
+        response = self.client.get(
+            reverse("payments:return-status", args=[unknown_id]),
+        )
+        malformed = self.client.get("/payments/return/not-a-uuid/status/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(malformed.status_code, 404)
+
+    def test_return_page_uses_bounded_partial_polling_without_reload(self):
+        payment = Payment.objects.create(
+            donation=self.donation,
+            amount=self.donation.amount,
+            provider=PaymentProvider.STRIPE,
+            method=PaymentMethod.CARD,
+        )
+
+        response = self.client.get(
+            reverse("payments:return"),
+            {"payment_id": payment.pk},
+        )
+        content = response.content.decode()
+
+        self.assertContains(response, 'aria-live="polite"')
+        self.assertContains(response, "maxAttempts = 10")
+        self.assertContains(response, "AbortController")
+        self.assertNotIn("window.location.reload", content)
+
 
 @pytest.mark.django_db(transaction=True)
 def test_concurrent_workers_cannot_claim_the_same_webhook():

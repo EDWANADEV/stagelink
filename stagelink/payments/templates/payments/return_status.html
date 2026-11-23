@@ -1,0 +1,24 @@
+{% load i18n %}
+
+<div id="payment-status"
+     data-payment-state="{{ payment_status }}"
+     aria-live="polite"
+     aria-atomic="true">
+  {% if payment_status == "success" %}
+    <p class="text-sm font-semibold uppercase tracking-wide text-status-accepted-text">{% translate "Paiement confirmé" %}</p>
+    <h1 class="mt-3 font-heading text-2xl font-bold text-text">{% translate "Merci pour votre don !" %}</h1>
+    <p class="mt-3 leading-7 text-text-muted">{% translate "Le prestataire a confirmé votre paiement. Votre soutien contribue aux opportunités de stage sur StageLink." %}</p>
+  {% elif payment_status == "failed" %}
+    <p class="text-sm font-semibold uppercase tracking-wide text-status-rejected-text">{% translate "Paiement échoué" %}</p>
+    <h1 class="mt-3 font-heading text-2xl font-bold text-text">{% translate "Le paiement n’a pas abouti" %}</h1>
+    <p class="mt-3 leading-7 text-text-muted">{% translate "Le prestataire nous a signalé un échec. Aucun don n’a été confirmé. Vous pouvez réessayer." %}</p>
+  {% elif payment_status == "cancelled" %}
+    <p class="text-sm font-semibold uppercase tracking-wide text-text-muted">{% translate "Paiement annulé" %}</p>
+    <h1 class="mt-3 font-heading text-2xl font-bold text-text">{% translate "Vous avez annulé le paiement" %}</h1>
+    <p class="mt-3 leading-7 text-text-muted">{% translate "Le don n’a pas été confirmé. Vous pouvez reprendre le parcours à tout moment." %}</p>
+  {% else %}
+    <p class="text-sm font-semibold uppercase tracking-wide text-primary">{% translate "Paiement en attente" %}</p>
+    <h1 class="mt-3 font-heading text-2xl font-bold text-text">{% translate "Nous vérifions votre paiement" %}</h1>
+    <p class="mt-3 leading-7 text-text-muted">{% translate "Le prestataire traite encore la transaction. Le statut affiché dépend de la confirmation vérifiée par StageLink." %}</p>
+  {% endif %}
+</div>
